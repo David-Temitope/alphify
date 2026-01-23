@@ -1,0 +1,462 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import ChatMessage from '@/components/ChatMessage';
+import FileUpload from '@/components/FileUpload';
+import { 
+  ArrowLeft, 
+  Send, 
+  Paperclip, 
+  Loader2,
+  MessageSquarePlus,
+  Menu,
+  X
+} from 'lucide-react';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  is_quiz?: boolean;
+  quiz_passed?: boolean;
+  created_at: string;
+}
+
+export default function Chat() {
+  const { conversationId } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+
+  // Fetch conversation
+  const { data: conversation } = useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: async () => {
+      if (!conversationId) return null;
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!conversationId,
+  });
+
+  // Fetch messages
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: async () => {
+      if (!conversationId) return [];
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data as Message[];
+    },
+    enabled: !!conversationId,
+  });
+
+  // Fetch all conversations for sidebar
+  const { data: allConversations } = useQuery({
+    queryKey: ['all-conversations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingContent]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [input]);
+
+  const handleSendMessage = useCallback(async () => {
+    if (!input.trim() || isStreaming || !conversationId) return;
+
+    const userMessage = input.trim();
+    setInput('');
+    setIsStreaming(true);
+    setStreamingContent('');
+
+    try {
+      // Save user message
+      await supabase.from('messages').insert({
+        conversation_id: conversationId,
+        user_id: user!.id,
+        role: 'user',
+        content: userMessage,
+      });
+
+      // Get all messages for context
+      const { data: allMessages } = await supabase
+        .from('messages')
+        .select('role, content')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      const messageHistory = allMessages?.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      })) || [];
+
+      // Add current message
+      messageHistory.push({ role: 'user', content: userMessage });
+
+      // Call AI
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/xplane-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ 
+          messages: messageHistory,
+          fileContent: fileContent 
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
+      }
+
+      // Stream response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      let buffer = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          let newlineIndex: number;
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            let line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+
+            if (line.endsWith('\r')) line = line.slice(0, -1);
+            if (line.startsWith(':') || line.trim() === '') continue;
+            if (!line.startsWith('data: ')) continue;
+
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullContent += content;
+                setStreamingContent(fullContent);
+              }
+            } catch {
+              buffer = line + '\n' + buffer;
+              break;
+            }
+          }
+        }
+      }
+
+      // Save assistant message
+      const isQuiz = fullContent.includes('[QUIZ]') || fullContent.includes('quiz') && fullContent.includes('?');
+      await supabase.from('messages').insert({
+        conversation_id: conversationId,
+        user_id: user!.id,
+        role: 'assistant',
+        content: fullContent,
+        is_quiz: isQuiz,
+      });
+
+      // Update conversation title if first exchange
+      if (messages.length === 0) {
+        const title = userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : '');
+        await supabase
+          .from('conversations')
+          .update({ title, updated_at: new Date().toISOString() })
+          .eq('id', conversationId);
+      } else {
+        await supabase
+          .from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId);
+      }
+
+      await refetchMessages();
+      setFileContent(null);
+      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsStreaming(false);
+      setStreamingContent('');
+    }
+  }, [input, isStreaming, conversationId, user, messages, fileContent, refetchMessages, toast, queryClient]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleNewChat = async () => {
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({ user_id: user!.id, title: 'New Conversation' })
+      .select()
+      .single();
+    
+    if (!error && data) {
+      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
+      navigate(`/chat/${data.id}`);
+    }
+  };
+
+  const handleFileProcessed = (content: string) => {
+    setFileContent(content);
+    setShowFileUpload(false);
+    toast({
+      title: 'Document ready!',
+      description: 'Your file has been processed. Ask me anything about it!',
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border transform transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg xp-gradient flex items-center justify-center font-display font-bold text-primary-foreground">
+                Xp
+              </div>
+              <span className="font-display font-semibold text-sidebar-foreground">Xplane</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="lg:hidden">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* New Chat Button */}
+          <div className="p-4">
+            <Button onClick={handleNewChat} className="w-full xp-gradient text-primary-foreground">
+              <MessageSquarePlus className="mr-2 h-4 w-4" />
+              New Chat
+            </Button>
+          </div>
+
+          {/* Conversations List */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
+            <div className="space-y-1">
+              {allConversations?.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => {
+                    navigate(`/chat/${conv.id}`);
+                    setShowSidebar(false);
+                  }}
+                  className={`w-full text-left p-3 rounded-lg text-sm transition-colors truncate ${
+                    conv.id === conversationId 
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground' 
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  }`}
+                >
+                  {conv.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Back to Dashboard */}
+          <div className="p-4 border-t border-sidebar-border">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="w-full justify-start text-sidebar-foreground">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Dashboard
+            </Button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Overlay for mobile */}
+      {showSidebar && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* Main Chat Area */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Chat Header */}
+        <header className="border-b border-border bg-background/50 backdrop-blur-xl p-4 flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display font-semibold text-foreground truncate">
+              {conversation?.title || 'New Conversation'}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Ask me anything - I'll explain it simply
+            </p>
+          </div>
+        </header>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+          {messages.length === 0 && !streamingContent && (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
+                Xp
+              </div>
+              <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
+                Hey there! I'm Xplane 👋
+              </h2>
+              <p className="text-muted-foreground max-w-md mb-8">
+                I'm here to help you understand complex topics using real-world examples from your everyday student life. 
+                What would you like to learn about today?
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {['Explain calculus derivatives', 'What is entropy in chemistry?', 'Help me understand physics forces'].map((prompt) => (
+                  <Button 
+                    key={prompt}
+                    variant="outline" 
+                    className="text-sm"
+                    onClick={() => setInput(prompt)}
+                  >
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+
+          {streamingContent && (
+            <ChatMessage 
+              message={{ 
+                id: 'streaming', 
+                role: 'assistant', 
+                content: streamingContent, 
+                created_at: new Date().toISOString() 
+              }} 
+            />
+          )}
+
+          {isStreaming && !streamingContent && (
+            <div className="flex items-center gap-2 text-muted-foreground p-4">
+              <div className="flex gap-1">
+                <span className="typing-dot" />
+                <span className="typing-dot" />
+                <span className="typing-dot" />
+              </div>
+              <span className="text-sm">Xplane is thinking...</span>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* File Content Indicator */}
+        {fileContent && (
+          <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between">
+            <span className="text-sm text-primary">📄 Document attached - Ask me anything about it!</span>
+            <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Input Area */}
+        <div className="border-t border-border bg-background/50 backdrop-blur-xl p-4">
+          <div className="max-w-4xl mx-auto flex items-end gap-3">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setShowFileUpload(true)}
+              className="flex-shrink-0"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex-1 relative">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything... I'll explain it simply"
+                className="min-h-[52px] max-h-[200px] resize-none bg-secondary border-border focus:border-primary input-glow pr-12"
+                rows={1}
+              />
+            </div>
+
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isStreaming}
+              className="xp-gradient text-primary-foreground flex-shrink-0"
+            >
+              {isStreaming ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </main>
+
+      {/* File Upload Modal */}
+      {showFileUpload && (
+        <FileUpload 
+          conversationId={conversationId || null}
+          onClose={() => setShowFileUpload(false)}
+          onFileProcessed={handleFileProcessed}
+        />
+      )}
+    </div>
+  );
+}
