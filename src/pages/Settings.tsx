@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import {
+import { 
   Select,
   SelectContent,
   SelectItem,
@@ -15,47 +15,66 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, Loader2, Settings as SettingsIcon, User, GraduationCap, Globe, BookOpen } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Settings as SettingsIcon, 
+  User, 
+  GraduationCap, 
+  Globe, 
+  Sparkles,
+  BookOpen,
+  Save,
+  Loader2,
+  Brain,
+  X
+} from 'lucide-react';
 
 const STUDENT_TYPES = [
   { value: 'science', label: 'Science' },
-  { value: 'art', label: 'Arts/Humanities' },
-  { value: 'commercial', label: 'Commercial/Business' },
-];
-
-const UNIVERSITY_LEVELS = [
-  { value: '100L', label: '100 Level (Freshman)' },
-  { value: '200L', label: '200 Level (Sophomore)' },
-  { value: '300L', label: '300 Level (Junior)' },
-  { value: '400L', label: '400 Level (Senior)' },
-  { value: '500L', label: '500 Level (Graduate)' },
-  { value: '600L', label: '600 Level (Postgraduate)' },
-];
-
-const AI_PERSONALITIES = [
-  { value: 'friendly', label: 'Friendly & Casual' },
-  { value: 'encouraging', label: 'Encouraging & Supportive' },
-  { value: 'tough', label: 'Tough & Challenging' },
-  { value: 'calm', label: 'Calm & Patient' },
-  { value: 'teacher', label: 'Professional Teacher' },
-  { value: 'close_friend', label: 'Close Friend' },
-];
-
-const POPULAR_COURSES = [
-  'MTH', 'CHM', 'PHY', 'BIO', 'MCB', 'BCH', 'GST', 'GNS', 'CSC', 'ENG', 
-  'ECO', 'ACC', 'BUS', 'LAW', 'MED', 'PHM', 'NUR', 'AGR', 'ARC', 'EEE'
-];
-
-const COUNTRIES = [
-  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'United States', 
-  'United Kingdom', 'Canada', 'India', 'Australia', 'Other'
+  { value: 'art', label: 'Art' },
+  { value: 'commercial', label: 'Commercial' },
 ];
 
 const FIELDS_OF_STUDY = [
   'Microbiology', 'Medicine and Surgery', 'Computer Science', 'Law', 
-  'Engineering', 'Pharmacy', 'Nursing', 'Accounting', 'Economics', 
-  'Biochemistry', 'Physics', 'Chemistry', 'Mathematics', 'English', 
-  'Political Science', 'Psychology', 'Architecture', 'Agriculture', 'Other'
+  'Accounting', 'Economics', 'Engineering', 'Pharmacy', 'Nursing',
+  'Biochemistry', 'Physics', 'Chemistry', 'Mathematics', 'Biology',
+  'Political Science', 'Mass Communication', 'Psychology', 'Sociology',
+  'Business Administration', 'Public Administration', 'Architecture',
+  'Fine Arts', 'Theatre Arts', 'Music', 'Philosophy', 'History',
+  'English', 'French', 'Linguistics', 'Education', 'Agriculture',
+  'Veterinary Medicine', 'Dentistry', 'Physiotherapy', 'Other'
+];
+
+const COUNTRIES = [
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'United States',
+  'United Kingdom', 'Canada', 'India', 'Australia', 'Other'
+];
+
+const UNIVERSITY_LEVELS = ['100L', '200L', '300L', '400L', '500L', '600L', 'Postgraduate'];
+
+const AI_PERSONALITIES = [
+  { id: 'close_friend', label: 'Close Friend', description: 'Casual, uses slang, very supportive' },
+  { id: 'friendly_teacher', label: 'Friendly Teacher', description: 'Warm, patient, encouraging' },
+  { id: 'encouraging', label: 'Encouraging', description: 'Lots of positive reinforcement' },
+  { id: 'tough', label: 'Tough Love', description: 'Pushes you to do better, no shortcuts' },
+  { id: 'nice', label: 'Nice & Gentle', description: 'Very kind, never critical' },
+  { id: 'calm', label: 'Calm & Composed', description: 'Relaxed, never rushes' },
+  { id: 'funny', label: 'Funny', description: 'Uses humor to teach' },
+  { id: 'strict', label: 'Strict Professor', description: 'Formal, academic, by-the-book' },
+];
+
+const EXPLANATION_STYLES = [
+  { id: 'five_year_old', label: 'Like a 5-year-old', description: 'Super simple, using toys and everyday examples' },
+  { id: 'professional', label: 'Professional', description: 'Academic terminology, assumes some knowledge' },
+  { id: 'complete_beginner', label: 'Complete Beginner', description: 'Start from absolute zero, define everything' },
+  { id: 'visual_learner', label: 'Visual Descriptions', description: 'Lots of imagery, diagrams in words' },
+];
+
+const COMMON_COURSES = [
+  'MTH', 'CHM', 'PHY', 'BIO', 'GST', 'GNS', 'MCB', 'BCH', 'CSC', 'COS',
+  'ENG', 'LIN', 'ECO', 'ACC', 'BUS', 'POL', 'SOC', 'PSY', 'LAW', 'MED',
+  'PHA', 'NUR', 'ARC', 'AGR', 'EDU', 'HIS', 'PHI', 'FRE', 'ART', 'MUS'
 ];
 
 interface UserSettings {
@@ -66,6 +85,7 @@ interface UserSettings {
   ai_personality: string[];
   courses: string[];
   preferred_name: string | null;
+  explanation_style: string | null;
 }
 
 export default function Settings() {
@@ -79,9 +99,10 @@ export default function Settings() {
     field_of_study: null,
     country: null,
     university_level: null,
-    ai_personality: ['friendly'],
+    ai_personality: ['friendly_teacher'],
     courses: [],
     preferred_name: null,
+    explanation_style: 'five_year_old',
   });
   const [customCourse, setCustomCourse] = useState('');
 
@@ -105,9 +126,10 @@ export default function Settings() {
         field_of_study: existingSettings.field_of_study,
         country: existingSettings.country,
         university_level: existingSettings.university_level,
-        ai_personality: existingSettings.ai_personality || ['friendly'],
+        ai_personality: existingSettings.ai_personality || ['friendly_teacher'],
         courses: existingSettings.courses || [],
         preferred_name: existingSettings.preferred_name,
+        explanation_style: (existingSettings as any).explanation_style || 'five_year_old',
       });
     }
   }, [existingSettings]);
@@ -162,6 +184,13 @@ export default function Settings() {
       }));
       setCustomCourse('');
     }
+  };
+
+  const removeCourse = (course: string) => {
+    setSettings(prev => ({
+      ...prev,
+      courses: prev.courses.filter(c => c !== course),
+    }));
   };
 
   if (isLoading) {
@@ -225,6 +254,31 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* Explanation Style */}
+        <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <Brain className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold">How would you like to be explained to?</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {EXPLANATION_STYLES.map((style) => (
+              <button
+                key={style.id}
+                onClick={() => setSettings(prev => ({ ...prev, explanation_style: style.id }))}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  settings.explanation_style === style.id
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-secondary/50 hover:border-primary/50'
+                }`}
+              >
+                <div className="font-medium">{style.label}</div>
+                <div className="text-sm text-muted-foreground mt-1">{style.description}</div>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Academic Info */}
         <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center gap-3 mb-6">
@@ -278,24 +332,7 @@ export default function Settings() {
                 </SelectTrigger>
                 <SelectContent>
                   {UNIVERSITY_LEVELS.map(level => (
-                    <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Country</Label>
-              <Select
-                value={settings.country || ''}
-                onValueChange={(value) => setSettings(prev => ({ ...prev, country: value }))}
-              >
-                <SelectTrigger className="mt-1 bg-secondary border-border">
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -303,84 +340,116 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Courses */}
+        {/* Country */}
+        <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <Globe className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold">Location</h2>
+          </div>
+          
+          <div>
+            <Label>Country</Label>
+            <p className="text-sm text-muted-foreground mb-2">This helps me explain using examples relevant to your education system</p>
+            <Select
+              value={settings.country || ''}
+              onValueChange={(value) => setSettings(prev => ({ ...prev, country: value }))}
+            >
+              <SelectTrigger className="mt-1 bg-secondary border-border">
+                <SelectValue placeholder="Select your country" />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRIES.map(country => (
+                  <SelectItem key={country} value={country}>{country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
+        {/* AI Personality */}
         <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold">AI Personality</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Select how you'd like me to behave (you can select multiple)</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {AI_PERSONALITIES.map((personality) => (
+              <button
+                key={personality.id}
+                onClick={() => togglePersonality(personality.id)}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  settings.ai_personality.includes(personality.id)
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-secondary/50 hover:border-primary/50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={settings.ai_personality.includes(personality.id)}
+                    className="pointer-events-none"
+                  />
+                  <span className="font-medium">{personality.label}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1 ml-6">{personality.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Courses */}
+        <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
           <div className="flex items-center gap-3 mb-6">
             <BookOpen className="h-5 w-5 text-primary" />
             <h2 className="font-display text-lg font-semibold">Your Courses</h2>
           </div>
+          <p className="text-sm text-muted-foreground mb-4">Select or add the course codes you study</p>
           
-          <p className="text-sm text-muted-foreground mb-4">
-            Select the courses you're taking this semester. This helps me tailor explanations to your curriculum.
-          </p>
-
+          {/* Selected courses */}
+          {settings.courses.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {settings.courses.map((course) => (
+                <span 
+                  key={course}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm"
+                >
+                  {course}
+                  <button onClick={() => removeCourse(course)} className="hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* Common courses grid */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {POPULAR_COURSES.map(course => (
+            {COMMON_COURSES.map((course) => (
               <button
                 key={course}
                 onClick={() => toggleCourse(course)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 py-1 rounded-full text-sm transition-all ${
                   settings.courses.includes(course)
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-foreground hover:bg-secondary/80'
+                    : 'bg-secondary border border-border hover:border-primary/50'
                 }`}
               >
                 {course}
               </button>
             ))}
           </div>
-
+          
+          {/* Add custom course */}
           <div className="flex gap-2">
             <Input
-              placeholder="Add custom course code..."
+              placeholder="Add custom course code"
               value={customCourse}
               onChange={(e) => setCustomCourse(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addCustomCourse()}
               className="bg-secondary border-border"
             />
             <Button variant="outline" onClick={addCustomCourse}>Add</Button>
-          </div>
-
-          {settings.courses.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="text-sm text-muted-foreground">Selected:</span>
-              {settings.courses.map(course => (
-                <span key={course} className="px-2 py-1 bg-primary/20 text-primary rounded text-sm">
-                  {course}
-                </span>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* AI Personality */}
-        <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <div className="flex items-center gap-3 mb-6">
-            <Globe className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-lg font-semibold">AI Personality</h2>
-          </div>
-          
-          <p className="text-sm text-muted-foreground mb-4">
-            Choose how you'd like Xplane to interact with you. You can select multiple options.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {AI_PERSONALITIES.map(personality => (
-              <label
-                key={personality.value}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                  settings.ai_personality.includes(personality.value)
-                    ? 'bg-primary/20 border border-primary/30'
-                    : 'bg-secondary hover:bg-secondary/80'
-                }`}
-              >
-                <Checkbox
-                  checked={settings.ai_personality.includes(personality.value)}
-                  onCheckedChange={() => togglePersonality(personality.value)}
-                />
-                <span className="text-foreground">{personality.label}</span>
-              </label>
-            ))}
           </div>
         </section>
       </main>

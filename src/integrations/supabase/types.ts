@@ -109,6 +109,110 @@ export type Database = {
         }
         Relationships: []
       }
+      study_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_groups: {
+        Row: {
+          admin_id: string
+          created_at: string
+          field_of_study: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          field_of_study?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          field_of_study?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      study_mates: {
+        Row: {
+          created_at: string
+          id: string
+          mate_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mate_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mate_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_requests: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          status: string
+          to_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          status?: string
+          to_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          status?: string
+          to_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       uploaded_files: {
         Row: {
           conversation_id: string | null
@@ -159,10 +263,12 @@ export type Database = {
           country: string | null
           courses: string[] | null
           created_at: string
+          explanation_style: string | null
           field_of_study: string | null
           id: string
           preferred_name: string | null
           quiz_score_percentage: number | null
+          star_rating: number | null
           student_type: string | null
           total_quizzes_taken: number | null
           university_level: string | null
@@ -174,10 +280,12 @@ export type Database = {
           country?: string | null
           courses?: string[] | null
           created_at?: string
+          explanation_style?: string | null
           field_of_study?: string | null
           id?: string
           preferred_name?: string | null
           quiz_score_percentage?: number | null
+          star_rating?: number | null
           student_type?: string | null
           total_quizzes_taken?: number | null
           university_level?: string | null
@@ -189,10 +297,12 @@ export type Database = {
           country?: string | null
           courses?: string[] | null
           created_at?: string
+          explanation_style?: string | null
           field_of_study?: string | null
           id?: string
           preferred_name?: string | null
           quiz_score_percentage?: number | null
+          star_rating?: number | null
           student_type?: string | null
           total_quizzes_taken?: number | null
           university_level?: string | null
