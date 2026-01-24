@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const XPLANE_SYSTEM_PROMPT = `You are Xplane, an expert educational AI assistant specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
+const GIDEON_SYSTEM_PROMPT = `You are Gideon, an expert educational AI assistant created by Alphadominity, specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
 
 ## CRITICAL: Response Formatting - MUST FOLLOW
 Your responses MUST be structured and easy to read. NEVER write article-style paragraphs.
@@ -268,7 +268,7 @@ serve(async (req) => {
 
     // Build context-aware messages
     const systemMessages = [
-      { role: "system", content: XPLANE_SYSTEM_PROMPT }
+      { role: "system", content: GIDEON_SYSTEM_PROMPT }
     ];
 
     // Add personalization context if provided

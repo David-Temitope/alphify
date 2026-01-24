@@ -16,9 +16,12 @@ import {
   X,
   Clock,
   GraduationCap,
-  Loader2
+  Loader2,
+  Plus
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import StudyGroupCard from '@/components/StudyGroupCard';
+import CreateGroupModal from '@/components/CreateGroupModal';
 
 interface UserProfile {
   id: string;
@@ -49,6 +52,16 @@ interface StudyMate {
   created_at: string;
 }
 
+interface StudyGroup {
+  id: string;
+  name: string;
+  admin_id: string;
+  field_of_study: string | null;
+  created_at: string;
+  suspended_until: string | null;
+  warning_count: number | null;
+}
+
 export default function Community() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +69,48 @@ export default function Community() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('discover');
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+
+  // Fetch user's study groups (where they are admin or member)
+  const { data: myGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['my-study-groups', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      // Get groups where user is admin
+      const { data: adminGroups } = await supabase
+        .from('study_groups')
+        .select('*')
+        .eq('admin_id', user.id);
+      
+      // Get groups where user is a member
+      const { data: membershipData } = await supabase
+        .from('study_group_members')
+        .select('group_id')
+        .eq('user_id', user.id);
+      
+      const memberGroupIds = membershipData?.map(m => m.group_id) || [];
+      
+      let memberGroups: StudyGroup[] = [];
+      if (memberGroupIds.length > 0) {
+        const { data } = await supabase
+          .from('study_groups')
+          .select('*')
+          .in('id', memberGroupIds);
+        memberGroups = (data || []) as StudyGroup[];
+      }
+      
+      // Combine and dedupe
+      const allGroups = [...(adminGroups || []), ...memberGroups];
+      const uniqueGroups = allGroups.filter((group, index, self) => 
+        index === self.findIndex(g => g.id === group.id)
+      );
+      
+      return uniqueGroups as StudyGroup[];
+    },
+    enabled: !!user
+  });
+
   // Fetch all users with their profiles and settings
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['community-users', searchQuery],
@@ -239,6 +294,7 @@ export default function Community() {
               )}
             </TabsTrigger>
             <TabsTrigger value="mates">Study Mates ({mateIds.length})</TabsTrigger>
+            <TabsTrigger value="groups">Study Groups</TabsTrigger>
           </TabsList>
 
           {/* Discover Tab */}
@@ -453,7 +509,57 @@ export default function Community() {
               </div>
             )}
           </TabsContent>
+
+          {/* Study Groups Tab */}
+          <TabsContent value="groups" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-semibold text-foreground">Your Study Groups</h2>
+              <Button 
+                onClick={() => setShowCreateGroupModal(true)}
+                className="bg-primary text-primary-foreground"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Group
+              </Button>
+            </div>
+
+            {groupsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : myGroups && myGroups.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {myGroups.map((group) => (
+                  <StudyGroupCard 
+                    key={group.id} 
+                    group={group}
+                    onJoinSession={(sessionId) => navigate(`/session/${sessionId}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-12 rounded-2xl text-center">
+                <Users className="h-16 w-16 text-primary mx-auto mb-6" />
+                <h2 className="font-display text-xl font-semibold mb-2">No study groups yet</h2>
+                <p className="text-muted-foreground mb-6">
+                  Create a group to start collaborative study sessions with your mates!
+                </p>
+                <Button 
+                  onClick={() => setShowCreateGroupModal(true)} 
+                  className="bg-primary text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Group
+                </Button>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
+
+        <CreateGroupModal 
+          open={showCreateGroupModal} 
+          onOpenChange={setShowCreateGroupModal} 
+        />
       </main>
     </div>
   );
