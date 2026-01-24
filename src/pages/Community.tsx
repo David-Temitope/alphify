@@ -87,15 +87,14 @@ export default function Community() {
     },
   });
 
-  // Fetch pending requests (sent and received)
+  // Fetch ALL requests (sent and received) - include all statuses to check for existing requests
   const { data: requests } = useQuery({
     queryKey: ['study-requests'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('study_requests')
         .select('*')
-        .or(`from_user_id.eq.${user!.id},to_user_id.eq.${user!.id}`)
-        .eq('status', 'pending');
+        .or(`from_user_id.eq.${user!.id},to_user_id.eq.${user!.id}`);
       if (error) throw error;
       return data as StudyRequest[];
     },
@@ -117,6 +116,16 @@ export default function Community() {
   // Send request mutation
   const sendRequest = useMutation({
     mutationFn: async (toUserId: string) => {
+      // Check if a request already exists (in any direction)
+      const existingRequest = requests?.find(
+        r => (r.from_user_id === user!.id && r.to_user_id === toUserId) ||
+             (r.from_user_id === toUserId && r.to_user_id === user!.id)
+      );
+      
+      if (existingRequest) {
+        throw new Error('A request already exists with this user');
+      }
+      
       const { error } = await supabase
         .from('study_requests')
         .insert({ from_user_id: user!.id, to_user_id: toUserId });
@@ -174,9 +183,11 @@ export default function Community() {
     },
   });
 
-  const incomingRequests = requests?.filter(r => r.to_user_id === user!.id) || [];
-  const outgoingRequests = requests?.filter(r => r.from_user_id === user!.id) || [];
+  const incomingRequests = requests?.filter(r => r.to_user_id === user!.id && r.status === 'pending') || [];
+  const outgoingRequests = requests?.filter(r => r.from_user_id === user!.id && r.status === 'pending') || [];
   const mateIds = studyMates?.map(m => m.user_id === user!.id ? m.mate_id : m.user_id) || [];
+  // Include ALL request user IDs (pending, accepted, rejected) to prevent duplicate requests
+  const allRequestUserIds = requests?.map(r => r.from_user_id === user!.id ? r.to_user_id : r.from_user_id) || [];
   const pendingUserIds = [...outgoingRequests.map(r => r.to_user_id), ...incomingRequests.map(r => r.from_user_id)];
 
   const renderStars = (rating: number | null) => {
@@ -252,6 +263,7 @@ export default function Community() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {users.map((profile) => {
                   const isMate = mateIds.includes(profile.user_id);
+                  const hasExistingRequest = allRequestUserIds.includes(profile.user_id);
                   const isPending = pendingUserIds.includes(profile.user_id);
 
                   return (
@@ -285,10 +297,10 @@ export default function Community() {
                             <Check className="h-4 w-4 mr-2" />
                             Study Mate
                           </Button>
-                        ) : isPending ? (
+                        ) : hasExistingRequest ? (
                           <Button variant="secondary" size="sm" className="w-full" disabled>
                             <Clock className="h-4 w-4 mr-2" />
-                            Pending
+                            {isPending ? 'Pending' : 'Request Sent'}
                           </Button>
                         ) : (
                           <Button
