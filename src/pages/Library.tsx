@@ -167,9 +167,17 @@ export default function Library() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => {
-                      // Navigate to chat with this file context
-                      navigate(`/chat?file=${file.id}`);
+                    onClick={async () => {
+                      // Create a new conversation and navigate to it with the file
+                      const { data, error } = await supabase
+                        .from('conversations')
+                        .insert({ user_id: user!.id, title: `Discussing: ${file.file_name}` })
+                        .select()
+                        .single();
+                      
+                      if (!error && data) {
+                        navigate(`/chat/${data.id}?file=${file.id}`);
+                      }
                     }}
                     className="text-xs"
                   >

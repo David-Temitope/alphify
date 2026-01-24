@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { formatMathToPlainText } from '@/utils/formatMath';
+import { useVoice } from '@/hooks/useVoice';
+import { Button } from '@/components/ui/button';
+import { Volume2, VolumeX, Check, X, AlertCircle } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,11 +22,26 @@ interface ChatMessageProps {
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isQuiz = message.is_quiz;
+  const { speak, stopSpeaking, isSpeaking } = useVoice();
+  const [isThisSpeaking, setIsThisSpeaking] = useState(false);
+  
+  // Format content to remove LaTeX
+  const formattedContent = formatMathToPlainText(message.content);
+
+  const handleSpeak = () => {
+    if (isThisSpeaking && isSpeaking) {
+      stopSpeaking();
+      setIsThisSpeaking(false);
+    } else {
+      speak(formattedContent);
+      setIsThisSpeaking(true);
+    }
+  };
 
   return (
     <div 
       className={cn(
-        'flex gap-3 animate-fade-in-up',
+        'flex gap-3 animate-fade-in-up group',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}
     >
@@ -36,10 +55,27 @@ export default function ChatMessage({ message }: ChatMessageProps) {
 
       {/* Message Content */}
       <div className={cn(
-        'flex-1 max-w-[80%] rounded-2xl p-4',
+        'flex-1 max-w-[80%] rounded-2xl p-4 relative',
         isUser ? 'chat-bubble-user' : 'chat-bubble-assistant',
         isQuiz && 'border-l-4 border-l-primary'
       )}>
+        {/* Voice button for assistant messages */}
+        {!isUser && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSpeak}
+            className="absolute -right-10 top-1 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+            title={isThisSpeaking && isSpeaking ? 'Stop reading' : 'Read aloud'}
+          >
+            {isThisSpeaking && isSpeaking ? (
+              <VolumeX className="h-4 w-4 text-primary" />
+            ) : (
+              <Volume2 className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+        )}
+
         {isQuiz && (
           <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
             <AlertCircle className="h-4 w-4 text-primary" />
@@ -55,7 +91,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         )}
 
         {isUser ? (
-          <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+          <p className="text-foreground whitespace-pre-wrap">{formattedContent}</p>
         ) : (
           <div className="markdown-content text-foreground">
             <ReactMarkdown
@@ -83,7 +119,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 ),
               }}
             >
-              {message.content}
+              {formattedContent}
             </ReactMarkdown>
           </div>
         )}
