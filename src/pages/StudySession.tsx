@@ -8,8 +8,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, Send, Users, Clock, Loader2, 
-  BookOpen, AlertTriangle, CheckCircle
+  BookOpen, AlertTriangle, CheckCircle, UserPlus
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SessionMessage {
   id: string;
@@ -30,6 +39,11 @@ interface ProfileMap {
   [userId: string]: string | null;
 }
 
+interface GroupMember {
+  id: string;
+  user_id: string;
+}
+
 export default function StudySession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -41,6 +55,8 @@ export default function StudySession() {
   const [streamingContent, setStreamingContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   // Fetch session details
   const { data: session, isLoading: loadingSession } = useQuery({
@@ -48,7 +64,7 @@ export default function StudySession() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('study_sessions')
-        .select('*, study_groups(name)')
+        .select('*, study_groups(name, admin_id)')
         .eq('id', sessionId)
         .single();
       
@@ -58,8 +74,10 @@ export default function StudySession() {
     enabled: !!sessionId
   });
 
+  const isAdmin = session?.study_groups?.admin_id === user?.id;
+
   // Fetch participants
-  const { data: participants } = useQuery({
+  const { data: participants, refetch: refetchParticipants } = useQuery({
     queryKey: ['session-participants', sessionId],
     queryFn: async () => {
       const { data } = await supabase
@@ -71,6 +89,24 @@ export default function StudySession() {
     },
     enabled: !!sessionId
   });
+
+  // Fetch group members (for admin to add)
+  const { data: groupMembers } = useQuery({
+    queryKey: ['group-members', session?.group_id],
+    queryFn: async () => {
+      if (!session?.group_id) return [];
+      const { data } = await supabase
+        .from('study_group_members')
+        .select('id, user_id')
+        .eq('group_id', session.group_id);
+      return (data || []) as GroupMember[];
+    },
+    enabled: !!session?.group_id && isAdmin
+  });
+
+  // Members not yet in session
+  const participantUserIds = participants?.map(p => p.user_id) || [];
+  const availableMembers = groupMembers?.filter(m => !participantUserIds.includes(m.user_id)) || [];
 
   // Fetch messages
   const { data: messages, refetch: refetchMessages } = useQuery({
@@ -89,7 +125,8 @@ export default function StudySession() {
   // Fetch profiles for participants and message authors
   const userIds = [
     ...(participants?.map(p => p.user_id) || []),
-    ...(messages?.filter(m => !m.is_ai_message).map(m => m.user_id) || [])
+    ...(messages?.filter(m => !m.is_ai_message).map(m => m.user_id) || []),
+    ...(availableMembers?.map(m => m.user_id) || [])
   ].filter((id, index, self) => self.indexOf(id) === index);
 
   const { data: profiles } = useQuery({
@@ -167,7 +204,7 @@ export default function StudySession() {
           filter: `session_id=eq.${sessionId}`
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
+          refetchParticipants();
         }
       )
       .subscribe();
@@ -175,7 +212,7 @@ export default function StudySession() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, refetchMessages, queryClient]);
+  }, [sessionId, refetchMessages, refetchParticipants]);
 
   // Timer countdown
   useEffect(() => {
@@ -205,6 +242,39 @@ export default function StudySession() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
+
+  // Add members mutation
+  const addMembers = useMutation({
+    mutationFn: async (memberUserIds: string[]) => {
+      const inserts = memberUserIds.map(userId => ({
+        session_id: sessionId,
+        user_id: userId,
+        is_active: true
+      }));
+      
+      const { error } = await supabase
+        .from('session_participants')
+        .upsert(inserts, { onConflict: 'session_id,user_id' });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchParticipants();
+      setShowAddMembersModal(false);
+      setSelectedMembers([]);
+      toast({
+        title: "Members Added",
+        description: "New participants have been added to the session."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add members",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Send message mutation
   const sendMessage = useMutation({
@@ -280,6 +350,14 @@ export default function StudySession() {
     }
   };
 
+  const toggleMember = (userId: string) => {
+    setSelectedMembers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
   if (loadingSession) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -320,6 +398,16 @@ export default function StudySession() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {isAdmin && isSessionActive && availableMembers.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowAddMembersModal(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Members
+              </Button>
+            )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
               <span>{participants?.length || 0}</span>
@@ -457,6 +545,77 @@ export default function StudySession() {
           </div>
         </div>
       </div>
+
+      {/* Add Members Modal */}
+      <Dialog open={showAddMembersModal} onOpenChange={setShowAddMembersModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Add Group Members
+            </DialogTitle>
+            <DialogDescription>
+              Add other members from your study group to this session
+            </DialogDescription>
+          </DialogHeader>
+
+          {availableMembers.length > 0 ? (
+            <div className="space-y-4">
+              <ScrollArea className="h-[200px] border border-border rounded-lg p-2">
+                <div className="space-y-2">
+                  {availableMembers.map((member) => (
+                    <div 
+                      key={member.id} 
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 cursor-pointer"
+                      onClick={() => toggleMember(member.user_id)}
+                    >
+                      <Checkbox 
+                        checked={selectedMembers.includes(member.user_id)}
+                        onCheckedChange={() => toggleMember(member.user_id)}
+                      />
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+                        {(profiles?.[member.user_id] || 'S').charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-foreground">
+                        {profiles?.[member.user_id] || 'Student'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddMembersModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => addMembers.mutate(selectedMembers)}
+                  disabled={selectedMembers.length === 0 || addMembers.isPending}
+                  className="flex-1 bg-primary text-primary-foreground"
+                >
+                  {addMembers.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    `Add ${selectedMembers.length} Member${selectedMembers.length !== 1 ? 's' : ''}`
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-4">
+              All group members are already in this session.
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

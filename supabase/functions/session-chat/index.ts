@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,7 @@ You are teaching a specific topic to a group of students in real-time. Your role
 - Use bullet points and numbered lists for clarity
 - Include simple examples from everyday life
 - Use emojis sparingly to keep things engaging
+- Address students by their preferred names when available
 
 ## CRITICAL: Math Formatting
 NEVER use LaTeX. Write math in plain text:
@@ -63,9 +65,61 @@ serve(async (req) => {
   try {
     const { sessionId, message, topic, course } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Initialize Supabase client to fetch participant settings
+    let participantContext = "";
+    
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      
+      // Get active participants in the session
+      const { data: participants } = await supabase
+        .from("session_participants")
+        .select("user_id")
+        .eq("session_id", sessionId)
+        .eq("is_active", true);
+      
+      if (participants && participants.length > 0) {
+        const userIds = participants.map(p => p.user_id);
+        
+        // Fetch user settings for all participants
+        const { data: settings } = await supabase
+          .from("user_settings")
+          .select("preferred_name, field_of_study, university_level, explanation_style, courses")
+          .in("user_id", userIds);
+        
+        if (settings && settings.length > 0) {
+          // Combine personalization from all students
+          const preferredNames = settings.map(s => s.preferred_name).filter(Boolean);
+          const fieldsOfStudy = [...new Set(settings.map(s => s.field_of_study).filter(Boolean))];
+          const universityLevels = [...new Set(settings.map(s => s.university_level).filter(Boolean))];
+          const explanationStyles = settings.map(s => s.explanation_style).filter(Boolean);
+          const allCourses = [...new Set(settings.flatMap(s => s.courses || []))];
+          
+          // Determine the most common/appropriate explanation style
+          const styleCounts: Record<string, number> = {};
+          explanationStyles.forEach(style => {
+            styleCounts[style] = (styleCounts[style] || 0) + 1;
+          });
+          const dominantStyle = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "five_year_old";
+          
+          participantContext = `
+## Students in this Session
+- Students: ${preferredNames.length > 0 ? preferredNames.join(", ") : "Several students"}
+- Fields of Study: ${fieldsOfStudy.join(", ") || "Various fields"}
+- University Levels: ${universityLevels.join(", ") || "Various levels"}
+- Preferred Explanation Style: ${dominantStyle === "five_year_old" ? "Simple, like explaining to a 5-year-old" : dominantStyle === "professional" ? "Professional/Academic" : dominantStyle === "complete_beginner" ? "Complete beginner (start from basics)" : "Visual learner (use diagrams and visual descriptions)"}
+- Relevant Courses: ${allCourses.length > 0 ? allCourses.slice(0, 10).join(", ") : "General academics"}
+
+Personalize your teaching for this group. Use their names when addressing them, and adapt your explanations to their collective background.`;
+        }
+      }
     }
 
     const systemPrompt = `${GIDEON_SESSION_PROMPT}
@@ -73,6 +127,7 @@ serve(async (req) => {
 ## Current Session
 - Topic: ${topic}
 - Course: ${course}
+${participantContext}
 
 Stay strictly focused on this topic. Help students understand ${topic} thoroughly.`;
 

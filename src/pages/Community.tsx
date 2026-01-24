@@ -241,9 +241,6 @@ export default function Community() {
   const incomingRequests = requests?.filter(r => r.to_user_id === user!.id && r.status === 'pending') || [];
   const outgoingRequests = requests?.filter(r => r.from_user_id === user!.id && r.status === 'pending') || [];
   const mateIds = studyMates?.map(m => m.user_id === user!.id ? m.mate_id : m.user_id) || [];
-  // Include ALL request user IDs (pending, accepted, rejected) to prevent duplicate requests
-  const allRequestUserIds = requests?.map(r => r.from_user_id === user!.id ? r.to_user_id : r.from_user_id) || [];
-  const pendingUserIds = [...outgoingRequests.map(r => r.to_user_id), ...incomingRequests.map(r => r.from_user_id)];
 
   const renderStars = (rating: number | null) => {
     const stars = Math.round(rating || 0);
@@ -317,62 +314,63 @@ export default function Community() {
               </div>
             ) : users && users.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {users.map((profile) => {
-                  const isMate = mateIds.includes(profile.user_id);
-                  const hasExistingRequest = allRequestUserIds.includes(profile.user_id);
-                  const isPending = pendingUserIds.includes(profile.user_id);
+                {users
+                  .filter(profile => !mateIds.includes(profile.user_id)) // Hide study mates from discover
+                  .map((profile) => {
+                    const isPendingOutgoing = outgoingRequests.some(r => r.to_user_id === profile.user_id);
+                    const isPendingIncoming = incomingRequests.some(r => r.from_user_id === profile.user_id);
 
-                  return (
-                    <div
-                      key={profile.id}
-                      className="glass-card p-4 rounded-xl animate-fade-in"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-lg">
-                          {getUserName(profile).charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-foreground truncate">
-                            {getUserName(profile)}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            {renderStars(profile.settings?.star_rating)}
+                    return (
+                      <div
+                        key={profile.id}
+                        className="glass-card p-4 rounded-xl animate-fade-in"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-lg">
+                            {getUserName(profile).charAt(0).toUpperCase()}
                           </div>
-                          {profile.settings?.field_of_study && (
-                            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                              <GraduationCap className="h-3 w-3" />
-                              <span className="truncate">{profile.settings.field_of_study}</span>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-foreground truncate">
+                              {getUserName(profile)}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              {renderStars(profile.settings?.star_rating)}
                             </div>
+                            {profile.settings?.field_of_study && (
+                              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                                <GraduationCap className="h-3 w-3" />
+                                <span className="truncate">{profile.settings.field_of_study}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          {isPendingOutgoing ? (
+                            <Button variant="secondary" size="sm" className="w-full" disabled>
+                              <Clock className="h-4 w-4 mr-2" />
+                              Request Sent
+                            </Button>
+                          ) : isPendingIncoming ? (
+                            <Button variant="secondary" size="sm" className="w-full" disabled>
+                              <Clock className="h-4 w-4 mr-2" />
+                              Pending Response
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="w-full xp-gradient text-primary-foreground"
+                              onClick={() => sendRequest.mutate(profile.user_id)}
+                              disabled={sendRequest.isPending}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Send Request
+                            </Button>
                           )}
                         </div>
                       </div>
-
-                      <div className="mt-4">
-                        {isMate ? (
-                          <Button variant="secondary" size="sm" className="w-full" disabled>
-                            <Check className="h-4 w-4 mr-2" />
-                            Study Mate
-                          </Button>
-                        ) : hasExistingRequest ? (
-                          <Button variant="secondary" size="sm" className="w-full" disabled>
-                            <Clock className="h-4 w-4 mr-2" />
-                            {isPending ? 'Pending' : 'Request Sent'}
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="w-full xp-gradient text-primary-foreground"
-                            onClick={() => sendRequest.mutate(profile.user_id)}
-                            disabled={sendRequest.isPending}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Send Request
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             ) : (
               <div className="glass-card p-12 rounded-2xl text-center">
