@@ -41,7 +41,7 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
   };
 
   const handleFile = async (file: File) => {
-    // Validate file type - NO IMAGES ALLOWED
+    // Validate file type - Images now allowed with Google AI
     const allowedTypes = [
       'application/pdf',
       'text/plain',
@@ -49,22 +49,15 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-powerpoint',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/png',
+      'image/jpeg',
+      'image/webp',
     ];
-
-    // Check if it's an image file
-    if (file.type.startsWith('image/')) {
-      toast({
-        title: 'Images not supported',
-        description: 'Please upload PDF, Word, or PowerPoint files only. Images are not allowed.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: 'Unsupported file type',
-        description: 'Please upload PDF, Word, or PowerPoint files only.',
+        description: 'Please upload PDF, Word, PowerPoint, or image files.',
         variant: 'destructive',
       });
       return;
@@ -97,9 +90,53 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
 
       if (uploadError) throw uploadError;
 
-      // For text files, read content directly
       let textContent = '';
-      if (uploadedFile.type === 'text/plain') {
+      
+      // Handle image files - analyze with Google AI
+      if (uploadedFile.type.startsWith('image/')) {
+        // Convert image to base64
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Remove the data URL prefix to get just the base64
+            const base64 = result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(uploadedFile);
+        const imageBase64 = await base64Promise;
+
+        // Call the image analysis edge function
+        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-image', {
+          body: {
+            imageBase64,
+            mimeType: uploadedFile.type,
+            prompt: `You are an educational AI assistant. Analyze this image carefully and provide a detailed, educational explanation of what you see.
+
+IMPORTANT RULES:
+1. Describe EXACTLY what is in the image - do not make assumptions
+2. If it's a math problem, solve it step by step showing all work
+3. If it's a diagram, explain each part clearly
+4. If it's text/notes, explain the content
+5. If it's a scientific figure, explain the concepts shown
+6. Use simple language that a student can understand
+7. Format your response with clear sections and numbered steps
+8. NEVER use LaTeX notation - use plain text like × for multiplication, ² for squared
+
+Start your response with: "Looking at your image, I can see..."`,
+          },
+        });
+
+        if (analysisError) {
+          console.error('Image analysis error:', analysisError);
+          textContent = `[User uploaded image: ${uploadedFile.name}. The image analysis is temporarily unavailable. Please describe what's in the image so I can help you.]`;
+        } else {
+          textContent = `[IMAGE ANALYSIS]\n\n${analysisData.analysis}`;
+        }
+      } else if (uploadedFile.type === 'text/plain') {
+        // For text files, read content directly
         textContent = await uploadedFile.text();
       } else if (uploadedFile.type === 'application/pdf') {
         // For PDFs, we'll pass a message to the AI about analyzing the PDF
@@ -178,12 +215,12 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
                 <input
                   type="file"
                   className="hidden"
-                  accept=".pdf,.txt,.doc,.docx,.ppt,.pptx"
+                  accept=".pdf,.txt,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp"
                   onChange={handleFileInput}
                 />
               </label>
               <p className="text-sm text-muted-foreground mt-4">
-                PDF, Word, or PowerPoint files only (max 10MB)
+                PDF, Word, PowerPoint, or images (max 10MB)
               </p>
             </>
           )}
