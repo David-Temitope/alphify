@@ -55,7 +55,7 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [activeTab, setActiveTab] = useState('discover');
   // Fetch all users with their profiles and settings
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['community-users', searchQuery],
@@ -149,7 +149,10 @@ export default function Community() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['study-requests'] });
       queryClient.invalidateQueries({ queryKey: ['study-mates'] });
+      queryClient.invalidateQueries({ queryKey: ['community-users'] });
       toast({ title: 'Request accepted!', description: 'You are now study mates.' });
+      // Navigate to study mates tab
+      setActiveTab('mates');
     },
     onError: (error: any) => {
       toast({ title: 'Failed to accept', description: error.message, variant: 'destructive' });
@@ -213,7 +216,7 @@ export default function Community() {
       </header>
 
       <main className="max-w-6xl mx-auto p-6 md:p-8">
-        <Tabs defaultValue="discover" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-secondary">
             <TabsTrigger value="discover">Discover</TabsTrigger>
             <TabsTrigger value="requests">

@@ -41,7 +41,7 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
   };
 
   const handleFile = async (file: File) => {
-    // Validate file type
+    // Validate file type - NO IMAGES ALLOWED
     const allowedTypes = [
       'application/pdf',
       'text/plain',
@@ -49,14 +49,22 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-powerpoint',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'image/png',
-      'image/jpeg',
     ];
+
+    // Check if it's an image file
+    if (file.type.startsWith('image/')) {
+      toast({
+        title: 'Images not supported',
+        description: 'Please upload PDF, Word, or PowerPoint files only. Images are not allowed.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: 'Unsupported file type',
-        description: 'Please upload PDF, Word, PowerPoint, or image files.',
+        description: 'Please upload PDF, Word, or PowerPoint files only.',
         variant: 'destructive',
       });
       return;
@@ -170,12 +178,12 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
                 <input
                   type="file"
                   className="hidden"
-                  accept=".pdf,.txt,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg"
+                  accept=".pdf,.txt,.doc,.docx,.ppt,.pptx"
                   onChange={handleFileInput}
                 />
               </label>
               <p className="text-sm text-muted-foreground mt-4">
-                PDF, Word, PowerPoint, or images (max 10MB)
+                PDF, Word, or PowerPoint files only (max 10MB)
               </p>
             </>
           )}
