@@ -10,7 +10,8 @@ import {
   LogOut, 
   ChevronRight,
   Sparkles,
-  FileText
+  FileText,
+  Settings
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -83,6 +84,14 @@ export default function Dashboard() {
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Library
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/settings')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
             </Button>
             <Button 
               variant="ghost" 

@@ -153,6 +153,54 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          ai_personality: string[] | null
+          country: string | null
+          courses: string[] | null
+          created_at: string
+          field_of_study: string | null
+          id: string
+          preferred_name: string | null
+          quiz_score_percentage: number | null
+          student_type: string | null
+          total_quizzes_taken: number | null
+          university_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_personality?: string[] | null
+          country?: string | null
+          courses?: string[] | null
+          created_at?: string
+          field_of_study?: string | null
+          id?: string
+          preferred_name?: string | null
+          quiz_score_percentage?: number | null
+          student_type?: string | null
+          total_quizzes_taken?: number | null
+          university_level?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_personality?: string[] | null
+          country?: string | null
+          courses?: string[] | null
+          created_at?: string
+          field_of_study?: string | null
+          id?: string
+          preferred_name?: string | null
+          quiz_score_percentage?: number | null
+          student_type?: string | null
+          total_quizzes_taken?: number | null
+          university_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

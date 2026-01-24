@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useVoice } from '@/hooks/useVoice';
 import ChatMessage from '@/components/ChatMessage';
 import FileUpload from '@/components/FileUpload';
 import { 
@@ -15,7 +16,10 @@ import {
   Loader2,
   MessageSquarePlus,
   Menu,
-  X
+  X,
+  Mic,
+  MicOff,
+  Settings
 } from 'lucide-react';
 
 interface Message {
@@ -27,8 +31,22 @@ interface Message {
   created_at: string;
 }
 
+interface UserSettings {
+  student_type: string | null;
+  field_of_study: string | null;
+  country: string | null;
+  university_level: string | null;
+  ai_personality: string[];
+  courses: string[];
+  preferred_name: string | null;
+  quiz_score_percentage: number;
+  total_quizzes_taken: number;
+}
+
 export default function Chat() {
   const { conversationId } = useParams();
+  const [searchParams] = useSearchParams();
+  const fileIdFromLibrary = searchParams.get('file');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,6 +60,55 @@ export default function Chat() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  // Voice input
+  const { isListening, transcript, startListening, stopListening, isSupported: voiceSupported } = useVoice({
+    onTranscript: (text) => {
+      setInput(prev => prev + (prev ? ' ' : '') + text);
+    },
+  });
+
+  // Fetch user settings for personalization
+  const { data: userSettings } = useQuery({
+    queryKey: ['user-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as UserSettings | null;
+    },
+  });
+
+  // Fetch file from library if coming from library page
+  const { data: libraryFile } = useQuery({
+    queryKey: ['library-file', fileIdFromLibrary],
+    queryFn: async () => {
+      if (!fileIdFromLibrary) return null;
+      const { data, error } = await supabase
+        .from('uploaded_files')
+        .select('*')
+        .eq('id', fileIdFromLibrary)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!fileIdFromLibrary,
+  });
+
+  // Set file content when coming from library
+  useEffect(() => {
+    if (libraryFile && !fileContent) {
+      const content = `[User wants to discuss file: ${libraryFile.file_name} (${libraryFile.file_type}). This is a document from their library that they'd like help understanding. Please ask them what specific topics from this file they'd like to explore.]`;
+      setFileContent(content);
+      toast({
+        title: 'File loaded from library',
+        description: `Ready to discuss: ${libraryFile.file_name}`,
+      });
+    }
+  }, [libraryFile, fileContent, toast]);
 
   // Fetch conversation
   const { data: conversation } = useQuery({
@@ -101,6 +168,13 @@ export default function Chat() {
     }
   }, [input]);
 
+  // Update input with voice transcript
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isStreaming || !conversationId) return;
 
@@ -133,6 +207,22 @@ export default function Chat() {
       // Add current message
       messageHistory.push({ role: 'user', content: userMessage });
 
+      // Build personalization context
+      let personalizationContext = '';
+      if (userSettings) {
+        personalizationContext = `
+Student Profile:
+- Name: ${userSettings.preferred_name || 'Student'}
+- Student Type: ${userSettings.student_type || 'Not specified'}
+- Field of Study: ${userSettings.field_of_study || 'Not specified'}
+- University Level: ${userSettings.university_level || 'Not specified'}
+- Country: ${userSettings.country || 'Not specified'}
+- Courses: ${userSettings.courses?.join(', ') || 'Not specified'}
+- Preferred AI Personality: ${userSettings.ai_personality?.join(', ') || 'friendly'}
+- Quiz Performance: ${userSettings.quiz_score_percentage || 0}% (${userSettings.total_quizzes_taken || 0} quizzes taken)
+`;
+      }
+
       // Call AI
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/xplane-chat`, {
         method: 'POST',
@@ -142,7 +232,8 @@ export default function Chat() {
         },
         body: JSON.stringify({ 
           messages: messageHistory,
-          fileContent: fileContent 
+          fileContent: fileContent,
+          personalization: personalizationContext,
         }),
       });
 
@@ -228,7 +319,7 @@ export default function Chat() {
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, conversationId, user, messages, fileContent, refetchMessages, toast, queryClient]);
+  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -257,6 +348,14 @@ export default function Chat() {
       title: 'Document ready!',
       description: 'Your file has been processed. Ask me anything about it!',
     });
+  };
+
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
   };
 
   return (
@@ -307,8 +406,12 @@ export default function Chat() {
             </div>
           </div>
 
-          {/* Back to Dashboard */}
-          <div className="p-4 border-t border-sidebar-border">
+          {/* Bottom Nav */}
+          <div className="p-4 border-t border-sidebar-border space-y-2">
+            <Button variant="ghost" onClick={() => navigate('/settings')} className="w-full justify-start text-sidebar-foreground">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/dashboard')} className="w-full justify-start text-sidebar-foreground">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Dashboard
@@ -337,7 +440,7 @@ export default function Chat() {
               {conversation?.title || 'New Conversation'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Ask me anything - I'll explain it simply
+              {libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
             </p>
           </div>
         </header>
@@ -350,7 +453,7 @@ export default function Chat() {
                 Xp
               </div>
               <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
-                Hey there! I'm Xplane 👋
+                Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Xplane 👋
               </h2>
               <p className="text-muted-foreground max-w-md mb-8">
                 I'm here to help you understand complex topics using real-world examples from your everyday student life. 
@@ -403,10 +506,20 @@ export default function Chat() {
         {/* File Content Indicator */}
         {fileContent && (
           <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between">
-            <span className="text-sm text-primary">📄 Document attached - Ask me anything about it!</span>
+            <span className="text-sm text-primary">
+              📄 {libraryFile ? libraryFile.file_name : 'Document attached'} - Ask me anything about it!
+            </span>
             <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
               <X className="h-4 w-4" />
             </Button>
+          </div>
+        )}
+
+        {/* Voice listening indicator */}
+        {isListening && (
+          <div className="mx-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2 animate-pulse">
+            <Mic className="h-4 w-4 text-destructive" />
+            <span className="text-sm text-destructive">Listening... Speak now</span>
           </div>
         )}
 
@@ -421,6 +534,17 @@ export default function Chat() {
             >
               <Paperclip className="h-4 w-4" />
             </Button>
+
+            {voiceSupported && (
+              <Button 
+                variant={isListening ? "destructive" : "outline"}
+                size="icon"
+                onClick={handleVoiceToggle}
+                className="flex-shrink-0"
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            )}
             
             <div className="flex-1 relative">
               <Textarea
