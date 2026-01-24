@@ -71,10 +71,10 @@ export default function Dashboard() {
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl xp-gradient flex items-center justify-center font-display font-bold text-lg text-primary-foreground">
-              Xp
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-display font-bold text-lg text-primary-foreground shadow-lg shadow-primary/25">
+              G
             </div>
-            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Xplane</span>
+            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Gideon</span>
           </div>
 
           <nav className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export default function Dashboard() {
             onClick={handleNewChat}
             className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left"
           >
-            <div className="w-14 h-14 rounded-xl xp-gradient flex items-center justify-center xp-glow-sm group-hover:xp-glow transition-all">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-all">
               <MessageSquarePlus className="h-7 w-7 text-primary-foreground" />
             </div>
             <div>
@@ -193,7 +193,7 @@ export default function Dashboard() {
               <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="font-display font-semibold text-lg mb-2">No conversations yet</h3>
               <p className="text-muted-foreground mb-4">Start your first chat and let me help you understand anything!</p>
-              <Button onClick={handleNewChat} className="xp-gradient text-primary-foreground">
+              <Button onClick={handleNewChat} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Start Learning
               </Button>

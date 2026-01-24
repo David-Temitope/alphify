@@ -41,6 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      group_warnings: {
+        Row: {
+          group_id: string
+          id: string
+          reason: string
+          session_id: string | null
+          warned_at: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          reason: string
+          session_id?: string | null
+          warned_at?: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          reason?: string
+          session_id?: string | null
+          warned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_warnings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_warnings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -109,6 +148,117 @@ export type Database = {
         }
         Relationships: []
       }
+      session_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_ai_message: boolean | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_ai_message?: boolean | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_ai_message?: boolean | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_participants: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          joined_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_quiz_responses: {
+        Row: {
+          correct_answer: string | null
+          id: string
+          is_correct: boolean | null
+          points_earned: number | null
+          quiz_question: string
+          session_id: string
+          submitted_at: string
+          user_answer: string
+          user_id: string
+        }
+        Insert: {
+          correct_answer?: string | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          quiz_question: string
+          session_id: string
+          submitted_at?: string
+          user_answer: string
+          user_id: string
+        }
+        Update: {
+          correct_answer?: string | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          quiz_question?: string
+          session_id?: string
+          submitted_at?: string
+          user_answer?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_quiz_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_group_members: {
         Row: {
           group_id: string
@@ -145,7 +295,9 @@ export type Database = {
           field_of_study: string | null
           id: string
           name: string
+          suspended_until: string | null
           updated_at: string
+          warning_count: number | null
         }
         Insert: {
           admin_id: string
@@ -153,7 +305,9 @@ export type Database = {
           field_of_study?: string | null
           id?: string
           name: string
+          suspended_until?: string | null
           updated_at?: string
+          warning_count?: number | null
         }
         Update: {
           admin_id?: string
@@ -161,7 +315,9 @@ export type Database = {
           field_of_study?: string | null
           id?: string
           name?: string
+          suspended_until?: string | null
           updated_at?: string
+          warning_count?: number | null
         }
         Relationships: []
       }
@@ -212,6 +368,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          course: string
+          created_at: string
+          created_by: string
+          duration_minutes: number
+          ends_at: string | null
+          group_id: string
+          id: string
+          started_at: string | null
+          status: string
+          topic: string
+        }
+        Insert: {
+          course: string
+          created_at?: string
+          created_by: string
+          duration_minutes?: number
+          ends_at?: string | null
+          group_id: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          topic: string
+        }
+        Update: {
+          course?: string
+          created_at?: string
+          created_by?: string
+          duration_minutes?: number
+          ends_at?: string | null
+          group_id?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       uploaded_files: {
         Row: {

@@ -12,6 +12,7 @@ import Chat from "./pages/Chat";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
+import StudySession from "./pages/StudySession";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/session/:sessionId"
+              element={
+                <ProtectedRoute>
+                  <StudySession />
                 </ProtectedRoute>
               }
             />
