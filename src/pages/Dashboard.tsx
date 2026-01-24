@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Sparkles,
   FileText,
-  Settings
+  Settings,
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -84,6 +85,14 @@ export default function Dashboard() {
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Library
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/community')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Community
             </Button>
             <Button 
               variant="ghost" 

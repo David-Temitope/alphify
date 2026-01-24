@@ -19,7 +19,8 @@ import {
   X,
   Mic,
   MicOff,
-  Settings
+  Settings,
+  Trash2
 } from 'lucide-react';
 
 interface Message {
@@ -41,6 +42,7 @@ interface UserSettings {
   preferred_name: string | null;
   quiz_score_percentage: number;
   total_quizzes_taken: number;
+  explanation_style: string | null;
 }
 
 export default function Chat() {
@@ -219,6 +221,7 @@ Student Profile:
 - Country: ${userSettings.country || 'Not specified'}
 - Courses: ${userSettings.courses?.join(', ') || 'Not specified'}
 - Preferred AI Personality: ${userSettings.ai_personality?.join(', ') || 'friendly'}
+- Explanation Style: ${userSettings.explanation_style || 'five_year_old'}
 - Quiz Performance: ${userSettings.quiz_score_percentage || 0}% (${userSettings.total_quizzes_taken || 0} quizzes taken)
 `;
       }
@@ -388,20 +391,45 @@ Student Profile:
           <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
             <div className="space-y-1">
               {allConversations?.map((conv) => (
-                <button
+                <div
                   key={conv.id}
-                  onClick={() => {
-                    navigate(`/chat/${conv.id}`);
-                    setShowSidebar(false);
-                  }}
-                  className={`w-full text-left p-3 rounded-lg text-sm transition-colors truncate ${
+                  className={`w-full text-left p-3 rounded-lg text-sm transition-colors flex items-center justify-between group ${
                     conv.id === conversationId 
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground' 
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                   }`}
                 >
-                  {conv.title}
-                </button>
+                  <button
+                    onClick={() => {
+                      navigate(`/chat/${conv.id}`);
+                      setShowSidebar(false);
+                    }}
+                    className="flex-1 truncate text-left"
+                  >
+                    {conv.title}
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const { error } = await supabase
+                        .from('conversations')
+                        .delete()
+                        .eq('id', conv.id);
+                      if (!error) {
+                        queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
+                        if (conv.id === conversationId) {
+                          navigate('/dashboard');
+                        }
+                        toast({ title: 'Conversation deleted' });
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
