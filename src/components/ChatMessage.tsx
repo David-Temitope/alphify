@@ -93,16 +93,16 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         {isUser ? (
           <p className="text-foreground whitespace-pre-wrap">{formattedContent}</p>
         ) : (
-          <div className="markdown-content text-foreground">
+          <div className="markdown-content text-foreground space-y-4">
             <ReactMarkdown
               components={{
-                p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
-                h1: ({ children }) => <h1 className="text-xl font-bold mt-4 mb-2 gradient-text">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-lg font-semibold mt-3 mb-2">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-base font-medium mt-2 mb-1">{children}</h3>,
-                ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
-                li: ({ children }) => <li className="text-foreground">{children}</li>,
+                p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
+                h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-3 gradient-text">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-3">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-base font-medium mt-4 mb-2">{children}</h3>,
+                ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
+                li: ({ children }) => <li className="text-foreground leading-relaxed pl-1">{children}</li>,
                 strong: ({ children }) => <strong className="font-semibold text-primary">{children}</strong>,
                 em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
                 code: ({ children, className }) => {
@@ -110,13 +110,14 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                   return isInline ? (
                     <code className="bg-secondary px-1.5 py-0.5 rounded text-sm font-mono text-primary">{children}</code>
                   ) : (
-                    <code className="block bg-secondary p-3 rounded-lg text-sm font-mono overflow-x-auto">{children}</code>
+                    <code className="block bg-secondary p-3 rounded-lg text-sm font-mono overflow-x-auto my-3">{children}</code>
                   );
                 },
-                pre: ({ children }) => <pre className="bg-secondary p-4 rounded-lg mb-3 overflow-x-auto">{children}</pre>,
+                pre: ({ children }) => <pre className="bg-secondary p-4 rounded-lg my-4 overflow-x-auto">{children}</pre>,
                 blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-primary pl-4 italic my-3 text-muted-foreground">{children}</blockquote>
+                  <blockquote className="border-l-4 border-primary pl-4 italic my-4 text-muted-foreground">{children}</blockquote>
                 ),
+                br: () => <br className="my-2" />,
               }}
             >
               {formattedContent}

@@ -264,29 +264,41 @@
   }
 }
 
-/* Markdown content styling */
+/* Markdown content styling - clear, readable formatting */
+.markdown-content {
+  @apply space-y-4;
+}
+
 .markdown-content h1 {
-  @apply text-2xl font-bold mt-6 mb-4 gradient-text;
+  @apply text-2xl font-bold mt-6 mb-4 gradient-text block;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-semibold mt-5 mb-3 text-foreground;
+  @apply text-xl font-semibold mt-5 mb-3 text-foreground block;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-medium mt-4 mb-2 text-foreground;
+  @apply text-lg font-medium mt-4 mb-2 text-foreground block;
 }
 
 .markdown-content p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-4 leading-relaxed block;
 }
 
-.markdown-content ul, .markdown-content ol {
-  @apply mb-4 pl-6 space-y-2;
+.markdown-content ul {
+  @apply mb-4 pl-6 space-y-2 list-disc block;
+}
+
+.markdown-content ol {
+  @apply mb-4 pl-6 space-y-2 list-decimal block;
 }
 
 .markdown-content li {
-  @apply leading-relaxed;
+  @apply leading-relaxed block py-1;
+}
+
+.markdown-content li::marker {
+  @apply text-primary;
 }
 
 .markdown-content code {
@@ -294,11 +306,11 @@
 }
 
 .markdown-content pre {
-  @apply bg-secondary p-4 rounded-lg mb-4 overflow-x-auto;
+  @apply bg-secondary p-4 rounded-lg my-4 overflow-x-auto block;
 }
 
 .markdown-content pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 block;
 }
 
 .markdown-content strong {
@@ -306,5 +318,10 @@
 }
 
 .markdown-content blockquote {
-  @apply border-l-4 border-primary pl-4 italic my-4 text-muted-foreground;
+  @apply border-l-4 border-primary pl-4 italic my-4 text-muted-foreground block;
+}
+
+/* Ensure proper line breaks for math and structured content */
+.markdown-content br {
+  @apply block my-2;
 }

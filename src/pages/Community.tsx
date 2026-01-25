@@ -111,7 +111,7 @@ export default function Community() {
     enabled: !!user
   });
 
-  // Fetch all users with their profiles and settings
+  // Fetch all users with their profiles and public settings
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['community-users', searchQuery],
     queryFn: async () => {
@@ -123,20 +123,21 @@ export default function Community() {
       const { data: profiles, error } = await query;
       if (error) throw error;
 
-      // Get settings for these users
+      // Get public profile info (star_rating, field_of_study) from the public view
       const userIds = profiles?.map(p => p.user_id) || [];
-      const { data: settings } = await supabase
-        .from('user_settings')
-        .select('user_id, field_of_study, star_rating, preferred_name')
+      const { data: publicSettings } = await supabase
+        .from('user_public_profiles')
+        .select('user_id, field_of_study, star_rating')
         .in('user_id', userIds);
 
-      // Combine profiles with settings
+      // Combine profiles with public settings
       return profiles?.map(profile => ({
         ...profile,
-        settings: settings?.find(s => s.user_id === profile.user_id),
+        settings: publicSettings?.find(s => s.user_id === profile.user_id),
       })).filter(u => {
         if (!searchQuery) return true;
-        const name = u.settings?.preferred_name || u.full_name || '';
+        // Search by name from profile (preferred_name is not exposed publicly)
+        const name = u.full_name || '';
         return name.toLowerCase().includes(searchQuery.toLowerCase());
       });
     },
@@ -198,17 +199,40 @@ export default function Community() {
   // Accept request mutation
   const acceptRequest = useMutation({
     mutationFn: async (request: StudyRequest) => {
-      // Update request status
-      await supabase
+      // Update request status first
+      const { error: updateError } = await supabase
         .from('study_requests')
         .update({ status: 'accepted' })
         .eq('id', request.id);
+      
+      if (updateError) throw updateError;
 
-      // Create study mate connections (both directions)
-      await supabase.from('study_mates').insert([
-        { user_id: request.from_user_id, mate_id: request.to_user_id },
-        { user_id: request.to_user_id, mate_id: request.from_user_id },
-      ]);
+      // Create study mate connections (both directions) - insert one by one to handle individually
+      const { error: mate1Error } = await supabase.from('study_mates').insert({
+        user_id: request.from_user_id,
+        mate_id: request.to_user_id,
+      });
+      
+      if (mate1Error && !mate1Error.message.includes('duplicate')) {
+        console.error('Error creating first mate connection:', mate1Error);
+        throw mate1Error;
+      }
+
+      const { error: mate2Error } = await supabase.from('study_mates').insert({
+        user_id: request.to_user_id,
+        mate_id: request.from_user_id,
+      });
+      
+      if (mate2Error && !mate2Error.message.includes('duplicate')) {
+        console.error('Error creating second mate connection:', mate2Error);
+        throw mate2Error;
+      }
+
+      // Delete the request after successful acceptance to prevent "already exists" errors
+      await supabase
+        .from('study_requests')
+        .delete()
+        .eq('id', request.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['study-requests'] });
@@ -219,6 +243,7 @@ export default function Community() {
       setActiveTab('mates');
     },
     onError: (error: any) => {
+      console.error('Accept request error:', error);
       toast({ title: 'Failed to accept', description: error.message, variant: 'destructive' });
     },
   });
@@ -257,7 +282,8 @@ export default function Community() {
   };
 
   const getUserName = (profile: any) => {
-    return profile.settings?.preferred_name || profile.full_name || 'Student';
+    // Use full_name from profile (preferred_name is private and not exposed in public view)
+    return profile.full_name || 'Student';
   };
 
   return (
