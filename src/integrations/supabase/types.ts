@@ -516,7 +516,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_public_profiles: {
+        Row: {
+          field_of_study: string | null
+          star_rating: number | null
+          user_id: string | null
+        }
+        Insert: {
+          field_of_study?: string | null
+          star_rating?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          field_of_study?: string | null
+          star_rating?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
