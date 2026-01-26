@@ -20,7 +20,8 @@ import {
   Mic,
   MicOff,
   Settings,
-  Trash2
+  Trash2,
+  BookOpen
 } from 'lucide-react';
 
 interface Message {
@@ -369,10 +370,10 @@ Student Profile:
           {/* Sidebar Header */}
           <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg xp-gradient flex items-center justify-center font-display font-bold text-primary-foreground">
-                Xp
+            <div className="w-9 h-9 rounded-lg xp-gradient flex items-center justify-center font-display font-bold text-primary-foreground">
+                G
               </div>
-              <span className="font-display font-semibold text-sidebar-foreground">Xplane</span>
+              <span className="font-display font-semibold text-sidebar-foreground">Gideon</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="lg:hidden">
               <X className="h-5 w-5" />
@@ -457,9 +458,9 @@ Student Profile:
       )}
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Chat Header */}
-        <header className="border-b border-border bg-background/50 backdrop-blur-xl p-4 flex items-center gap-4">
+        <header className="sticky top-0 z-10 border-b border-border bg-background/50 backdrop-blur-xl p-4 flex items-center gap-4 flex-shrink-0">
           <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>
@@ -478,10 +479,10 @@ Student Profile:
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
-                Xp
+                G
               </div>
               <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
-                Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Xplane 👋
+                Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Gideon 👋
               </h2>
               <p className="text-muted-foreground max-w-md mb-8">
                 I'm here to help you understand complex topics using real-world examples from your everyday student life. 
@@ -524,7 +525,7 @@ Student Profile:
                 <span className="typing-dot" />
                 <span className="typing-dot" />
               </div>
-              <span className="text-sm">Xplane is thinking...</span>
+              <span className="text-sm">Gideon is thinking...</span>
             </div>
           )}
 
@@ -533,13 +534,27 @@ Student Profile:
 
         {/* File Content Indicator */}
         {fileContent && (
-          <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between">
+          <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-2 flex-wrap">
             <span className="text-sm text-primary">
               📄 {libraryFile ? libraryFile.file_name : 'Document attached'} - Ask me anything about it!
             </span>
-            <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-primary border-primary/30 hover:bg-primary/10"
+                onClick={() => {
+                  setInput('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
+                  setTimeout(() => handleSendMessage(), 100);
+                }}
+              >
+                <BookOpen className="h-4 w-4 mr-1" />
+                Lecture This PDF
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
 
@@ -552,8 +567,8 @@ Student Profile:
         )}
 
         {/* Input Area */}
-        <div className="border-t border-border bg-background/50 backdrop-blur-xl p-4">
-          <div className="max-w-4xl mx-auto flex items-end gap-3">
+        <div className="sticky bottom-0 z-10 border-t border-border bg-background/50 backdrop-blur-xl p-4 flex-shrink-0">
+          <div className="max-w-5xl mx-auto flex items-end gap-2 md:gap-3">
             <Button 
               variant="outline" 
               size="icon"
@@ -581,7 +596,7 @@ Student Profile:
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything... I'll explain it simply"
-                className="min-h-[52px] max-h-[200px] resize-none bg-secondary border-border focus:border-primary input-glow pr-12"
+                className="min-h-[52px] max-h-[200px] resize-none bg-secondary border-border focus:border-primary input-glow pr-12 transition-all duration-200 focus:min-h-[80px]"
                 rows={1}
               />
             </div>

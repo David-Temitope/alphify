@@ -86,6 +86,7 @@ interface UserSettings {
   courses: string[];
   preferred_name: string | null;
   explanation_style: string | null;
+  exam_sample_text: string | null;
 }
 
 export default function Settings() {
@@ -103,6 +104,7 @@ export default function Settings() {
     courses: [],
     preferred_name: null,
     explanation_style: 'five_year_old',
+    exam_sample_text: null,
   });
   const [customCourse, setCustomCourse] = useState('');
 
@@ -130,6 +132,7 @@ export default function Settings() {
         courses: existingSettings.courses || [],
         preferred_name: existingSettings.preferred_name,
         explanation_style: (existingSettings as any).explanation_style || 'five_year_old',
+        exam_sample_text: (existingSettings as any).exam_sample_text || null,
       });
     }
   }, [existingSettings]);
@@ -450,6 +453,31 @@ export default function Settings() {
               className="bg-secondary border-border"
             />
             <Button variant="outline" onClick={addCustomCourse}>Add</Button>
+          </div>
+        </section>
+
+        {/* Exam Question Style */}
+        <section className="glass-card p-6 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold">Exam Question Style</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes.
+          </p>
+          
+          <div>
+            <Label htmlFor="exam_sample">Sample Exam Questions</Label>
+            <textarea
+              id="exam_sample"
+              placeholder="Paste sample exam questions here...&#10;&#10;Example:&#10;1. Define osmosis and explain its importance in plant cells. (10 marks)&#10;2. Calculate the molarity of a solution containing... (5 marks)"
+              value={settings.exam_sample_text || ''}
+              onChange={(e) => setSettings(prev => ({ ...prev, exam_sample_text: e.target.value }))}
+              className="mt-2 w-full min-h-[150px] rounded-lg bg-secondary border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              These samples help Gideon set questions in the same style as your professor.
+            </p>
           </div>
         </section>
       </main>

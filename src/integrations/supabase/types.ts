@@ -466,6 +466,8 @@ export type Database = {
           country: string | null
           courses: string[] | null
           created_at: string
+          exam_sample_file_id: string | null
+          exam_sample_text: string | null
           explanation_style: string | null
           field_of_study: string | null
           id: string
@@ -483,6 +485,8 @@ export type Database = {
           country?: string | null
           courses?: string[] | null
           created_at?: string
+          exam_sample_file_id?: string | null
+          exam_sample_text?: string | null
           explanation_style?: string | null
           field_of_study?: string | null
           id?: string
@@ -500,6 +504,8 @@ export type Database = {
           country?: string | null
           courses?: string[] | null
           created_at?: string
+          exam_sample_file_id?: string | null
+          exam_sample_text?: string | null
           explanation_style?: string | null
           field_of_study?: string | null
           id?: string
@@ -512,31 +518,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_exam_sample_file_id_fkey"
+            columns: ["exam_sample_file_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      user_public_profiles: {
-        Row: {
-          field_of_study: string | null
-          star_rating: number | null
-          user_id: string | null
-        }
-        Insert: {
-          field_of_study?: string | null
-          star_rating?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          field_of_study?: string | null
-          star_rating?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_profiles: {
+        Args: never
+        Returns: {
+          field_of_study: string
+          star_rating: number
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -264,6 +264,33 @@
   }
 }
 
+/* Chat bubble styling */
+.chat-bubble-user {
+  @apply bg-primary/20 border border-primary/30 text-foreground;
+}
+
+.chat-bubble-assistant {
+  @apply bg-secondary border border-border text-foreground;
+}
+
+/* Calculation card for math-heavy responses */
+.calculation-card {
+  @apply bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-primary/30;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.calculation-card p {
+  @apply leading-loose;
+}
+
+.calculation-card li {
+  @apply py-1;
+}
+
+.calculation-card code {
+  @apply bg-primary/10 text-primary;
+}
+
 /* Markdown content styling - clear, readable formatting */
 .markdown-content {
   @apply space-y-4;

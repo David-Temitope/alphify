@@ -77,38 +77,42 @@ export default function Dashboard() {
             <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Gideon</span>
           </div>
 
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1 md:gap-2">
             <Button 
               variant="ghost" 
+              size="icon"
               onClick={() => navigate('/library')}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground md:w-auto md:px-3"
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Library
+              <BookOpen className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Library</span>
             </Button>
             <Button 
               variant="ghost" 
+              size="icon"
               onClick={() => navigate('/community')}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground md:w-auto md:px-3"
             >
-              <Users className="h-4 w-4 mr-2" />
-              Community
+              <Users className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Community</span>
             </Button>
             <Button 
               variant="ghost" 
+              size="icon"
               onClick={() => navigate('/settings')}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground md:w-auto md:px-3"
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
+              <Settings className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Settings</span>
             </Button>
             <Button 
               variant="ghost" 
+              size="icon"
               onClick={handleSignOut}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground md:w-auto md:px-3"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
             </Button>
           </nav>
         </div>

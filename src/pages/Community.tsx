@@ -123,17 +123,13 @@ export default function Community() {
       const { data: profiles, error } = await query;
       if (error) throw error;
 
-      // Get public profile info (star_rating, field_of_study) from the public view
-      const userIds = profiles?.map(p => p.user_id) || [];
-      const { data: publicSettings } = await supabase
-        .from('user_public_profiles')
-        .select('user_id, field_of_study, star_rating')
-        .in('user_id', userIds);
+      // Get public profile info (star_rating, field_of_study) from the security definer function
+      const { data: publicSettings } = await supabase.rpc('get_public_profiles');
 
       // Combine profiles with public settings
       return profiles?.map(profile => ({
         ...profile,
-        settings: publicSettings?.find(s => s.user_id === profile.user_id),
+        settings: publicSettings?.find((s: { user_id: string; field_of_study: string | null; star_rating: number | null }) => s.user_id === profile.user_id) as { user_id: string; field_of_study: string | null; star_rating: number | null } | undefined,
       })).filter(u => {
         if (!searchQuery) return true;
         // Search by name from profile (preferred_name is not exposed publicly)
@@ -248,12 +244,12 @@ export default function Community() {
     },
   });
 
-  // Reject request mutation
+  // Reject request mutation - delete instead of update to avoid permission issues
   const rejectRequest = useMutation({
     mutationFn: async (requestId: string) => {
       const { error } = await supabase
         .from('study_requests')
-        .update({ status: 'rejected' })
+        .delete()
         .eq('id', requestId);
       if (error) throw error;
     },
@@ -291,14 +287,14 @@ export default function Community() {
       {/* Header */}
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between p-4 md:px-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="md:w-auto md:px-3">
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Back</span>
             </Button>
-            <div className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-primary" />
-              <h1 className="font-display font-semibold text-xl text-foreground">Community</h1>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              <h1 className="font-display font-semibold text-lg md:text-xl text-foreground">Community</h1>
             </div>
           </div>
         </div>

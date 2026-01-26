@@ -88,10 +88,10 @@ serve(async (req) => {
       if (participants && participants.length > 0) {
         const userIds = participants.map(p => p.user_id);
         
-        // Fetch user settings for all participants
+        // Fetch user settings for all participants (including exam samples)
         const { data: settings } = await supabase
           .from("user_settings")
-          .select("preferred_name, field_of_study, university_level, explanation_style, courses")
+          .select("preferred_name, field_of_study, university_level, explanation_style, courses, exam_sample_text")
           .in("user_id", userIds);
         
         if (settings && settings.length > 0) {
@@ -101,6 +101,7 @@ serve(async (req) => {
           const universityLevels = [...new Set(settings.map(s => s.university_level).filter(Boolean))];
           const explanationStyles = settings.map(s => s.explanation_style).filter(Boolean);
           const allCourses = [...new Set(settings.flatMap(s => s.courses || []))];
+          const examSamples = settings.map(s => s.exam_sample_text).filter(Boolean);
           
           // Determine the most common/appropriate explanation style
           const styleCounts: Record<string, number> = {};
@@ -109,6 +110,13 @@ serve(async (req) => {
           });
           const dominantStyle = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "five_year_old";
           
+          // Build merged exam sample context
+          let examSampleContext = "";
+          if (examSamples.length > 0) {
+            examSampleContext = `\n\n## Exam Question Style Reference
+The participants have provided sample exam questions from their professors. When generating quizzes or exams, follow this style:\n\n${examSamples.join("\n\n---\n\n")}`;
+          }
+
           participantContext = `
 ## Students in this Session
 - Students: ${preferredNames.length > 0 ? preferredNames.join(", ") : "Several students"}
@@ -116,6 +124,7 @@ serve(async (req) => {
 - University Levels: ${universityLevels.join(", ") || "Various levels"}
 - Preferred Explanation Style: ${dominantStyle === "five_year_old" ? "Simple, like explaining to a 5-year-old" : dominantStyle === "professional" ? "Professional/Academic" : dominantStyle === "complete_beginner" ? "Complete beginner (start from basics)" : "Visual learner (use diagrams and visual descriptions)"}
 - Relevant Courses: ${allCourses.length > 0 ? allCourses.slice(0, 10).join(", ") : "General academics"}
+${examSampleContext}
 
 Personalize your teaching for this group. Use their names when addressing them, and adapt your explanations to their collective background.`;
         }

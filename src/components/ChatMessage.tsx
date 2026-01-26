@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { formatMathToPlainText } from '@/utils/formatMath';
 import { useVoice } from '@/hooks/useVoice';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, Check, X, AlertCircle } from 'lucide-react';
+import { Volume2, VolumeX, Check, X, AlertCircle, Calculator } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -19,6 +19,20 @@ interface ChatMessageProps {
   message: Message;
 }
 
+// Detect if content is math-heavy for special styling
+const isMathHeavy = (content: string): boolean => {
+  const mathIndicators = [
+    /[×÷=²³⁴⁵⁶⁷⁸⁹⁰√π∞∫Σ]/g,  // Math symbols
+    /\d+\s*[+\-×÷*/]\s*\d+/g,   // Basic operations like "5 + 3"
+    /Step \d+:/gi,              // Step-by-step solutions
+    /\d+\.\d+/g,                // Decimals
+    /\d+\s*[xX]\s*\d+/g,        // Multiplication with x
+  ];
+  const matches = mathIndicators.reduce((count, regex) => 
+    count + (content.match(regex)?.length || 0), 0);
+  return matches > 3; // Threshold for "math-heavy"
+};
+
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isQuiz = message.is_quiz;
@@ -27,6 +41,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   
   // Format content to remove LaTeX
   const formattedContent = formatMathToPlainText(message.content);
+  const isMath = !isUser && isMathHeavy(formattedContent);
 
   const handleSpeak = () => {
     if (isThisSpeaking && isSpeaking) {
@@ -57,7 +72,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <div className={cn(
         'flex-1 max-w-[80%] rounded-2xl p-4 relative',
         isUser ? 'chat-bubble-user' : 'chat-bubble-assistant',
-        isQuiz && 'border-l-4 border-l-primary'
+        isQuiz && 'border-l-4 border-l-primary',
+        isMath && 'calculation-card'
       )}>
         {/* Voice button for assistant messages */}
         {!isUser && (
@@ -87,6 +103,13 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 <X className="h-4 w-4 text-destructive ml-auto" />
               )
             )}
+          </div>
+        )}
+
+        {isMath && !isQuiz && (
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-primary/20">
+            <Calculator className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Calculation</span>
           </div>
         )}
 
