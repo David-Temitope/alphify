@@ -158,19 +158,21 @@ export default function CreateGroupModal({ open, onOpenChange }: CreateGroupModa
       
       if (groupError) throw groupError;
 
-      // Add selected members to the group
-      if (selectedMembers.length > 0) {
-        const memberInserts = selectedMembers.map(userId => ({
+      // Add selected members and the admin to the group members table
+      // The admin MUST be a member for RLS policies to work correctly without recursion
+      const memberInserts = [
+        { group_id: group.id, user_id: user.id }, // Admin as member
+        ...selectedMembers.map(userId => ({
           group_id: group.id,
           user_id: userId
-        }));
+        }))
+      ];
 
-        const { error: membersError } = await supabase
-          .from('study_group_members')
-          .insert(memberInserts);
+      const { error: membersError } = await supabase
+        .from('study_group_members')
+        .insert(memberInserts);
 
-        if (membersError) throw membersError;
-      }
+      if (membersError) throw membersError;
 
       return group;
     },
