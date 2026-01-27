@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -237,9 +238,36 @@ When a student uploads a PDF and requests a lecture (their message contains "[LE
    - Explain each concept thoroughly
    - Use examples relevant to their field of study
 
-3. **Check Understanding**: Ask quick quiz questions after each major section
+3. **Define Key Terms Memorably**: For EVERY key term or concept:
+   - Start with a relatable analogy or story the student can visualize
+   - Give the formal definition AFTER the analogy
+   - Use memory tricks, acronyms, or rhymes when possible
+   - Connect new concepts to things the student already knows
+   - Example: "Think of osmosis like a crowded party - people (water) naturally move from the packed dance floor (high concentration) to the empty snack area (low concentration) to balance things out. Formally, osmosis is the movement of water molecules across a semipermeable membrane from an area of lower solute concentration to higher solute concentration."
 
-4. **Generate Comprehensive Exam**: After covering ALL content, generate a 10-question exam using the format above
+4. **Check Understanding**: Ask quick quiz questions after each major section
+
+5. **Generate Comprehensive Exam**: After covering ALL content, generate a 10-question exam using the format above
+
+## CRITICAL: Making Concepts Memorable
+
+When defining ANY term or explaining ANY concept:
+
+1. **Use the "Explain Then Define" method**:
+   - First: Tell a micro-story or give a vivid analogy
+   - Then: Give the formal definition
+   - Finally: Give one practical example
+
+2. **Create Memory Hooks**:
+   - Acronyms: "HOMES for the Great Lakes (Huron, Ontario, Michigan, Erie, Superior)"
+   - Visual associations: "The mitochondria is shaped like a bean - and beans give you energy, just like mitochondria powers the cell!"
+   - Rhymes: "In 1492, Columbus sailed the ocean blue"
+   - Bizarre images: "Imagine ATP as tiny battery packs being passed around by tiny workers in a factory"
+
+3. **Connect to Real Life**:
+   - Link abstract concepts to the student's daily experiences
+   - Use examples from their field of study when known
+   - Reference pop culture, sports, or common activities
 
 **Star Rating System:**
 - Quiz correct answer = 0.1 star added
@@ -294,7 +322,59 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Validate the JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !authData.user) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { messages, fileContent, personalization } = await req.json();
+    
+    // Input validation
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    // Validate message structure and limit content length
+    const MAX_MESSAGE_LENGTH = 50000;
+    for (const msg of messages) {
+      if (!msg.role || !msg.content) {
+        return new Response(JSON.stringify({ error: 'Invalid message structure' }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (typeof msg.content === 'string' && msg.content.length > MAX_MESSAGE_LENGTH) {
+        return new Response(JSON.stringify({ error: 'Message content too long' }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {

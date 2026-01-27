@@ -227,12 +227,18 @@ Student Profile:
 `;
       }
 
+      // Get the current session token for authenticated requests
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Please log in to continue');
+      }
+
       // Call AI
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/xplane-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ 
           messages: messageHistory,

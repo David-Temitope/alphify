@@ -63,23 +63,63 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, message, topic, course } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // Validate authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Validate the JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data: authData, error: authError } = await supabase.auth.getUser(token);
     
+    if (authError || !authData.user) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { sessionId, message, topic, course } = await req.json();
+    
+    // Input validation
+    if (!sessionId || typeof sessionId !== 'string') {
+      return new Response(JSON.stringify({ error: 'Invalid session ID' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    if (!message || typeof message !== 'string' || message.length > 10000) {
+      return new Response(JSON.stringify({ error: 'Invalid or too long message' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
-
-    // Initialize Supabase client to fetch participant settings
-    let participantContext = "";
     
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Initialize Supabase client with service role for fetching participant settings
+    let participantContext = "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (SUPABASE_URL && serviceRoleKey) {
+      const serviceClient = createClient(SUPABASE_URL, serviceRoleKey);
       
       // Get active participants in the session
-      const { data: participants } = await supabase
+      const { data: participants } = await serviceClient
         .from("session_participants")
         .select("user_id")
         .eq("session_id", sessionId)
@@ -89,7 +129,7 @@ serve(async (req) => {
         const userIds = participants.map(p => p.user_id);
         
         // Fetch user settings for all participants (including exam samples)
-        const { data: settings } = await supabase
+        const { data: settings } = await serviceClient
           .from("user_settings")
           .select("preferred_name, field_of_study, university_level, explanation_style, courses, exam_sample_text")
           .in("user_id", userIds);
