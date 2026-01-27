@@ -302,18 +302,29 @@ export default function Community() {
 
       <main className="max-w-6xl mx-auto p-6 md:p-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-secondary">
-            <TabsTrigger value="discover">Discover</TabsTrigger>
-            <TabsTrigger value="requests">
-              Requests
+          <TabsList className="bg-secondary flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="discover" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Discover</span>
+              <Search className="h-4 w-4 sm:hidden" />
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Requests</span>
+              <Clock className="h-4 w-4 sm:hidden" />
               {incomingRequests.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs">
+                <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs">
                   {incomingRequests.length}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="mates">Study Mates ({mateIds.length})</TabsTrigger>
-            <TabsTrigger value="groups">Study Groups</TabsTrigger>
+            <TabsTrigger value="mates" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Mates</span>
+              <Users className="h-4 w-4 sm:hidden" />
+              <span className="ml-1">({mateIds.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="groups" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Groups</span>
+              <GraduationCap className="h-4 w-4 sm:hidden" />
+            </TabsTrigger>
           </TabsList>
 
           {/* Discover Tab */}

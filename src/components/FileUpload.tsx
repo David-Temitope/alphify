@@ -108,6 +108,12 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
         reader.readAsDataURL(uploadedFile);
         const imageBase64 = await base64Promise;
 
+        // Get current session for authenticated request
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error('Please log in to continue');
+        }
+
         // Call the image analysis edge function
         const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-image', {
           body: {

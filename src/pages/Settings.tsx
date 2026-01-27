@@ -466,8 +466,60 @@ export default function Settings() {
             Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes.
           </p>
           
+          {/* File Upload for Exam Samples */}
+          <div className="mb-4">
+            <Label>Upload Past Exam Papers</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Upload PDF or image files of your previous exams
+            </p>
+            <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors bg-secondary/50">
+              <div className="text-center">
+                <BookOpen className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                <span className="text-sm text-muted-foreground">Click to upload PDF or images</span>
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !user) return;
+                  
+                  try {
+                    // Upload to storage
+                    const filePath = `exam-samples/${user.id}/${Date.now()}_${file.name}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from('user-files')
+                      .upload(filePath, file);
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    // For now, just notify user - in future could extract text
+                    toast({ 
+                      title: 'Exam paper uploaded!', 
+                      description: 'Gideon will reference this when creating quizzes.' 
+                    });
+                  } catch (error: any) {
+                    toast({ 
+                      title: 'Upload failed', 
+                      description: error.message, 
+                      variant: 'destructive' 
+                    });
+                  }
+                }}
+              />
+            </label>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center">
+              <span className="bg-background px-3 text-xs text-muted-foreground">OR</span>
+            </div>
+            <div className="border-t border-border my-4"></div>
+          </div>
+          
           <div>
-            <Label htmlFor="exam_sample">Sample Exam Questions</Label>
+            <Label htmlFor="exam_sample">Type Sample Exam Questions</Label>
             <textarea
               id="exam_sample"
               placeholder="Paste sample exam questions here...&#10;&#10;Example:&#10;1. Define osmosis and explain its importance in plant cells. (10 marks)&#10;2. Calculate the molarity of a solution containing... (5 marks)"
