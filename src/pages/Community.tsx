@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -120,6 +120,10 @@ export default function Community() {
         .select('*')
         .neq('user_id', user!.id);
       
+      if (searchQuery) {
+        query = query.ilike('full_name', `%${searchQuery}%`);
+      }
+
       const { data: profiles, error } = await query;
       if (error) throw error;
 
@@ -130,12 +134,7 @@ export default function Community() {
       return profiles?.map(profile => ({
         ...profile,
         settings: publicSettings?.find((s: { user_id: string; field_of_study: string | null; star_rating: number | null }) => s.user_id === profile.user_id) as { user_id: string; field_of_study: string | null; star_rating: number | null } | undefined,
-      })).filter(u => {
-        if (!searchQuery) return true;
-        // Search by name from profile (preferred_name is not exposed publicly)
-        const name = u.full_name || '';
-        return name.toLowerCase().includes(searchQuery.toLowerCase());
-      });
+      }));
     },
   });
 
@@ -187,8 +186,12 @@ export default function Community() {
       queryClient.invalidateQueries({ queryKey: ['study-requests'] });
       toast({ title: 'Request sent!' });
     },
-    onError: (error: any) => {
-      toast({ title: 'Failed to send request', description: error.message, variant: 'destructive' });
+    onError: (error) => {
+      toast({
+        title: 'Failed to send request',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
+      });
     },
   });
 
@@ -238,9 +241,13 @@ export default function Community() {
       // Navigate to study mates tab
       setActiveTab('mates');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Accept request error:', error);
-      toast({ title: 'Failed to accept', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Failed to accept',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
+      });
     },
   });
 
@@ -277,7 +284,7 @@ export default function Community() {
     );
   };
 
-  const getUserName = (profile: any) => {
+  const getUserName = (profile: { full_name: string | null }) => {
     // Use full_name from profile (preferred_name is private and not exposed in public view)
     return profile.full_name || 'Student';
   };
