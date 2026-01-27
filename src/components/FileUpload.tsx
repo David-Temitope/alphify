@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -33,14 +33,14 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
-  }, []);
+  }, [handleFile]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     // Validate file type - Images now allowed with Google AI
     const allowedTypes = [
       'application/pdf',
@@ -74,7 +74,7 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
     }
 
     setUploadedFile(file);
-  };
+  }, [toast]);
 
   const processFile = async () => {
     if (!uploadedFile || !user) return;
@@ -162,10 +162,10 @@ Start your response with: "Looking at your image, I can see..."`,
       });
 
       onFileProcessed(textContent);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Upload failed',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     } finally {

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Sparkles, ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 import gideonHero from '@/assets/gideon-hero.jpg';
 import robotFeatures from '@/assets/robot-features.jpg';

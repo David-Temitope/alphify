@@ -4,6 +4,32 @@ interface UseVoiceOptions {
   onTranscript?: (text: string) => void;
 }
 
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    isFinal: boolean;
+    length: number;
+    [key: number]: {
+      transcript: string;
+    };
+  }[];
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
 // Check browser support for speech APIs
 const isSpeechRecognitionSupported = () => {
   if (typeof window === 'undefined') return false;
@@ -15,16 +41,20 @@ const isSpeechSynthesisSupported = () => {
 };
 
 // Get the SpeechRecognition constructor
-const getSpeechRecognition = (): any => {
+const getSpeechRecognition = () => {
   if (typeof window === 'undefined') return null;
-  return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const Win = window as unknown as {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  };
+  return Win.SpeechRecognition || Win.webkitSpeechRecognition;
 };
 
 export const useVoice = (options: UseVoiceOptions = {}) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const voicesLoaded = useRef(false);
 
   // Load voices when available
@@ -61,7 +91,7 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
     recognitionRef.current.interimResults = true;
     recognitionRef.current.lang = 'en-US';
 
-    recognitionRef.current.onresult = (event: any) => {
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -82,7 +112,7 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
       }
     };
 
-    recognitionRef.current.onerror = (event: any) => {
+    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
     };
@@ -166,7 +196,7 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
       .replace(/`([^`]+)`/g, '$1') // Remove inline code markers
       .replace(/---/g, '') // Remove horizontal rules
       .replace(/\n{3,}/g, '\n\n') // Reduce multiple newlines
-      .replace(/[📝🎓🤔🛑👋✨💡📄🧪⚗️🔬💊🩺📚🎯]/g, ''); // Remove emojis
+      .replace(/[\u{1F4DD}\u{1F393}\u{1F914}\u{1F6D1}\u{1F44B}\u{2728}\u{1F4A1}\u{1F4C4}\u{1F322}\u{2697}\u{1F52C}\u{1F48A}\u{1FA7A}\u{1F4DA}\u{1F3AF}]/ug, ''); // Remove emojis
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     

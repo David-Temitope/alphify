@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -131,8 +131,8 @@ export default function Settings() {
         ai_personality: existingSettings.ai_personality || ['friendly_teacher'],
         courses: existingSettings.courses || [],
         preferred_name: existingSettings.preferred_name,
-        explanation_style: (existingSettings as any).explanation_style || 'five_year_old',
-        exam_sample_text: (existingSettings as any).exam_sample_text || null,
+        explanation_style: existingSettings.explanation_style || 'five_year_old',
+        exam_sample_text: existingSettings.exam_sample_text || null,
       });
     }
   }, [existingSettings]);
@@ -156,8 +156,12 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ['user-settings'] });
       toast({ title: 'Settings saved!', description: 'Your preferences have been updated.' });
     },
-    onError: (error: any) => {
-      toast({ title: 'Failed to save', description: error.message, variant: 'destructive' });
+    onError: (error) => {
+      toast({
+        title: 'Failed to save',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
+      });
     },
   });
 
@@ -499,10 +503,10 @@ export default function Settings() {
                       title: 'Exam paper uploaded!', 
                       description: 'Gideon will reference this when creating quizzes.' 
                     });
-                  } catch (error: any) {
+                  } catch (error) {
                     toast({ 
                       title: 'Upload failed', 
-                      description: error.message, 
+                      description: error instanceof Error ? error.message : 'An unknown error occurred',
                       variant: 'destructive' 
                     });
                   }
