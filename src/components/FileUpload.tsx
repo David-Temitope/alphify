@@ -28,18 +28,6 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  };
-
   const handleFile = useCallback(async (file: File) => {
     // Validate file type - Images now allowed with Google AI
     const allowedTypes = [
@@ -75,6 +63,19 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
 
     setUploadedFile(file);
   }, [toast]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
+
 
   const processFile = async () => {
     if (!uploadedFile || !user) return;

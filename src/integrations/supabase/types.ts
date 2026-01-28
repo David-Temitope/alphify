@@ -533,6 +533,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      are_study_mates: {
+        Args: { _user_id1: string; _user_id2: string }
+        Returns: boolean
+      }
       get_public_profiles: {
         Args: never
         Returns: {
@@ -540,6 +544,18 @@ export type Database = {
           star_rating: number
           user_id: string
         }[]
+      }
+      is_group_admin: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      users_share_group: {
+        Args: { _user_id1: string; _user_id2: string }
+        Returns: boolean
       }
     }
     Enums: {
