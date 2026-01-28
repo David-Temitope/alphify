@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Sparkles, ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 import gideonHero from '@/assets/gideon-hero.jpg';
 import robotFeatures from '@/assets/robot-features.jpg';
-import robotCommunity from '@/assets/robot-community.jpg';
+import robotCommunity from '@/assets/robot-community.png';
 
 export default function Index() {
   const { user } = useAuth();
