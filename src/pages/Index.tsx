@@ -149,7 +149,7 @@ export default function Index() {
           animationDelay: '0.3s'
         }}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
-            <img alt="Gideon AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border border-border/50" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
+            <img alt="Gideon AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
             <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-2xl p-4 shadow-xl animate-fade-in-up" style={{
             animationDelay: '0.8s'
           }}>
