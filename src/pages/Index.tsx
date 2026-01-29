@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { Sparkles, ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
+import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 import gideonHero from '@/assets/gideon-hero.jpg';
 import robotFeatures from '@/assets/robot-features.jpg';
 import robotCommunity from '@/assets/robot-community.png';
@@ -91,7 +91,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
-              <Sparkles className="h-4 w-4 text-primary" />
+              
               <span className="text-sm text-primary font-medium">AI-Powered Learning by Alphadominity</span>
             </div>
 
