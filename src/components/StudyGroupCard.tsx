@@ -35,7 +35,7 @@ export default function StudyGroupCard({ group, onJoinSession }: StudyGroupCardP
         .from('study_group_members')
         .select('*', { count: 'exact', head: true })
         .eq('group_id', group.id);
-      return (count || 0) + 1; // +1 for admin
+      return count || 0;
     }
   });
 
