@@ -553,6 +553,10 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      is_session_participant: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
       users_share_group: {
         Args: { _user_id1: string; _user_id2: string }
         Returns: boolean

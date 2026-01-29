@@ -147,22 +147,53 @@ export default function StudySession() {
     enabled: userIds.length > 0
   });
 
+  const [hasJoined, setHasJoined] = useState(false);
+
   // Join session on mount
   useEffect(() => {
     if (!user || !sessionId) return;
 
     const joinSession = async () => {
-      const { error } = await supabase
+      // First check if user is already a participant
+      const { data: existingParticipant } = await supabase
         .from('session_participants')
-        .upsert({
-          session_id: sessionId,
-          user_id: user.id,
-          is_active: true
-        }, { onConflict: 'session_id,user_id' });
-      
-      if (!error) {
-        queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
+        .select('id, is_active')
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingParticipant) {
+        // User already a participant - update to active if needed
+        if (!existingParticipant.is_active) {
+          await supabase
+            .from('session_participants')
+            .update({ is_active: true })
+            .eq('id', existingParticipant.id);
+        }
+        setHasJoined(true);
+      } else {
+        // New participant - insert
+        const { error } = await supabase
+          .from('session_participants')
+          .insert({
+            session_id: sessionId,
+            user_id: user.id,
+            is_active: true
+          });
+        
+        if (!error) {
+          setHasJoined(true);
+        } else {
+          console.error('Failed to join session:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to join the session. You may not have permission.',
+            variant: 'destructive'
+          });
+        }
       }
+      
+      queryClient.invalidateQueries({ queryKey: ['session-participants', sessionId] });
     };
 
     joinSession();
@@ -175,7 +206,7 @@ export default function StudySession() {
         .eq('session_id', sessionId)
         .eq('user_id', user.id);
     };
-  }, [user, sessionId, queryClient]);
+  }, [user, sessionId, queryClient, toast]);
 
   // Subscribe to realtime messages
   useEffect(() => {
@@ -491,7 +522,7 @@ export default function StudySession() {
           </div>
 
           {/* Input */}
-          {isSessionActive ? (
+          {isSessionActive && hasJoined ? (
             <div className="border-t border-border p-4">
               <div className="flex gap-3">
                 <Textarea
@@ -512,6 +543,13 @@ export default function StudySession() {
                     <Send className="h-4 w-4" />
                   )}
                 </Button>
+              </div>
+            </div>
+          ) : isSessionActive && !hasJoined ? (
+            <div className="border-t border-border p-4 text-center">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Joining session...</span>
               </div>
             </div>
           ) : (
