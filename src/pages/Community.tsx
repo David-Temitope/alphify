@@ -22,6 +22,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StudyGroupCard from '@/components/StudyGroupCard';
 import CreateGroupModal from '@/components/CreateGroupModal';
+import PremiumBadge from '@/components/PremiumBadge';
 
 interface UserProfile {
   id: string;
@@ -163,6 +164,22 @@ export default function Community() {
       return data as StudyMate[];
     },
   });
+
+  // Fetch premium users for badge display
+  const { data: premiumUsers } = useQuery({
+    queryKey: ['premium-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('plan', 'premium')
+        .eq('status', 'active');
+      if (error) throw error;
+      return data?.map(s => s.user_id) || [];
+    },
+  });
+
+  const isPremiumUser = (userId: string) => premiumUsers?.includes(userId) || false;
 
   // Send request mutation
   const sendRequest = useMutation({
@@ -370,9 +387,12 @@ export default function Community() {
                             {getUserName(profile).charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">
-                              {getUserName(profile)}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-foreground truncate">
+                                {getUserName(profile)}
+                              </h3>
+                              {isPremiumUser(profile.user_id) && <PremiumBadge />}
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                               {renderStars(profile.settings?.star_rating)}
                             </div>
