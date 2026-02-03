@@ -9,8 +9,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, AlertCircle } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Loader2, Users, AlertCircle, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNavigate } from 'react-router-dom';
 
 const FIELDS_OF_STUDY = [
   'Computer Science',
@@ -74,10 +76,14 @@ export default function CreateGroupModal({ open, onOpenChange }: CreateGroupModa
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { limits, currentPlan } = useSubscription();
   const [name, setName] = useState('');
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [customField, setCustomField] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  
+  const canCreateGroup = limits.canCreateStudyGroup;
 
   // Fetch study mates to add as group members
   const { data: studyMates } = useQuery({
@@ -132,11 +138,21 @@ export default function CreateGroupModal({ open, onOpenChange }: CreateGroupModa
   };
 
   const toggleMember = (userId: string) => {
-    setSelectedMembers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+    setSelectedMembers(prev => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId);
+      }
+      // Max 15 members (14 + admin)
+      if (prev.length >= 14) {
+        toast({
+          title: 'Member limit reached',
+          description: 'Study groups can have a maximum of 15 members including the admin.',
+          variant: 'destructive',
+        });
+        return prev;
+      }
+      return [...prev, userId];
+    });
   };
 
   const createGroup = useMutation({
@@ -239,7 +255,28 @@ export default function CreateGroupModal({ open, onOpenChange }: CreateGroupModa
           </DialogDescription>
         </DialogHeader>
 
-        {!hasStudyMates ? (
+        {!canCreateGroup ? (
+          <div className="py-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Lock className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-muted-foreground mb-2">
+              Study groups are available on Pro and Premium plans.
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upgrade to create and join study groups with your mates!
+            </p>
+            <Button 
+              onClick={() => {
+                onOpenChange(false);
+                navigate('/settings?tab=subscription');
+              }}
+              className="xp-gradient text-primary-foreground"
+            >
+              Upgrade Now
+            </Button>
+          </div>
+        ) : !hasStudyMates ? (
           <div className="py-6 text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="h-6 w-6 text-destructive" />

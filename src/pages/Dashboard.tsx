@@ -3,7 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useToast } from '@/hooks/use-toast';
+import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 export default function Dashboard() {
   const {
@@ -11,6 +13,8 @@ export default function Dashboard() {
     signOut
   } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { currentPlan, canStartNewChat, incrementChatCount } = useSubscription();
   const {
     data: conversations
   } = useQuery({
@@ -42,6 +46,27 @@ export default function Dashboard() {
     }
   });
   const handleNewChat = async () => {
+    // Check subscription
+    if (currentPlan === 'free') {
+      toast({
+        title: 'Subscription required',
+        description: 'Please subscribe to start chatting with Gideon.',
+        variant: 'destructive',
+      });
+      navigate('/settings?tab=subscription');
+      return;
+    }
+    
+    if (!canStartNewChat()) {
+      toast({
+        title: 'Daily chat limit reached',
+        description: 'You\'ve used all your chats for today. Upgrade for more!',
+        variant: 'destructive',
+      });
+      navigate('/settings?tab=subscription');
+      return;
+    }
+    
     const {
       data,
       error
@@ -50,6 +75,8 @@ export default function Dashboard() {
       title: 'New Conversation'
     }).select().single();
     if (!error && data) {
+      // Increment chat count
+      incrementChatCount.mutate();
       navigate(`/chat/${data.id}`);
     }
   };

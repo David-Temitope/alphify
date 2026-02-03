@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
 import { 
   ArrowLeft, 
   Search, 
@@ -14,7 +15,8 @@ import {
   Upload,
   Folder,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 import { format } from 'date-fns';
 import FileUpload from '@/components/FileUpload';
@@ -26,6 +28,12 @@ export default function Library() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
+  const { currentPlan, limits } = useSubscription();
+
+  const canUploadMore = () => {
+    if (limits.maxLibraryFiles === Infinity) return true;
+    return (files?.length || 0) < limits.maxLibraryFiles;
+  };
 
   const { data: files, isLoading } = useQuery({
     queryKey: ['library-files'],
@@ -94,9 +102,37 @@ export default function Library() {
             </div>
           </div>
 
-          <Button onClick={() => setShowUpload(true)} className="xp-gradient text-primary-foreground">
+          <Button 
+            onClick={() => {
+              if (currentPlan === 'free') {
+                toast({
+                  title: 'Subscription required',
+                  description: 'Subscribe to upload files to your library.',
+                  variant: 'destructive',
+                });
+                navigate('/settings?tab=subscription');
+                return;
+              }
+              if (!canUploadMore()) {
+                toast({
+                  title: 'File limit reached',
+                  description: `Your ${currentPlan} plan allows ${limits.maxLibraryFiles} files. Upgrade for more!`,
+                  variant: 'destructive',
+                });
+                navigate('/settings?tab=subscription');
+                return;
+              }
+              setShowUpload(true);
+            }} 
+            className="xp-gradient text-primary-foreground"
+          >
             <Upload className="h-4 w-4 mr-2" />
             Upload
+            {limits.maxLibraryFiles !== Infinity && (
+              <span className="ml-1 text-xs opacity-75">
+                ({files?.length || 0}/{limits.maxLibraryFiles})
+              </span>
+            )}
           </Button>
         </div>
       </header>

@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useVoice } from '@/hooks/useVoice';
+import { useSubscription } from '@/hooks/useSubscription';
 import ChatMessage from '@/components/ChatMessage';
 import FileUpload from '@/components/FileUpload';
+import UsageLimitBanner from '@/components/UsageLimitBanner';
 import { 
   ArrowLeft, 
   Send, 
@@ -63,6 +65,9 @@ export default function Chat() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  
+  // Subscription
+  const { currentPlan, canSendPrompt, incrementPromptCount, limits, getPromptsRemaining } = useSubscription();
 
   // Voice input
   const { isListening, transcript, startListening, stopListening, isSupported: voiceSupported } = useVoice({
@@ -181,10 +186,32 @@ export default function Chat() {
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isStreaming || !conversationId) return;
 
+    // Check subscription limits
+    if (currentPlan === 'free') {
+      toast({
+        title: 'Subscription required',
+        description: 'Please subscribe to start chatting with Gideon.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!canSendPrompt(conversationId)) {
+      toast({
+        title: 'Prompt limit reached',
+        description: `You've used all ${limits.maxPromptsPerChat} prompts in this chat.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const userMessage = input.trim();
     setInput('');
     setIsStreaming(true);
     setStreamingContent('');
+
+    // Increment prompt count
+    incrementPromptCount.mutate(conversationId);
 
     try {
       // Save user message
@@ -329,7 +356,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient]);
+  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient, currentPlan, canSendPrompt, limits, incrementPromptCount]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -569,6 +596,13 @@ Student Profile:
           <div className="mx-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2 animate-pulse">
             <Mic className="h-4 w-4 text-destructive" />
             <span className="text-sm text-destructive">Listening... Speak now</span>
+          </div>
+        )}
+
+        {/* Usage Limit Banner */}
+        {conversationId && (
+          <div className="px-4">
+            <UsageLimitBanner type="prompt" conversationId={conversationId} />
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
   Settings as SettingsIcon, 
@@ -26,8 +27,12 @@ import {
   Save,
   Loader2,
   Brain,
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
+import SubscriptionPlans from '@/components/SubscriptionPlans';
+import { useSubscription, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
+import { format } from 'date-fns';
 
 const STUDENT_TYPES = [
   { value: 'science', label: 'Science' },
@@ -92,8 +97,11 @@ interface UserSettings {
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { subscription, currentPlan, isLoading: subscriptionLoading, limits } = useSubscription();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
 
   const [settings, setSettings] = useState<UserSettings>({
     student_type: null,
@@ -239,7 +247,44 @@ export default function Settings() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-6 md:p-8 space-y-8">
+      <main className="max-w-4xl mx-auto p-6 md:p-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-secondary">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="subscription" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Subscription</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="subscription" className="space-y-6">
+            {/* Current Plan */}
+            <section className="glass-card p-6 rounded-2xl animate-fade-in">
+              <h2 className="font-display text-lg font-semibold mb-4">Current Plan</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold capitalize">{currentPlan}</p>
+                  <p className="text-muted-foreground">
+                    {subscription?.status === 'active' 
+                      ? `Renews ${subscription.current_period_end ? format(new Date(subscription.current_period_end), 'MMM d, yyyy') : 'soon'}`
+                      : 'No active subscription'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{PLAN_DISPLAY_PRICES[currentPlan]}</p>
+                  <p className="text-muted-foreground">/month</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Plans */}
+            <section className="animate-fade-in-up">
+              <h2 className="font-display text-lg font-semibold mb-4">Choose a Plan</h2>
+              <SubscriptionPlans onSuccess={() => queryClient.invalidateQueries({ queryKey: ['subscription'] })} />
+            </section>
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-8">
         {/* Personal Info */}
         <section className="glass-card p-6 rounded-2xl animate-fade-in">
           <div className="flex items-center gap-3 mb-6">
@@ -475,17 +520,31 @@ export default function Settings() {
             <Label>Upload Past Exam Papers</Label>
             <p className="text-xs text-muted-foreground mb-2">
               Upload PDF or image files of your previous exams
+              {!limits.canUploadExamSample && (
+                <span className="ml-1 text-primary">(Pro or Premium required)</span>
+              )}
             </p>
-            <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors bg-secondary/50">
+            <label className={`flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg transition-colors bg-secondary/50 ${limits.canUploadExamSample ? 'cursor-pointer hover:border-primary/50' : 'opacity-50 cursor-not-allowed'}`}>
               <div className="text-center">
                 <BookOpen className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                <span className="text-sm text-muted-foreground">Click to upload PDF or images</span>
+                <span className="text-sm text-muted-foreground">
+                  {limits.canUploadExamSample ? 'Click to upload PDF or images' : 'Upgrade to upload exam samples'}
+                </span>
               </div>
               <input
                 type="file"
                 className="hidden"
                 accept=".pdf,.png,.jpg,.jpeg,.webp"
                 onChange={async (e) => {
+                  if (!limits.canUploadExamSample) {
+                    toast({
+                      title: 'Upgrade required',
+                      description: 'Upgrade to Pro or Premium to upload exam samples.',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  
                   const file = e.target.files?.[0];
                   if (!file || !user) return;
                   
@@ -536,6 +595,8 @@ export default function Settings() {
             </p>
           </div>
         </section>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

@@ -121,6 +121,39 @@ export type Database = {
           },
         ]
       }
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          paystack_reference: string
+          plan: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paystack_reference: string
+          plan: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paystack_reference?: string
+          plan?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -416,6 +449,45 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          paystack_customer_code: string | null
+          paystack_subscription_code: string | null
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       uploaded_files: {
         Row: {
           conversation_id: string | null
@@ -459,6 +531,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      usage_tracking: {
+        Row: {
+          chats_started: number
+          created_at: string
+          date: string
+          id: string
+          prompts_today: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chats_started?: number
+          created_at?: string
+          date?: string
+          id?: string
+          prompts_today?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chats_started?: number
+          created_at?: string
+          date?: string
+          id?: string
+          prompts_today?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_settings: {
         Row: {
