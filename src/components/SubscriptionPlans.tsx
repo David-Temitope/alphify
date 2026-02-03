@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Check, Crown, Loader2, Sparkles, Zap } from 'lucide-react';
 
 // Paystack public key
-const PAYSTACK_PUBLIC_KEY = 'pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a';
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+
 
 interface PaystackResponse {
   reference: string;
@@ -26,7 +27,14 @@ declare global {
         amount: number;
         currency: string;
         ref: string;
-        metadata: Record<string, unknown>;
+        metadata?: {
+        custom_fields?: {
+          display_name: string;
+          variable_name: string;
+          value: string;
+        }[];
+      };
+
         callback: (response: PaystackResponse) => void;
         onClose: () => void;
       }) => { openIframe: () => void };
