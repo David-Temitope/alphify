@@ -94,6 +94,70 @@ serve(async (req) => {
       );
     }
 
+    const { data: existingPayment, error: existingPaymentError } =
+      await supabaseClient
+        .from("payment_history")
+        .select("id, status")
+        .eq("paystack_reference", reference)
+        .maybeSingle();
+
+    if (existingPaymentError) {
+      throw existingPaymentError;
+    }
+
+    if (existingPayment) {
+      return new Response(
+        JSON.stringify({ error: "Payment already processed" }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const metadata = paystackData.data.metadata ?? {};
+    const customFields = Array.isArray(metadata.custom_fields)
+      ? metadata.custom_fields
+      : [];
+    const metadataUserId = customFields.find(
+      (field: { variable_name?: string }) => field.variable_name === "user_id"
+    )?.value;
+    const metadataPlan = customFields.find(
+      (field: { variable_name?: string }) => field.variable_name === "plan"
+    )?.value;
+
+    if (metadataUserId && metadataUserId !== user.id) {
+      return new Response(
+        JSON.stringify({ error: "Payment metadata mismatch" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (metadataPlan && metadataPlan !== plan) {
+      return new Response(
+        JSON.stringify({ error: "Plan mismatch" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (user.email && paystackData.data.customer?.email) {
+      if (paystackData.data.customer.email !== user.email) {
+        return new Response(
+          JSON.stringify({ error: "Customer mismatch" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     // Verify amount matches plan
     const expectedAmounts: Record<string, number> = {
       basic: 300000,
