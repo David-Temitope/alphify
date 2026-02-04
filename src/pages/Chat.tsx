@@ -199,7 +199,7 @@ export default function Chat() {
     if (!canSendPrompt(conversationId)) {
       toast({
         title: 'Prompt limit reached',
-        description: `You've used all ${limits.maxPromptsPerChat} prompts in this chat.`,
+        description: `You've used all ${limits.maxPromptsPerChat} prompts in this chat. Continue tomorrow or upgrade your plan!`,
         variant: 'destructive',
       });
       return;

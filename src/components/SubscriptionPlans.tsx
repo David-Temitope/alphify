@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useSubscription, SubscriptionPlan, PLAN_LIMITS, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
+import { supabase } from '@/integrations/supabase/client';
+import { useSubscription, SubscriptionPlan, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Check, Crown, Loader2, Sparkles, Zap } from 'lucide-react';
 
-// Paystack public key
-const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-
+// Paystack public key (publishable - safe to store in code)
+const PAYSTACK_PUBLIC_KEY = 'pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a';
 
 interface PaystackResponse {
   reference: string;
@@ -28,13 +28,12 @@ declare global {
         currency: string;
         ref: string;
         metadata?: {
-        custom_fields?: {
-          display_name: string;
-          variable_name: string;
-          value: string;
-        }[];
-      };
-
+          custom_fields?: {
+            display_name: string;
+            variable_name: string;
+            value: string;
+          }[];
+        };
         callback: (response: PaystackResponse) => void;
         onClose: () => void;
       }) => { openIframe: () => void };
@@ -152,8 +151,10 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
               }
             );
 
+            const result = await verifyResponse.json();
+            
             if (!verifyResponse.ok) {
-              throw new Error('Payment verification failed');
+              throw new Error(result.error || 'Payment verification failed');
             }
 
             toast({
@@ -161,10 +162,14 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
               description: `You're now on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan.`,
             });
             onSuccess?.();
+            
+            // Reload to refresh subscription data
+            window.location.reload();
           } catch (error) {
+            console.error('Payment verification error:', error);
             toast({
               title: 'Verification failed',
-              description: 'Please contact support if payment was deducted.',
+              description: error instanceof Error ? error.message : 'Please contact support if payment was deducted.',
               variant: 'destructive',
             });
           }
@@ -177,6 +182,7 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
 
       handler.openIframe();
     } catch (error) {
+      console.error('Payment initialization error:', error);
       toast({
         title: 'Payment error',
         description: 'Failed to initialize payment. Please try again.',
@@ -269,6 +275,3 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
     </div>
   );
 }
-
-// Need to import supabase for the callback
-import { supabase } from '@/integrations/supabase/client';

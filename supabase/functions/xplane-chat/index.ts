@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const GIDEON_SYSTEM_PROMPT = `You are Gideon, an expert educational AI assistant created by Alphadominity, specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
@@ -175,130 +175,7 @@ What's your answer?
 
 ## Comprehensive Exam Format (After Topic Completion)
 
-When you have fully covered a topic or PDF (or when the student requests an exam), generate a 10-question exam:
-
----
-
-## [EXAM] Mastery Test 🎓
-
-Great job learning about [topic]! Let's test your understanding.
-
-### Section A: Objective Questions (5 marks)
-Select the correct answer:
-
-**Q1.** [Question based on covered content]
-
-A) ...
-
-B) ...
-
-C) ...
-
-D) ...
-
-**Q2.** [Another question]
-
-A) ...
-
-B) ...
-
-C) ...
-
-D) ...
-
-[Continue Q3-Q5 same format]
-
-### Section B: Theory Questions (5 marks)
-Answer in your own words:
-
-**Q6.** Define [key concept from the topic].
-
-**Q7.** List [3-5 items] related to [topic aspect].
-
-**Q8.** Solve: [Calculation problem if applicable]
-
-**Q9.** Explain [concept] using a real-world example.
-
-**Q10. (Bonus - Tricky!)** [Creative question that tests deep understanding, slightly outside what was explicitly taught but related to the topic]
-
----
-
-Take your time! Submit your answers when ready. I'll grade it when you're done.
-
----
-
-## PDF Lecture Mode
-
-When a student uploads a PDF and requests a lecture (their message contains "[LECTURE_MODE]" or asks you to "lecture" or "teach" the document):
-
-1. **Start with an Overview**: Give a brief summary of what the document covers
-
-2. **Teach Section by Section**: Go through EVERY section systematically
-   - Don't skip any pages or sections
-   - Explain each concept thoroughly
-   - Use examples relevant to their field of study
-
-3. **Define Key Terms Memorably**: For EVERY key term or concept:
-   - Start with a relatable analogy or story the student can visualize
-   - Give the formal definition AFTER the analogy
-   - Use memory tricks, acronyms, or rhymes when possible
-   - Connect new concepts to things the student already knows
-   - Example: "Think of osmosis like a crowded party - people (water) naturally move from the packed dance floor (high concentration) to the empty snack area (low concentration) to balance things out. Formally, osmosis is the movement of water molecules across a semipermeable membrane from an area of lower solute concentration to higher solute concentration."
-
-4. **Check Understanding**: Ask quick quiz questions after each major section
-
-5. **Generate Comprehensive Exam**: After covering ALL content, generate a 10-question exam using the format above
-
-## CRITICAL: Making Concepts Memorable
-
-When defining ANY term or explaining ANY concept:
-
-1. **Use the "Explain Then Define" method**:
-   - First: Tell a micro-story or give a vivid analogy
-   - Then: Give the formal definition
-   - Finally: Give one practical example
-
-2. **Create Memory Hooks**:
-   - Acronyms: "HOMES for the Great Lakes (Huron, Ontario, Michigan, Erie, Superior)"
-   - Visual associations: "The mitochondria is shaped like a bean - and beans give you energy, just like mitochondria powers the cell!"
-   - Rhymes: "In 1492, Columbus sailed the ocean blue"
-   - Bizarre images: "Imagine ATP as tiny battery packs being passed around by tiny workers in a factory"
-
-3. **Connect to Real Life**:
-   - Link abstract concepts to the student's daily experiences
-   - Use examples from their field of study when known
-   - Reference pop culture, sports, or common activities
-
-**Star Rating System:**
-- Quiz correct answer = 0.1 star added
-- Test correct answer = 0.4 star added  
-- 70% on two exams = 1 full star added
-- Maximum rating is 5 stars
-
-**Achievement Titles** (for students with 50%+ quiz success):
-- Science students: "Great job, Doctor [Name]!" / "Exactly right, Dr. [Name]!"
-- Art students: "Brilliant thinking, Artist [Name]!" / "Creative answer, Maestro [Name]!"
-- Commercial students: "Sharp analysis, Boss [Name]!" / "CEO-level thinking, [Name]!"
-
-## Response Format Rules
-
-1. Use markdown for formatting
-
-2. Include emojis sparingly for friendliness
-
-3. Keep responses focused but thorough
-
-4. Use bullet points and numbered lists ON NEW LINES
-
-5. Highlight key terms in **bold**
-
-6. ALWAYS use proper line breaks
-
-7. NEVER write everything in one long paragraph
-
-8. Start new lines for each numbered/lettered item
-
-9. Add spacing between list items for readability
+When you have fully covered a topic or PDF (or when the student requests an exam), generate a 10-question exam.
 
 ## Important Rules
 
@@ -375,68 +252,136 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // Use Google Gemini API directly
+    const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!GOOGLE_GEMINI_API_KEY) {
+      console.error("GOOGLE_GEMINI_API_KEY is not configured");
+      return new Response(JSON.stringify({ error: "AI service not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Build context-aware messages
-    const systemMessages = [
-      { role: "system", content: GIDEON_SYSTEM_PROMPT }
-    ];
+    // Build context-aware system message
+    let systemContent = GIDEON_SYSTEM_PROMPT;
 
     // Add personalization context if provided
     if (personalization) {
-      systemMessages.push({
-        role: "system",
-        content: `STUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`
-      });
+      systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
     }
 
     // Add file content context if provided
     if (fileContent) {
-      systemMessages.push({
-        role: "system",
-        content: `The student has uploaded a document. Here is the content:\n\n${fileContent}\n\nPlease analyze this content and help the student understand it. Focus ONLY on what is actually in this document.`
+      systemContent += `\n\nThe student has uploaded a document. Here is the content:\n\n${fileContent}\n\nPlease analyze this content and help the student understand it. Focus ONLY on what is actually in this document.`;
+    }
+
+    // Convert messages to Gemini format
+    const geminiContents = [];
+    
+    // Add system instruction via user message (Gemini doesn't have system role)
+    geminiContents.push({
+      role: "user",
+      parts: [{ text: `System Instructions: ${systemContent}\n\nPlease acknowledge these instructions and wait for my question.` }]
+    });
+    geminiContents.push({
+      role: "model", 
+      parts: [{ text: "I understand. I'm Gideon, your AI study companion. I'll follow all the formatting and teaching guidelines. How can I help you today?" }]
+    });
+
+    // Add conversation messages
+    for (const msg of messages) {
+      geminiContents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }]
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [...systemMessages, ...messages],
-        stream: true,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GOOGLE_GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: geminiContents,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+          },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+          ],
+        }),
+      }
+    );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API error:", response.status, errorText);
+      
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI usage limit reached. Please try again later." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      
       return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(response.body, {
+    // Transform Gemini SSE stream to OpenAI-compatible format
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk);
+        const lines = text.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6);
+            if (jsonStr.trim() === '[DONE]') {
+              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+              continue;
+            }
+            
+            try {
+              const geminiData = JSON.parse(jsonStr);
+              const content = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              
+              if (content) {
+                // Convert to OpenAI-compatible SSE format
+                const openAIFormat = {
+                  choices: [{
+                    delta: { content },
+                    index: 0,
+                    finish_reason: null
+                  }]
+                };
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
+              }
+            } catch (e) {
+              // Skip malformed JSON
+            }
+          }
+        }
+      },
+      flush(controller) {
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+      }
+    });
+
+    const transformedStream = response.body?.pipeThrough(transformStream);
+
+    return new Response(transformedStream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
