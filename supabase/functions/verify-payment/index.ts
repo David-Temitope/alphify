@@ -73,8 +73,10 @@ serve(async (req) => {
     );
 
     const paystackData = await paystackResponse.json();
+    console.log("Paystack verification response:", paystackData);
 
     if (!paystackData.status || paystackData.data.status !== "success") {
+      console.error("Paystack verification failed:", paystackData.message || "Unknown error");
       // Record failed payment
       await supabaseClient.from("payment_history").insert({
         user_id: user.id,
@@ -86,7 +88,10 @@ serve(async (req) => {
       });
 
       return new Response(
-        JSON.stringify({ error: "Payment verification failed" }),
+        JSON.stringify({
+          error: "Payment verification failed",
+          details: paystackData.message || "Paystack returned a non-success status"
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -102,8 +107,13 @@ serve(async (req) => {
     };
 
     if (paystackData.data.amount !== expectedAmounts[plan]) {
+      console.error(`Amount mismatch: Expected ${expectedAmounts[plan]}, got ${paystackData.data.amount}`);
       return new Response(
-        JSON.stringify({ error: "Amount mismatch" }),
+        JSON.stringify({
+          error: "Amount mismatch",
+          expected: expectedAmounts[plan],
+          received: paystackData.data.amount
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
