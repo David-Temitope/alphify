@@ -136,10 +136,15 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
         callback: async (response: PaystackResponse) => {
           console.log('Paystack payment successful, verifying reference:', response.reference);
           try {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            if (!supabaseUrl) {
+              throw new Error('Supabase URL is not configured. Cannot verify payment.');
+            }
+
             // Verify payment on backend
             const { data: { session } } = await supabase.auth.getSession();
             const verifyResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
+              `${supabaseUrl}/functions/v1/verify-payment`,
               {
                 method: 'POST',
                 headers: {
