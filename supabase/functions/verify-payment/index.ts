@@ -13,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY") || Deno.env.get("PAYSTACK_API_KEY");
     if (!PAYSTACK_SECRET_KEY) {
-      throw new Error("PAYSTACK_SECRET_KEY is not configured");
+      throw new Error("Paystack secret key (PAYSTACK_SECRET_KEY or PAYSTACK_API_KEY) is not configured");
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
