@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Check, Crown, Loader2, Sparkles, Zap } from 'lucide-react';
 
 // Paystack public key (publishable - safe to store in code)
-const PAYSTACK_PUBLIC_KEY = 'pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_138ebaa183ec16342d00c7eee0ad68862d438581';
 
 interface PaystackResponse {
   reference: string;
