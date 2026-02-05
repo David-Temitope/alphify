@@ -120,6 +120,48 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
       const reference = `sub_${plan}_${user.id}_${Date.now()}`;
       const amount = plan === 'basic' ? 300000 : plan === 'pro' ? 500000 : 1000000;
 
+      // Paystack validates that `callback` is a *plain* function. Some versions
+      // of inline.js reject `async` functions, even though they are callable.
+      // Keep the callback non-async and delegate async work inside.
+      const verifyPaymentAndActivate = async (paystackReference: string) => {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const verifyResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              reference: paystackReference,
+              plan,
+            }),
+          }
+        );
+
+        const isJson = verifyResponse.headers
+          .get('content-type')
+          ?.toLowerCase()
+          .includes('application/json');
+
+        const result = isJson ? await verifyResponse.json() : null;
+
+        if (!verifyResponse.ok) {
+          throw new Error(result?.error || 'Payment verification failed');
+        }
+
+        toast({
+          title: 'Subscription activated!',
+          description: `You're now on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan.`,
+        });
+        onSuccess?.();
+
+        // Reload to refresh subscription data
+        window.location.reload();
+      };
+
       const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
@@ -132,48 +174,24 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
             { display_name: 'User ID', variable_name: 'user_id', value: user.id },
           ],
         },
-        callback: async (response: PaystackResponse) => {
-          try {
-            // Verify payment on backend
-            const { data: { session } } = await supabase.auth.getSession();
-            const verifyResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${session?.access_token}`,
-                },
-                body: JSON.stringify({
-                  reference: response.reference,
-                  plan,
-                }),
-              }
-            );
-
-            const result = await verifyResponse.json();
-            
-            if (!verifyResponse.ok) {
-              throw new Error(result.error || 'Payment verification failed');
+        callback: (response: PaystackResponse) => {
+          void (async () => {
+            if (!response?.reference) {
+              throw new Error('Missing Paystack reference. Please try again.');
             }
-
-            toast({
-              title: 'Subscription activated!',
-              description: `You're now on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan.`,
-            });
-            onSuccess?.();
-            
-            // Reload to refresh subscription data
-            window.location.reload();
-          } catch (error) {
+            await verifyPaymentAndActivate(response.reference);
+          })().catch((error) => {
             console.error('Payment verification error:', error);
             toast({
               title: 'Verification failed',
-              description: error instanceof Error ? error.message : 'Please contact support if payment was deducted.',
+              description: error instanceof Error
+                ? error.message
+                : 'Please contact support if payment was deducted.',
               variant: 'destructive',
             });
-          }
-          setProcessingPlan(null);
+          }).finally(() => {
+            setProcessingPlan(null);
+          });
         },
         onClose: () => {
           setProcessingPlan(null);
