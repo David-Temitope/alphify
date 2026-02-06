@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useSubscription, SubscriptionPlan, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
+import { useSubscription, SubscriptionPlan, PLAN_LIMITS, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Check, Crown, Loader2, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Paystack public key
-const PAYSTACK_PUBLIC_KEY = 'pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a';
+// Paystack public key - Prefer environment variable
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a';
 
 interface PaystackResponse {
   reference: string;
@@ -28,13 +27,7 @@ declare global {
         amount: number;
         currency: string;
         ref: string;
-        metadata?: {
-          custom_fields?: {
-            display_name: string;
-            variable_name: string;
-            value: string;
-          }[];
-        };
+        metadata: Record<string, unknown>;
         callback: (response: PaystackResponse) => void;
         onClose: () => void;
       }) => { openIframe: () => void };
@@ -126,6 +119,8 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
       const reference = `sub_${plan}_${user.id}_${Date.now()}`;
       const amount = plan === 'basic' ? 300000 : plan === 'pro' ? 500000 : 1000000;
 
+      console.log('Setting up Paystack with reference:', reference);
+
       const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
@@ -139,11 +134,17 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
           ],
         },
         callback: async (response: PaystackResponse) => {
+          console.log('Paystack payment successful, verifying reference:', response.reference);
           try {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            if (!supabaseUrl) {
+              throw new Error('Supabase URL is not configured. Cannot verify payment.');
+            }
+
             // Verify payment on backend
             const { data: { session } } = await supabase.auth.getSession();
             const verifyResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
+              `${supabaseUrl}/functions/v1/verify-payment`,
               {
                 method: 'POST',
                 headers: {
@@ -157,24 +158,28 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
               }
             );
 
+            const result = await verifyResponse.json();
+
             if (!verifyResponse.ok) {
-              throw new Error('Payment verification failed');
+              console.error('Verification failed on server:', result);
+              throw new Error(result.error || 'Payment verification failed');
             }
 
+            console.log('Verification successful:', result);
             toast({
               title: 'Subscription activated!',
               description: `You're now on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan.`,
             });
             onSuccess?.();
           } catch (error) {
+            console.error('Verification error:', error);
             toast({
               title: 'Verification failed',
-              description: 'Please contact support if payment was deducted.',
+              description: error instanceof Error ? error.message : 'Please contact support if payment was deducted.',
               variant: 'destructive',
             });
-          }).finally(() => {
-            setProcessingPlan(null);
-          });
+          }
+          setProcessingPlan(null);
         },
         onClose: () => {
           console.log('Paystack popup closed');
@@ -185,6 +190,7 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
       console.log('Opening Paystack iframe...');
       handler.openIframe();
     } catch (error) {
+      console.error('Paystack initialization error:', error);
       toast({
         title: 'Payment error',
         description: error instanceof Error ? error.message : 'Failed to initialize payment. Please try again.',
@@ -278,5 +284,3 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
   );
 }
 
-// Need to import supabase for the callback
-import { supabase } from '@/integrations/supabase/client';

@@ -86,36 +86,162 @@ serve(async (req) => {
       );
     }
 
-    // Verify payment with Paystack
-    const paystackResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        },
-      }
-    );
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    const paystackData = await paystackResponse.json();
+    const verifyWithPaystack = async () => {
+      console.log(`Verifying reference: ${reference} with Paystack...`);
+      const res = await fetch(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          },
+        }
+      );
 
-    if (!paystackData.status || paystackData.data.status !== "success") {
-      // Record failed payment
-      await supabaseClient.from("payment_history").insert({
-        user_id: user.id,
-        amount: paystackData.data?.amount || 0,
-        currency: "NGN",
-        paystack_reference: reference,
-        plan,
-        status: "failed",
+      const json = await res.json().catch(() => null);
+      return { res, json: json as PaystackVerifyResponse | null };
+    };
+
+    // Verify payment with Paystack (retry briefly in case Paystack hasn't finalized status yet)
+    let paystackResponse: Response;
+    let paystackData: PaystackVerifyResponse | null = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await verifyWithPaystack();
+      paystackResponse = result.res;
+      paystackData = result.json;
+
+      const txStatus = paystackData?.data?.status;
+      const gatewayResponse = paystackData?.data?.gateway_response;
+
+      console.log(`Attempt ${attempt + 1} - Paystack verify:`, {
+        reference,
+        httpStatus: paystackResponse.status,
+        paystackStatus: paystackData?.status,
+        txStatus,
+        gatewayResponse,
+        amount: paystackData?.data?.amount,
       });
 
+      if (txStatus === "success") {
+        break;
+      }
+
+      const shouldRetry =
+        paystackResponse.status === 200 &&
+        paystackData?.status === true &&
+        (txStatus === "pending" || txStatus === "ongoing");
+
+      if (shouldRetry && attempt < 2) {
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+
+      // If we are here, it means either it failed or it shouldn't retry
+      if (!shouldRetry || attempt === 2) {
+        // Record failed / non-success payment
+        await supabaseClient.from("payment_history").insert({
+          user_id: user.id,
+          amount: paystackData?.data?.amount || 0,
+          currency: "NGN",
+          paystack_reference: reference,
+          plan,
+          status: "failed",
+        });
+
+        return new Response(
+          JSON.stringify({
+            error: "Payment verification failed",
+            paystack: {
+              httpStatus: paystackResponse.status,
+              status: paystackData?.status ?? null,
+              transaction_status: txStatus ?? null,
+              gateway_response: gatewayResponse ?? null,
+              message: paystackData?.message ?? null,
+            },
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    if (!paystackData?.status || paystackData?.data?.status !== "success") {
+      throw new Error("Paystack verification did not return a success transaction");
+    }
+
+    // Check if this reference has already been processed
+    const { data: existingPayment, error: existingPaymentError } =
+      await supabaseClient
+        .from("payment_history")
+        .select("id, status")
+        .eq("paystack_reference", reference)
+        .eq("status", "success")
+        .maybeSingle();
+
+    if (existingPaymentError) {
+      throw existingPaymentError;
+    }
+
+    if (existingPayment) {
       return new Response(
-        JSON.stringify({ error: "Payment verification failed" }),
+        JSON.stringify({ error: "Payment already processed" }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Verify metadata if available
+    const metadata = paystackData.data.metadata ?? {};
+    const customFields = Array.isArray(metadata.custom_fields)
+      ? metadata.custom_fields
+      : [];
+    const metadataUserId = customFields.find(
+      (field) => field.variable_name === "user_id"
+    )?.value;
+    const metadataPlan = customFields.find(
+      (field) => field.variable_name === "plan"
+    )?.value;
+
+    if (metadataUserId && metadataUserId !== user.id) {
+      console.error(`User ID mismatch: Metadata ${metadataUserId} vs Auth ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Payment metadata mismatch (User ID)" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    if (metadataPlan && metadataPlan !== plan) {
+      console.error(`Plan mismatch: Metadata ${metadataPlan} vs Request ${plan}`);
+      return new Response(
+        JSON.stringify({ error: "Plan mismatch" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Verify email match if possible
+    if (user.email && paystackData.data.customer?.email) {
+      if (paystackData.data.customer.email.toLowerCase() !== user.email.toLowerCase()) {
+        console.error(`Email mismatch: Paystack ${paystackData.data.customer.email} vs Auth ${user.email}`);
+        return new Response(
+          JSON.stringify({ error: "Customer email mismatch" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     // Verify amount matches plan

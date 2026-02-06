@@ -80,12 +80,6 @@ export interface UsageTracking {
   prompts_today: Record<string, number>; // conversation_id -> prompt count
 }
 
-// Track conversation prompt counts across all days
-interface ConversationPromptCount {
-  conversationId: string;
-  totalPrompts: number;
-}
-
 export function useSubscription() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -106,7 +100,6 @@ export function useSubscription() {
     enabled: !!user,
   });
 
-  // Get today's usage for daily chat limits
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ['usage-tracking', user?.id],
     queryFn: async () => {
@@ -125,38 +118,6 @@ export function useSubscription() {
     enabled: !!user,
   });
 
-  // Get total prompts per conversation (across all days within subscription period)
-  const { data: conversationPrompts } = useQuery({
-    queryKey: ['conversation-prompts', user?.id, subscription?.current_period_start],
-    queryFn: async () => {
-      if (!user || !subscription?.current_period_start) return {};
-      
-      // Get all usage records since subscription started
-      const { data: usageRecords, error } = await supabase
-        .from('usage_tracking')
-        .select('prompts_today')
-        .eq('user_id', user.id)
-        .gte('date', subscription.current_period_start.split('T')[0]);
-      
-      if (error) throw error;
-      
-      // Aggregate prompts per conversation across all days
-      const totalByConversation: Record<string, number> = {};
-      
-      for (const record of usageRecords || []) {
-        const promptsToday = record.prompts_today as Record<string, number>;
-        if (promptsToday) {
-          for (const [convId, count] of Object.entries(promptsToday)) {
-            totalByConversation[convId] = (totalByConversation[convId] || 0) + count;
-          }
-        }
-      }
-      
-      return totalByConversation;
-    },
-    enabled: !!user && !!subscription?.current_period_start,
-  });
-
   const currentPlan: SubscriptionPlan = 
     (subscription?.status === 'active' ? subscription.plan : 'free') as SubscriptionPlan;
   
@@ -168,20 +129,16 @@ export function useSubscription() {
     return chatsToday < limits.maxChatsPerDay;
   };
 
-  // Check if user can send prompt based on TOTAL prompts in conversation (across all days)
   const canSendPrompt = (conversationId: string) => {
     if (limits.maxPromptsPerChat === Infinity) return true;
-    
-    // Get total prompts for this conversation across all days
-    const totalPrompts = conversationPrompts?.[conversationId] || 0;
-    return totalPrompts < limits.maxPromptsPerChat;
+    const promptsInChat = usage?.prompts_today?.[conversationId] || 0;
+    return promptsInChat < limits.maxPromptsPerChat;
   };
 
-  // Get remaining prompts based on total used in conversation
   const getPromptsRemaining = (conversationId: string) => {
     if (limits.maxPromptsPerChat === Infinity) return Infinity;
-    const totalPrompts = conversationPrompts?.[conversationId] || 0;
-    return Math.max(0, limits.maxPromptsPerChat - totalPrompts);
+    const promptsInChat = usage?.prompts_today?.[conversationId] || 0;
+    return Math.max(0, limits.maxPromptsPerChat - promptsInChat);
   };
 
   const getChatsRemaining = () => {
@@ -219,21 +176,13 @@ export function useSubscription() {
       if (!user) throw new Error('Not authenticated');
       const today = new Date().toISOString().split('T')[0];
       
-      // Get or create today's usage record
-      const { data: todayUsage } = await supabase
-        .from('usage_tracking')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', today)
-        .maybeSingle();
-      
-      const currentPrompts = (todayUsage?.prompts_today as Record<string, number>) || {};
+      const currentPrompts = usage?.prompts_today || {};
       const newPrompts = {
         ...currentPrompts,
         [conversationId]: (currentPrompts[conversationId] || 0) + 1,
       };
       
-      if (todayUsage) {
+      if (usage) {
         const { error } = await supabase
           .from('usage_tracking')
           .update({ prompts_today: newPrompts })
@@ -249,7 +198,6 @@ export function useSubscription() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usage-tracking', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['conversation-prompts', user?.id] });
     },
   });
 
