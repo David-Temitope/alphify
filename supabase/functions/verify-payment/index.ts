@@ -7,16 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface PaystackVerifyResponse {
+  status: boolean;
+  message: string;
+  data: {
+    status: string;
+    amount: number;
+    currency: string;
+    gateway_response: string;
+    customer?: {
+      email: string;
+      customer_code: string;
+    };
+    metadata?: {
+      custom_fields?: Array<{
+        display_name: string;
+        variable_name: string;
+        value: string;
+      }>;
+    };
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY") || Deno.env.get("PAYSTACK_API_KEY");
     if (!PAYSTACK_SECRET_KEY) {
-      throw new Error("PAYSTACK_SECRET_KEY is not configured");
+      throw new Error("PAYSTACK_SECRET_KEY is not configured in Supabase secrets");
     }
+
+    console.log("Using Paystack key starting with:", PAYSTACK_SECRET_KEY.substring(0, 7));
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -65,6 +89,7 @@ serve(async (req) => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const verifyWithPaystack = async () => {
+      console.log(`Verifying reference: ${reference} with Paystack...`);
       const res = await fetch(
         `https://api.paystack.co/transaction/verify/${reference}`,
         {
@@ -75,12 +100,12 @@ serve(async (req) => {
       );
 
       const json = await res.json().catch(() => null);
-      return { res, json };
+      return { res, json: json as PaystackVerifyResponse | null };
     };
 
     // Verify payment with Paystack (retry briefly in case Paystack hasn't finalized status yet)
     let paystackResponse: Response;
-    let paystackData: any;
+    let paystackData: PaystackVerifyResponse | null = null;
 
     for (let attempt = 0; attempt < 3; attempt++) {
       const result = await verifyWithPaystack();
@@ -90,7 +115,7 @@ serve(async (req) => {
       const txStatus = paystackData?.data?.status;
       const gatewayResponse = paystackData?.data?.gateway_response;
 
-      console.log("Paystack verify", {
+      console.log(`Attempt ${attempt + 1} - Paystack verify:`, {
         reference,
         httpStatus: paystackResponse.status,
         paystackStatus: paystackData?.status,
@@ -109,46 +134,52 @@ serve(async (req) => {
         (txStatus === "pending" || txStatus === "ongoing");
 
       if (shouldRetry && attempt < 2) {
-        await sleep(800 * (attempt + 1));
+        await sleep(1000 * (attempt + 1));
         continue;
       }
 
-      // Record failed / non-success payment
-      await supabaseClient.from("payment_history").insert({
-        user_id: user.id,
-        amount: paystackData?.data?.amount || 0,
-        currency: "NGN",
-        paystack_reference: reference,
-        plan,
-        status: "failed",
-      });
+      // If we are here, it means either it failed or it shouldn't retry
+      if (!shouldRetry || attempt === 2) {
+        // Record failed / non-success payment
+        await supabaseClient.from("payment_history").insert({
+          user_id: user.id,
+          amount: paystackData?.data?.amount || 0,
+          currency: "NGN",
+          paystack_reference: reference,
+          plan,
+          status: "failed",
+        });
 
-      return new Response(
-        JSON.stringify({
-          error: "Payment verification failed",
-          paystack: {
-            httpStatus: paystackResponse.status,
-            status: paystackData?.status ?? null,
-            transaction_status: txStatus ?? null,
-            gateway_response: gatewayResponse ?? null,
-          },
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+        return new Response(
+          JSON.stringify({
+            error: "Payment verification failed",
+            paystack: {
+              httpStatus: paystackResponse.status,
+              status: paystackData?.status ?? null,
+              transaction_status: txStatus ?? null,
+              gateway_response: gatewayResponse ?? null,
+              message: paystackData?.message ?? null,
+            },
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     if (!paystackData?.status || paystackData?.data?.status !== "success") {
       throw new Error("Paystack verification did not return a success transaction");
     }
 
+    // Check if this reference has already been processed
     const { data: existingPayment, error: existingPaymentError } =
       await supabaseClient
         .from("payment_history")
         .select("id, status")
         .eq("paystack_reference", reference)
+        .eq("status", "success")
         .maybeSingle();
 
     if (existingPaymentError) {
@@ -165,20 +196,22 @@ serve(async (req) => {
       );
     }
 
+    // Verify metadata if available
     const metadata = paystackData.data.metadata ?? {};
     const customFields = Array.isArray(metadata.custom_fields)
       ? metadata.custom_fields
       : [];
     const metadataUserId = customFields.find(
-      (field: { variable_name?: string }) => field.variable_name === "user_id"
+      (field) => field.variable_name === "user_id"
     )?.value;
     const metadataPlan = customFields.find(
-      (field: { variable_name?: string }) => field.variable_name === "plan"
+      (field) => field.variable_name === "plan"
     )?.value;
 
     if (metadataUserId && metadataUserId !== user.id) {
+      console.error(`User ID mismatch: Metadata ${metadataUserId} vs Auth ${user.id}`);
       return new Response(
-        JSON.stringify({ error: "Payment metadata mismatch" }),
+        JSON.stringify({ error: "Payment metadata mismatch (User ID)" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -187,6 +220,7 @@ serve(async (req) => {
     }
 
     if (metadataPlan && metadataPlan !== plan) {
+      console.error(`Plan mismatch: Metadata ${metadataPlan} vs Request ${plan}`);
       return new Response(
         JSON.stringify({ error: "Plan mismatch" }),
         {
@@ -196,10 +230,12 @@ serve(async (req) => {
       );
     }
 
+    // Verify email match if possible
     if (user.email && paystackData.data.customer?.email) {
-      if (paystackData.data.customer.email !== user.email) {
+      if (paystackData.data.customer.email.toLowerCase() !== user.email.toLowerCase()) {
+        console.error(`Email mismatch: Paystack ${paystackData.data.customer.email} vs Auth ${user.email}`);
         return new Response(
-          JSON.stringify({ error: "Customer mismatch" }),
+          JSON.stringify({ error: "Customer email mismatch" }),
           {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -216,8 +252,13 @@ serve(async (req) => {
     };
 
     if (paystackData.data.amount !== expectedAmounts[plan]) {
+      console.error(`Amount mismatch: Expected ${expectedAmounts[plan]}, got ${paystackData.data.amount}`);
       return new Response(
-        JSON.stringify({ error: "Amount mismatch" }),
+        JSON.stringify({
+          error: "Amount mismatch",
+          expected: expectedAmounts[plan],
+          received: paystackData.data.amount
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
