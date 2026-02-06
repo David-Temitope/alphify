@@ -62,23 +62,61 @@ serve(async (req) => {
       );
     }
 
-    // Verify payment with Paystack
-    const paystackResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        },
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const verifyWithPaystack = async () => {
+      const res = await fetch(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          },
+        }
+      );
+
+      const json = await res.json().catch(() => null);
+      return { res, json };
+    };
+
+    // Verify payment with Paystack (retry briefly in case Paystack hasn't finalized status yet)
+    let paystackResponse: Response;
+    let paystackData: any;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await verifyWithPaystack();
+      paystackResponse = result.res;
+      paystackData = result.json;
+
+      const txStatus = paystackData?.data?.status;
+      const gatewayResponse = paystackData?.data?.gateway_response;
+
+      console.log("Paystack verify", {
+        reference,
+        httpStatus: paystackResponse.status,
+        paystackStatus: paystackData?.status,
+        txStatus,
+        gatewayResponse,
+        amount: paystackData?.data?.amount,
+      });
+
+      if (txStatus === "success") {
+        break;
       }
-    );
 
-    const paystackData = await paystackResponse.json();
+      const shouldRetry =
+        paystackResponse.status === 200 &&
+        paystackData?.status === true &&
+        (txStatus === "pending" || txStatus === "ongoing");
 
-    if (!paystackData.status || paystackData.data.status !== "success") {
-      // Record failed payment
+      if (shouldRetry && attempt < 2) {
+        await sleep(800 * (attempt + 1));
+        continue;
+      }
+
+      // Record failed / non-success payment
       await supabaseClient.from("payment_history").insert({
         user_id: user.id,
-        amount: paystackData.data?.amount || 0,
+        amount: paystackData?.data?.amount || 0,
         currency: "NGN",
         paystack_reference: reference,
         plan,
@@ -86,12 +124,24 @@ serve(async (req) => {
       });
 
       return new Response(
-        JSON.stringify({ error: "Payment verification failed" }),
+        JSON.stringify({
+          error: "Payment verification failed",
+          paystack: {
+            httpStatus: paystackResponse.status,
+            status: paystackData?.status ?? null,
+            transaction_status: txStatus ?? null,
+            gateway_response: gatewayResponse ?? null,
+          },
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    if (!paystackData?.status || paystackData?.data?.status !== "success") {
+      throw new Error("Paystack verification did not return a success transaction");
     }
 
     const { data: existingPayment, error: existingPaymentError } =

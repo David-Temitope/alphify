@@ -253,10 +253,11 @@ serve(async (req) => {
     }
 
     // Use Google Gemini API directly
-    const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-    
-    if (!GOOGLE_GEMINI_API_KEY) {
-      console.error("GOOGLE_GEMINI_API_KEY is not configured");
+    const GOOGLE_API_KEY =
+      Deno.env.get("GOOGLE_GEMINI_API_KEY") || Deno.env.get("GOOGLE_AI_API_KEY");
+
+    if (!GOOGLE_API_KEY) {
+      console.error("No Google AI API key is configured (GOOGLE_GEMINI_API_KEY / GOOGLE_AI_API_KEY)");
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -278,28 +279,33 @@ serve(async (req) => {
 
     // Convert messages to Gemini format
     const geminiContents = [];
-    
+
     // Add system instruction via user message (Gemini doesn't have system role)
     geminiContents.push({
       role: "user",
-      parts: [{ text: `System Instructions: ${systemContent}\n\nPlease acknowledge these instructions and wait for my question.` }]
+      parts: [{ text: `System Instructions: ${systemContent}\n\nPlease acknowledge these instructions and wait for my question.` }],
     });
     geminiContents.push({
-      role: "model", 
-      parts: [{ text: "I understand. I'm Gideon, your AI study companion. I'll follow all the formatting and teaching guidelines. How can I help you today?" }]
+      role: "model",
+      parts: [{ text: "I understand. I'm Gideon, your AI study companion. I'll follow all the formatting and teaching guidelines. How can I help you today?" }],
     });
 
     // Add conversation messages
     for (const msg of messages) {
       geminiContents.push({
         role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }]
+        parts: [{ text: msg.content }],
       });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GOOGLE_GEMINI_API_KEY}`,
-      {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GOOGLE_API_KEY}`;
+
+    let response: Response | null = null;
+    let errorText = "";
+
+    // Retry once on 429 (provider-side throttle). If your key has 0 quota, this will still fail.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      response = await fetch(geminiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -319,20 +325,32 @@ serve(async (req) => {
             { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
           ],
         }),
-      }
-    );
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
+      if (response.ok) break;
+
+      errorText = await response.text();
       console.error("Gemini API error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+
+      if (response.status === 429 && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1200));
+        continue;
       }
-      
+
+      break;
+    }
+
+    if (!response || !response.ok) {
+      if (response?.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
       return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
