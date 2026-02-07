@@ -276,6 +276,12 @@ Student Profile:
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle rate limit / quota exhaustion with friendly message
+        if (response.status === 429) {
+          throw new Error('🚫 Gideon is currently overloaded. The AI service has reached its usage limit. Please wait a few minutes and try again. If this persists, the service may need a quota upgrade.');
+        }
+        
         throw new Error(errorData.error || 'Failed to get response');
       }
 
