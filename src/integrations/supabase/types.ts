@@ -41,6 +41,92 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          course: string
+          created_at: string
+          exam_type: string
+          id: string
+          max_score: number
+          questions: Json
+          score: number | null
+          started_at: string
+          status: string
+          time_limit_minutes: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          course: string
+          created_at?: string
+          exam_type: string
+          id?: string
+          max_score?: number
+          questions?: Json
+          score?: number | null
+          started_at?: string
+          status?: string
+          time_limit_minutes?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          course?: string
+          created_at?: string
+          exam_type?: string
+          id?: string
+          max_score?: number
+          questions?: Json
+          score?: number | null
+          started_at?: string
+          status?: string
+          time_limit_minutes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exam_samples: {
+        Row: {
+          course: string
+          created_at: string
+          file_id: string | null
+          id: string
+          sample_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          sample_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course?: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          sample_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_samples_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_warnings: {
         Row: {
           group_id: string
@@ -160,6 +246,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          scheduled_deletion_at: string | null
           updated_at: string
           user_id: string
         }
@@ -168,6 +255,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          scheduled_deletion_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -176,6 +264,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          scheduled_deletion_at?: string | null
           updated_at?: string
           user_id?: string
         }

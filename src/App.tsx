@@ -13,6 +13,7 @@ import Library from "./pages/Library";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
 import StudySession from "./pages/StudySession";
+import ExamMode from "./pages/ExamMode";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <StudySession />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exam"
+              element={
+                <ProtectedRoute>
+                  <ExamMode />
                 </ProtectedRoute>
               }
             />

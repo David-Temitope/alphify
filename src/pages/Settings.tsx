@@ -28,9 +28,14 @@ import {
   Loader2,
   Brain,
   X,
-  CreditCard
+  CreditCard,
+  Trash2,
+  AlertTriangle,
+  Upload,
+  FileText
 } from 'lucide-react';
 import SubscriptionPlans from '@/components/SubscriptionPlans';
+import AccountDeletion from '@/components/AccountDeletion';
 import { useSubscription, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
 import { format } from 'date-fns';
 
@@ -254,6 +259,10 @@ export default function Settings() {
             <TabsTrigger value="subscription" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">Subscription</span>
+            </TabsTrigger>
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Account</span>
             </TabsTrigger>
           </TabsList>
 
@@ -512,89 +521,167 @@ export default function Settings() {
             <h2 className="font-display text-lg font-semibold">Exam Question Style</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes.
+            Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes and exams.
+            {!limits.canUploadExamSample && (
+              <span className="ml-1 text-primary">(Pro or Premium required)</span>
+            )}
           </p>
           
-          {/* File Upload for Exam Samples */}
-          <div className="mb-4">
-            <Label>Upload Past Exam Papers</Label>
-            <p className="text-xs text-muted-foreground mb-2">
-              Upload PDF or image files of your previous exams
-              {!limits.canUploadExamSample && (
-                <span className="ml-1 text-primary">(Pro or Premium required)</span>
-              )}
-            </p>
-            <label className={`flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg transition-colors bg-secondary/50 ${limits.canUploadExamSample ? 'cursor-pointer hover:border-primary/50' : 'opacity-50 cursor-not-allowed'}`}>
-              <div className="text-center">
-                <BookOpen className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                <span className="text-sm text-muted-foreground">
-                  {limits.canUploadExamSample ? 'Click to upload PDF or images' : 'Upgrade to upload exam samples'}
-                </span>
+          {/* Course-specific exam samples */}
+          {settings.courses.length > 0 ? (
+            <div className="space-y-4 mb-6">
+              <Label>Select Course for Exam Sample</Label>
+              <div className="flex flex-wrap gap-2">
+                {settings.courses.map((course) => (
+                  <button
+                    key={course}
+                    type="button"
+                    onClick={() => {
+                      if (!limits.canUploadExamSample) {
+                        toast({
+                          title: 'Upgrade required',
+                          description: 'Upgrade to Pro or Premium to add exam samples.',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      // Set active course for sample upload
+                      const input = document.getElementById(`exam-file-${course}`) as HTMLInputElement;
+                      if (input) input.click();
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
+                      limits.canUploadExamSample 
+                        ? 'bg-secondary border border-border hover:border-primary/50 cursor-pointer' 
+                        : 'bg-secondary/50 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <Upload className="h-3 w-3" />
+                    {course}
+                    <input
+                      id={`exam-file-${course}`}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.png,.jpg,.jpeg,.webp"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !user) return;
+                        
+                        try {
+                          // Upload to storage with user.id as first folder
+                          const filePath = `${user.id}/exam-samples/${course}/${Date.now()}_${file.name}`;
+                          const { error: uploadError } = await supabase.storage
+                            .from('user-files')
+                            .upload(filePath, file);
+                          
+                          if (uploadError) throw uploadError;
+                          
+                          // Save to uploaded_files table
+                          const { data: fileRecord, error: dbError } = await supabase
+                            .from('uploaded_files')
+                            .insert({
+                              user_id: user.id,
+                              file_name: file.name,
+                              file_path: filePath,
+                              file_type: file.type,
+                              file_size: file.size,
+                            })
+                            .select()
+                            .single();
+                          
+                          if (dbError) throw dbError;
+                          
+                          // Upsert exam_samples record
+                          const { error: sampleError } = await supabase
+                            .from('exam_samples')
+                            .upsert({
+                              user_id: user.id,
+                              course: course,
+                              file_id: fileRecord.id,
+                            }, { onConflict: 'user_id,course' });
+                          
+                          if (sampleError) throw sampleError;
+                          
+                          toast({ 
+                            title: `${course} exam paper uploaded!`, 
+                            description: 'Gideon will reference this when creating quizzes for this course.' 
+                          });
+                        } catch (error) {
+                          console.error('Upload error:', error);
+                          toast({ 
+                            title: 'Upload failed', 
+                            description: error instanceof Error ? error.message : 'An unknown error occurred',
+                            variant: 'destructive' 
+                          });
+                        }
+                      }}
+                    />
+                  </button>
+                ))}
               </div>
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.png,.jpg,.jpeg,.webp"
-                onChange={async (e) => {
-                  if (!limits.canUploadExamSample) {
-                    toast({
-                      title: 'Upgrade required',
-                      description: 'Upgrade to Pro or Premium to upload exam samples.',
-                      variant: 'destructive',
-                    });
-                    return;
-                  }
-                  
-                  const file = e.target.files?.[0];
-                  if (!file || !user) return;
-                  
-                  try {
-                    // Upload to storage
-                    const filePath = `exam-samples/${user.id}/${Date.now()}_${file.name}`;
-                    const { error: uploadError } = await supabase.storage
-                      .from('user-files')
-                      .upload(filePath, file);
-                    
-                    if (uploadError) throw uploadError;
-                    
-                    // For now, just notify user - in future could extract text
-                    toast({ 
-                      title: 'Exam paper uploaded!', 
-                      description: 'Gideon will reference this when creating quizzes.' 
-                    });
-                  } catch (error) {
-                    toast({ 
-                      title: 'Upload failed', 
-                      description: error instanceof Error ? error.message : 'An unknown error occurred',
-                      variant: 'destructive' 
-                    });
-                  }
-                }}
-              />
-            </label>
-          </div>
+              <p className="text-xs text-muted-foreground">
+                Click on a course code to upload exam samples for that specific course.
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-secondary/50 border border-border mb-4">
+              <p className="text-sm text-muted-foreground">
+                Add courses in the "Current Courses" section above to upload course-specific exam samples.
+              </p>
+            </div>
+          )}
           
           <div className="relative">
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center">
-              <span className="bg-background px-3 text-xs text-muted-foreground">OR</span>
+              <span className="bg-background px-3 text-xs text-muted-foreground">OR TYPE SAMPLES</span>
             </div>
             <div className="border-t border-border my-4"></div>
           </div>
           
           <div>
-            <Label htmlFor="exam_sample">Type Sample Exam Questions</Label>
+            <Label htmlFor="exam_sample">General Exam Question Samples</Label>
             <textarea
               id="exam_sample"
               placeholder="Paste sample exam questions here...&#10;&#10;Example:&#10;1. Define osmosis and explain its importance in plant cells. (10 marks)&#10;2. Calculate the molarity of a solution containing... (5 marks)"
               value={settings.exam_sample_text || ''}
               onChange={(e) => setSettings(prev => ({ ...prev, exam_sample_text: e.target.value }))}
               className="mt-2 w-full min-h-[150px] rounded-lg bg-secondary border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+              disabled={!limits.canUploadExamSample}
             />
             <p className="text-xs text-muted-foreground mt-2">
-              These samples help Gideon set questions in the same style as your professor.
+              These samples help Gideon set questions in the same style as your professor. General samples apply to all courses unless you upload course-specific ones.
             </p>
           </div>
         </section>
+          </TabsContent>
+
+          {/* Account Tab */}
+          <TabsContent value="account" className="space-y-6">
+            {/* Account Info */}
+            <section className="glass-card p-6 rounded-2xl animate-fade-in">
+              <h2 className="font-display text-lg font-semibold mb-4">Account Information</h2>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <span className="text-muted-foreground">Email</span>
+                  <span className="font-medium">{user?.email}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <span className="text-muted-foreground">Member since</span>
+                  <span className="font-medium">{user?.created_at ? format(new Date(user.created_at), 'MMM d, yyyy') : 'N/A'}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Delete Account */}
+            <section className="glass-card p-6 rounded-2xl border-destructive/50 animate-fade-in-up">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <h2 className="font-display text-lg font-semibold text-destructive">Delete Account</h2>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Once you delete your account, there's no going back. Your account will be scheduled for deletion and permanently removed after 7 days. You can cancel during this period.
+              </p>
+              <AccountDeletion />
+            </section>
           </TabsContent>
         </Tabs>
       </main>

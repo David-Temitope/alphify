@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, CreditCard } from 'lucide-react';
+import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap } from 'lucide-react';
 import { format } from 'date-fns';
 export default function Dashboard() {
   const {
@@ -127,7 +127,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up" style={{
         animationDelay: '0.1s'
       }}>
           <button onClick={handleNewChat} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
@@ -137,6 +137,17 @@ export default function Dashboard() {
             <div>
               <h3 className="font-display font-semibold text-lg text-foreground">Start New Chat</h3>
               <p className="text-muted-foreground text-sm">Ask anything - I'll explain it simply</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
+          </button>
+
+          <button onClick={() => navigate('/exam')} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/25 group-hover:shadow-yellow-500/40 transition-all">
+              <GraduationCap className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-lg text-foreground">Exam Mode</h3>
+              <p className="text-muted-foreground text-sm">Test yourself with AI-generated exams</p>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
           </button>
