@@ -41,10 +41,10 @@ Deno.serve(async (req) => {
     }
 
     const { imageBase64, mimeType, prompt } = await req.json();
-    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    if (!GOOGLE_AI_API_KEY) {
-      throw new Error("GOOGLE_AI_API_KEY is not configured");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     // Input validation
@@ -76,26 +76,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use Google Gemini for image analysis
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: validMimeType,
-                    data: imageBase64,
-                  },
-                },
-                {
-                  text: prompt || `You are an educational AI assistant. Analyze this image carefully and provide a detailed, educational explanation of what you see.
+    const userPrompt = prompt || `You are an educational AI assistant. Analyze this image carefully and provide a detailed, educational explanation of what you see.
 
 IMPORTANT RULES:
 1. Describe EXACTLY what is in the image - do not make assumptions
@@ -107,29 +88,47 @@ IMPORTANT RULES:
 7. Format your response with clear sections and numbered steps
 8. NEVER use LaTeX notation - use plain text like × for multiplication, ² for squared
 
-Start your response with: "Looking at your image, I can see..."`,
+Start your response with: "Looking at your image, I can see..."`;
+
+    // Use OpenAI GPT-4o-mini for image analysis (supports vision)
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${validMimeType};base64,${imageBase64}`,
                 },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            topK: 32,
-            topP: 1,
-            maxOutputTokens: 4096,
+              },
+              {
+                type: "text",
+                text: userPrompt,
+              },
+            ],
           },
-        }),
-      }
-    );
+        ],
+        max_tokens: 4096,
+        temperature: 0.4,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Google AI error:", response.status, errorText);
+      console.error("OpenAI API error:", response.status, errorText);
       throw new Error("Failed to analyze image");
     }
 
     const data = await response.json();
-    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to analyze the image. Please try again.";
+    const analysis = data.choices?.[0]?.message?.content || "Unable to analyze the image. Please try again.";
 
     return new Response(JSON.stringify({ analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
