@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
-    if (!OPENAI_API_KEY) {
+    if (!GOOGLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -91,31 +91,28 @@ Return format:
   ]
 }`;
 
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`;
+
     let response: Response | null = null;
     let errorText = "";
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      response = await fetch("https://api.openai.com/v1/chat/completions", {
+      response = await fetch(geminiUrl, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are an exam generation assistant. Return only valid JSON." },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.8,
-          max_tokens: 8192,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 8192,
+          },
         }),
       });
 
       if (response.ok) break;
 
       errorText = await response.text();
-      console.error("OpenAI API error:", response.status, errorText);
+      console.error("Gemini API error:", response.status, errorText);
 
       if (response.status === 429 && attempt === 0) {
         await new Promise((r) => setTimeout(r, 2000));
@@ -137,8 +134,8 @@ Return format:
       );
     }
 
-    const openaiData = await response.json();
-    const rawText = openaiData.choices?.[0]?.message?.content || '';
+    const geminiData = await response.json();
+    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // Parse JSON from response (might be wrapped in markdown)
     let examData;
