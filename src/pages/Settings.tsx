@@ -157,8 +157,9 @@ export default function Settings() {
 
   const saveSettings = useMutation({
     mutationFn: async () => {
-      // Whitelist only safe fields to prevent mass assignment of quiz_score_percentage, star_rating, etc.
-      const safeFields = {
+      // Security: Explicitly list fields to prevent mass assignment of
+      // sensitive fields like quiz_score_percentage or total_quizzes_taken
+      const settingsToSave = {
         student_type: settings.student_type,
         field_of_study: settings.field_of_study,
         country: settings.country,
@@ -174,13 +175,13 @@ export default function Settings() {
       if (existingSettings) {
         const { error } = await supabase
           .from('user_settings')
-          .update(safeFields)
+          .update(settingsToSave)
           .eq('user_id', user!.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_settings')
-          .insert({ ...safeFields, user_id: user!.id });
+          .insert({ ...settingsToSave, user_id: user!.id });
         if (error) throw error;
       }
     },

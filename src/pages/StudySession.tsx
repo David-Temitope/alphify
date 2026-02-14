@@ -340,7 +340,8 @@ export default function StudySession() {
 
       if (response.error) throw response.error;
 
-      // AI message is now inserted server-side by the edge function
+      // The AI response is now securely saved by the Edge Function
+      // to prevent client-side spoofing of AI messages.
       return response.data;
     },
     onSuccess: () => {
