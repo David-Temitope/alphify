@@ -3,89 +3,65 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap } from 'lucide-react';
+import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap, Coins } from 'lucide-react';
 import { format } from 'date-fns';
+
 export default function Dashboard() {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currentPlan, canStartNewChat, incrementChatCount } = useSubscription();
-  const {
-    data: conversations
-  } = useQuery({
+  const { balance, canChat } = useKnowledgeUnits();
+
+  const { data: conversations } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('conversations').select('*').order('updated_at', {
-        ascending: false
-      }).limit(5);
+      const { data, error } = await supabase.from('conversations').select('*').order('updated_at', { ascending: false }).limit(5);
       if (error) throw error;
       return data;
     }
   });
-  const {
-    data: files
-  } = useQuery({
+
+  const { data: files } = useQuery({
     queryKey: ['recent-files'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('uploaded_files').select('*').order('created_at', {
-        ascending: false
-      }).limit(3);
+      const { data, error } = await supabase.from('uploaded_files').select('*').order('created_at', { ascending: false }).limit(3);
       if (error) throw error;
       return data;
     }
   });
+
   const handleNewChat = async () => {
-    // Check subscription
-    if (currentPlan === 'free') {
+    if (!canChat) {
       toast({
-        title: 'Subscription required',
-        description: 'Please subscribe to start chatting with Gideon.',
+        title: 'No Knowledge Units',
+        description: 'You need at least 1 KU to chat with Gideon. Top up your wallet!',
         variant: 'destructive',
       });
-      navigate('/settings?tab=subscription');
+      navigate('/settings?tab=wallet');
       return;
     }
-    
-    if (!canStartNewChat()) {
-      toast({
-        title: 'Daily chat limit reached',
-        description: 'You\'ve used all your chats for today. Upgrade for more!',
-        variant: 'destructive',
-      });
-      navigate('/settings?tab=subscription');
-      return;
-    }
-    
-    const {
-      data,
-      error
-    } = await supabase.from('conversations').insert({
+
+    const { data, error } = await supabase.from('conversations').insert({
       user_id: user!.id,
       title: 'New Conversation'
     }).select().single();
+
     if (!error && data) {
-      // Increment chat count
-      incrementChatCount.mutate();
       navigate(`/chat/${data.id}`);
     }
   };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
+
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
-  return <div className="min-h-screen xp-bg-gradient">
+
+  return (
+    <div className="min-h-screen xp-bg-gradient">
       {/* Header */}
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4 md:px-8">
@@ -95,6 +71,15 @@ export default function Dashboard() {
           </div>
 
           <nav className="flex items-center gap-1 md:gap-2">
+            {/* KU Balance */}
+            <button
+              onClick={() => navigate('/settings?tab=wallet')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+            >
+              <Coins className="h-3.5 w-3.5" />
+              <span>{balance} KU</span>
+            </button>
+
             <Button variant="ghost" size="icon" onClick={() => navigate('/library')} className="text-muted-foreground hover:text-foreground md:w-auto md:px-3">
               <BookOpen className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Library</span>
@@ -124,12 +109,22 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-lg">
             Ready to understand something new today?
           </p>
+          {balance <= 5 && balance > 0 && (
+            <p className="text-sm text-primary mt-2">
+              ⚡ You have {balance} KU remaining.{' '}
+              <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-medium">Top up</button>
+            </p>
+          )}
+          {balance === 0 && (
+            <p className="text-sm text-destructive mt-2">
+              🔴 No Knowledge Units left.{' '}
+              <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-medium">Buy KU to continue learning</button>
+            </p>
+          )}
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up" style={{
-        animationDelay: '0.1s'
-      }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <button onClick={handleNewChat} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-all">
               <MessageSquarePlus className="h-7 w-7 text-primary-foreground" />
@@ -167,9 +162,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Conversations */}
-        <div className="animate-fade-in-up" style={{
-        animationDelay: '0.2s'
-      }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
@@ -177,8 +170,10 @@ export default function Dashboard() {
             </h2>
           </div>
 
-          {conversations && conversations.length > 0 ? <div className="space-y-3">
-              {conversations.map(conv => <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)} className="w-full glass-card p-4 rounded-xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
+          {conversations && conversations.length > 0 ? (
+            <div className="space-y-3">
+              {conversations.map(conv => (
+                <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)} className="w-full glass-card p-4 rounded-xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
                   <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
                     <Sparkles className="h-5 w-5 text-primary" />
                   </div>
@@ -189,8 +184,11 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                </button>)}
-            </div> : <div className="glass-card p-8 rounded-2xl text-center">
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card p-8 rounded-2xl text-center">
               <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="font-display font-semibold text-lg mb-2">No conversations yet</h3>
               <p className="text-muted-foreground mb-4">Start your first chat and let me help you understand anything!</p>
@@ -198,19 +196,20 @@ export default function Dashboard() {
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Start Learning
               </Button>
-            </div>}
+            </div>
+          )}
         </div>
 
         {/* Recent Files */}
-        {files && files.length > 0 && <div className="animate-fade-in-up" style={{
-        animationDelay: '0.3s'
-      }}>
+        {files && files.length > 0 && (
+          <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
               <FileText className="h-5 w-5 text-primary" />
               Recent Uploads
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {files.map(file => <div key={file.id} className="glass-card p-4 rounded-xl">
+              {files.map(file => (
+                <div key={file.id} className="glass-card p-4 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
                       <FileText className="h-5 w-5 text-primary" />
@@ -222,12 +221,16 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                </div>)}
+                </div>
+              ))}
             </div>
-          </div>}
+          </div>
+        )}
       </main>
-    </div>;
+    </div>
+  );
 }
+
 function getTimeOfDay() {
   const hour = new Date().getHours();
   if (hour < 12) return 'morning';

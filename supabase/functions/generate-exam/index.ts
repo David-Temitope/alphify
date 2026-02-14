@@ -44,6 +44,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    // KU Balance Check (require >= 70 KU)
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Service configuration error" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: kuWallet } = await serviceClient
+      .from('ku_wallets')
+      .select('balance')
+      .eq('user_id', authData.user.id)
+      .maybeSingle();
+
+    if (!kuWallet || kuWallet.balance < 70) {
+      return new Response(JSON.stringify({ 
+        error: `You need at least 70 Knowledge Units to start an exam. You have ${kuWallet?.balance || 0} KU.`,
+        code: "INSUFFICIENT_KU"
+      }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Deduct 1 KU for exam generation
+    await serviceClient
+      .from('ku_wallets')
+      .update({ balance: kuWallet.balance - 1 })
+      .eq('user_id', authData.user.id);
+
+    await serviceClient.from('ku_transactions').insert({
+      user_id: authData.user.id,
+      amount: -1,
+      type: 'exam_start',
+      description: `Exam generation: ${course}`
+    });
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
