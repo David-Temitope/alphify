@@ -6,7 +6,7 @@ import { useKnowledgeUnits } from "@/hooks/useKnowledgeUnits";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Coins, Users } from "lucide-react";
+import { Loader2, Coins, Users, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -64,6 +64,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
   const { toast } = useToast();
   const { refetch } = useKnowledgeUnits();
   const [processing, setProcessing] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const [target, setTarget] = useState<"personal" | "group">("personal");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [customAmount, setCustomAmount] = useState<string>("");
@@ -81,6 +82,23 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     enabled: !!user,
   });
 
+  // Fetch pending checkouts for this user
+  const { data: pendingCheckouts, refetch: refetchPending } = useQuery({
+    queryKey: ["pending-checkouts", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await (supabase as any)
+        .from("pending_checkouts")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+    refetchInterval: 15000, // Poll every 15s to catch webhook completions
+  });
+
   const loadPaystackScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (window.PaystackPop) {
@@ -93,6 +111,71 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
       script.onerror = () => reject(new Error("Failed to load Paystack"));
       document.body.appendChild(script);
     });
+  };
+
+  const savePendingCheckout = async (
+    reference: string,
+    units: number,
+    amount: number,
+    packageType?: string,
+    customUnits?: number
+  ) => {
+    const { error } = await (supabase as any).from("pending_checkouts").insert({
+      user_id: user!.id,
+      reference,
+      package_type: packageType || null,
+      custom_units: customUnits || null,
+      units,
+      expected_amount: amount,
+      target,
+      group_id: target === "group" ? selectedGroup : null,
+    });
+    if (error) console.error("Failed to save pending checkout:", error);
+  };
+
+  const verifyPendingPayment = async (reference: string) => {
+    setVerifying(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/purchase-ku`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ reference, fromPending: true }),
+        }
+      );
+
+      const result = await res.json();
+      if (!res.ok) {
+        if (res.status === 409) {
+          // Already processed - just refresh
+          toast({ title: "Already credited ✅", description: "This payment was already added to your wallet." });
+        } else {
+          throw new Error(result.error || "Verification failed");
+        }
+      } else {
+        toast({
+          title: "Knowledge Units added! 🧠",
+          description: `${result.units} KU added to your wallet.`,
+        });
+      }
+      refetch();
+      refetchPending();
+      onSuccess?.();
+    } catch (error) {
+      toast({
+        title: "Payment still processing",
+        description: "Your bank transfer may still be processing. We'll credit your KU automatically once confirmed.",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const initiatePurchase = async (units: number, amount: number, label: string, packageType?: string) => {
@@ -110,6 +193,15 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     try {
       await loadPaystackScript();
       const reference = `ku_${label}_${target}_${user.id}_${Date.now()}`;
+
+      // Save pending checkout BEFORE opening Paystack
+      await savePendingCheckout(
+        reference,
+        units,
+        amount,
+        packageType,
+        packageType ? undefined : units
+      );
 
       const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
@@ -161,6 +253,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
               description: `${units} KU added to your ${target === "group" ? "group" : "personal"} wallet.`,
             });
             refetch();
+            refetchPending();
             onSuccess?.();
           })()
             .catch((error) => {
@@ -172,7 +265,15 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             })
             .finally(() => setProcessing(null));
         },
-        onClose: () => setProcessing(null),
+        onClose: () => {
+          setProcessing(null);
+          // Refresh pending checkouts - the webhook may process it
+          refetchPending();
+          toast({
+            title: "Payment window closed",
+            description: "If you completed a bank transfer, your KU will be credited automatically once the payment is confirmed. You can also tap 'Verify' below.",
+          });
+        },
       });
 
       handler.openIframe();
@@ -198,6 +299,38 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
 
   return (
     <div className="space-y-6">
+      {/* Pending Payments Banner */}
+      {pendingCheckouts && pendingCheckouts.length > 0 && (
+        <div className="p-4 rounded-xl bg-accent/20 border border-accent/40 space-y-3">
+          <p className="text-sm font-medium text-accent-foreground">
+            ⏳ You have {pendingCheckouts.length} pending payment{pendingCheckouts.length > 1 ? "s" : ""}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            If you completed a bank transfer, tap Verify to check if it's been confirmed.
+          </p>
+          {pendingCheckouts.map((checkout: any) => (
+            <div key={checkout.id} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-secondary/50">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{checkout.units} KU</p>
+                <p className="text-xs text-muted-foreground">
+                  ₦{(checkout.expected_amount / 100).toLocaleString()}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => verifyPendingPayment(checkout.reference)}
+                disabled={verifying}
+                className="shrink-0"
+              >
+                {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+                Verify
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Target Toggle */}
       {adminGroups && adminGroups.length > 0 && (
         <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl bg-secondary/50 border border-border">
