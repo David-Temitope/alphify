@@ -43,38 +43,75 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { reference, packageType, target, groupId, customUnits } = await req.json();
+    const { reference, packageType, target: reqTarget, groupId, customUnits, fromPending } = await req.json();
 
-    if (!reference || !target) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Support both preset packages and custom amounts
-    let units: number;
-    let expectedAmount: number;
-
-    if (customUnits && typeof customUnits === "number" && customUnits >= 1) {
-      units = Math.floor(customUnits);
-      expectedAmount = units * PRICE_PER_UNIT;
-    } else if (packageType && KU_PACKAGES[packageType]) {
-      const pkg = KU_PACKAGES[packageType];
-      units = pkg.units;
-      expectedAmount = pkg.amount;
-    } else {
-      return new Response(JSON.stringify({ error: "Invalid package or amount" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (target === "group" && !groupId) {
-      return new Response(JSON.stringify({ error: "Group ID required for group purchase" }), {
+    if (!reference) {
+      return new Response(JSON.stringify({ error: "Missing reference" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // If fromPending, look up checkout details from pending_checkouts table
+    let units: number;
+    let expectedAmount: number;
+    let target: string;
+    let groupIdResolved: string | null = null;
+    let packageTypeResolved: string | null = null;
+
+    if (fromPending) {
+      const { data: checkout } = await serviceClient
+        .from("pending_checkouts")
+        .select("*")
+        .eq("reference", reference)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!checkout) {
+        return new Response(JSON.stringify({ error: "No pending checkout found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      units = checkout.units;
+      expectedAmount = checkout.expected_amount;
+      target = checkout.target;
+      groupIdResolved = checkout.group_id;
+      packageTypeResolved = checkout.package_type;
+    } else {
+      target = reqTarget;
+      groupIdResolved = groupId || null;
+      packageTypeResolved = packageType || null;
+
+      if (!target) {
+        return new Response(JSON.stringify({ error: "Missing target" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Support both preset packages and custom amounts
+      if (customUnits && typeof customUnits === "number" && customUnits >= 1) {
+        units = Math.floor(customUnits);
+        expectedAmount = units * PRICE_PER_UNIT;
+      } else if (packageType && KU_PACKAGES[packageType]) {
+        const pkg = KU_PACKAGES[packageType];
+        units = pkg.units;
+        expectedAmount = pkg.amount;
+      } else {
+        return new Response(JSON.stringify({ error: "Invalid package or amount" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (target === "group" && !groupIdResolved) {
+      return new Response(JSON.stringify({ error: "Group ID required for group purchase" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // serviceClient already created above
 
     // Check duplicate
     const { data: existingPayment } = await serviceClient
@@ -107,7 +144,7 @@ Deno.serve(async (req) => {
       await serviceClient.from("payment_history").insert({
         user_id: user.id, amount: paystackData?.data?.amount || 0,
         currency: "NGN", paystack_reference: reference,
-        plan: `ku_${packageType || 'custom_' + units}`, status: "failed",
+        plan: `ku_${packageTypeResolved || 'custom_' + units}`, status: "failed",
       });
 
       return new Response(JSON.stringify({ error: "Payment verification failed" }), {
@@ -152,24 +189,24 @@ Deno.serve(async (req) => {
       }
     } else {
       const { data: groupWallet } = await serviceClient
-        .from("group_wallets").select("balance").eq("group_id", groupId).maybeSingle();
+        .from("group_wallets").select("balance").eq("group_id", groupIdResolved).maybeSingle();
 
       if (groupWallet) {
         await serviceClient.from("group_wallets")
           .update({ balance: groupWallet.balance + units })
-          .eq("group_id", groupId);
+          .eq("group_id", groupIdResolved);
       } else {
         await serviceClient.from("group_wallets")
-          .insert({ group_id: groupId, balance: units });
+          .insert({ group_id: groupIdResolved, balance: units });
       }
     }
 
-    const planLabel = packageType ? `ku_${packageType}_${target}` : `ku_custom_${units}_${target}`;
+    const planLabel = packageTypeResolved ? `ku_${packageTypeResolved}_${target}` : `ku_custom_${units}_${target}`;
 
     // Log transaction
     await serviceClient.from("ku_transactions").insert({
       user_id: user.id,
-      group_id: target === "group" ? groupId : null,
+      group_id: target === "group" ? groupIdResolved : null,
       amount: units,
       type: "purchase",
       description: `Purchased ${units} KU for ${target} wallet`,
@@ -182,13 +219,18 @@ Deno.serve(async (req) => {
       plan: planLabel, status: "success",
     });
 
+    // Mark pending checkout as completed
+    await serviceClient.from("pending_checkouts")
+      .update({ status: "completed" })
+      .eq("reference", reference);
+
     // Get updated balance
     let newBalance = 0;
     if (target === "personal") {
       const { data } = await serviceClient.from("ku_wallets").select("balance").eq("user_id", user.id).single();
       newBalance = data?.balance || 0;
     } else {
-      const { data } = await serviceClient.from("group_wallets").select("balance").eq("group_id", groupId).single();
+      const { data } = await serviceClient.from("group_wallets").select("balance").eq("group_id", groupIdResolved).single();
       newBalance = data?.balance || 0;
     }
 

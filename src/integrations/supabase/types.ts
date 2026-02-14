@@ -337,6 +337,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_checkouts: {
+        Row: {
+          created_at: string
+          custom_units: number | null
+          expected_amount: number
+          expires_at: string
+          group_id: string | null
+          id: string
+          package_type: string | null
+          reference: string
+          status: string
+          target: string
+          units: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_units?: number | null
+          expected_amount: number
+          expires_at?: string
+          group_id?: string | null
+          id?: string
+          package_type?: string | null
+          reference: string
+          status?: string
+          target?: string
+          units: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_units?: number | null
+          expected_amount?: number
+          expires_at?: string
+          group_id?: string | null
+          id?: string
+          package_type?: string | null
+          reference?: string
+          status?: string
+          target?: string
+          units?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
