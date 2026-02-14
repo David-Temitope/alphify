@@ -340,18 +340,8 @@ export default function StudySession() {
 
       if (response.error) throw response.error;
 
-      // Save AI response
-      const { error: aiError } = await supabase
-        .from('session_messages')
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          content: response.data.response,
-          is_ai_message: true
-        });
-
-      if (aiError) throw aiError;
-
+      // The AI response is now securely saved by the Edge Function
+      // to prevent client-side spoofing of AI messages.
       return response.data;
     },
     onSuccess: () => {

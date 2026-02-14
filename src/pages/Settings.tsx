@@ -157,16 +157,31 @@ export default function Settings() {
 
   const saveSettings = useMutation({
     mutationFn: async () => {
+      // Security: Explicitly list fields to prevent mass assignment of
+      // sensitive fields like quiz_score_percentage or total_quizzes_taken
+      const settingsToSave = {
+        student_type: settings.student_type,
+        field_of_study: settings.field_of_study,
+        country: settings.country,
+        university_level: settings.university_level,
+        ai_personality: settings.ai_personality,
+        courses: settings.courses,
+        preferred_name: settings.preferred_name,
+        explanation_style: settings.explanation_style,
+        exam_sample_text: settings.exam_sample_text,
+        bio: settings.bio,
+      };
+
       if (existingSettings) {
         const { error } = await supabase
           .from('user_settings')
-          .update(settings)
+          .update(settingsToSave)
           .eq('user_id', user!.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('user_settings')
-          .insert({ ...settings, user_id: user!.id });
+          .insert({ ...settingsToSave, user_id: user!.id });
         if (error) throw error;
       }
     },

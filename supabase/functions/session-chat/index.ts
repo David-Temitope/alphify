@@ -263,6 +263,22 @@ Stay strictly focused on this topic. Help students understand ${topic} thoroughl
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || "I'm having trouble responding right now. Please try again.";
 
+    // Securely save AI response using service role client
+    // This prevents spoofing by ensuring only the system can set is_ai_message = true
+    const { error: aiError } = await groupServiceClient
+      .from('session_messages')
+      .insert({
+        session_id: sessionId,
+        user_id: authData.user.id, // Associate with the user who triggered it for context
+        content: aiResponse,
+        is_ai_message: true
+      });
+
+    if (aiError) {
+      console.error("Error saving AI message:", aiError);
+      // We don't fail the request if just saving fails, but we should log it
+    }
+
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
