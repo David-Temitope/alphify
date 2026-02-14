@@ -12,6 +12,8 @@ const KU_PACKAGES: Record<string, { units: number; amount: number }> = {
   mega: { units: 100, amount: 500000 },
 };
 
+const PRICE_PER_UNIT = 5000; // ₦50 in kobo
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,17 +43,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { reference, packageType, target, groupId } = await req.json();
+    const { reference, packageType, target, groupId, customUnits } = await req.json();
 
-    if (!reference || !packageType || !target) {
+    if (!reference || !target) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const pkg = KU_PACKAGES[packageType];
-    if (!pkg) {
-      return new Response(JSON.stringify({ error: "Invalid package" }), {
+    // Support both preset packages and custom amounts
+    let units: number;
+    let expectedAmount: number;
+
+    if (customUnits && typeof customUnits === "number" && customUnits >= 1) {
+      units = Math.floor(customUnits);
+      expectedAmount = units * PRICE_PER_UNIT;
+    } else if (packageType && KU_PACKAGES[packageType]) {
+      const pkg = KU_PACKAGES[packageType];
+      units = pkg.units;
+      expectedAmount = pkg.amount;
+    } else {
+      return new Response(JSON.stringify({ error: "Invalid package or amount" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -95,7 +107,7 @@ Deno.serve(async (req) => {
       await serviceClient.from("payment_history").insert({
         user_id: user.id, amount: paystackData?.data?.amount || 0,
         currency: "NGN", paystack_reference: reference,
-        plan: `ku_${packageType}`, status: "failed",
+        plan: `ku_${packageType || 'custom_' + units}`, status: "failed",
       });
 
       return new Response(JSON.stringify({ error: "Payment verification failed" }), {
@@ -109,7 +121,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (paystackData.data.amount !== pkg.amount) {
+    if (paystackData.data.amount !== expectedAmount) {
       return new Response(JSON.stringify({ error: "Amount mismatch" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -132,11 +144,11 @@ Deno.serve(async (req) => {
 
       if (wallet) {
         await serviceClient.from("ku_wallets")
-          .update({ balance: wallet.balance + pkg.units })
+          .update({ balance: wallet.balance + units })
           .eq("user_id", user.id);
       } else {
         await serviceClient.from("ku_wallets")
-          .insert({ user_id: user.id, balance: pkg.units + 3 });
+          .insert({ user_id: user.id, balance: units + 3 });
       }
     } else {
       const { data: groupWallet } = await serviceClient
@@ -144,28 +156,30 @@ Deno.serve(async (req) => {
 
       if (groupWallet) {
         await serviceClient.from("group_wallets")
-          .update({ balance: groupWallet.balance + pkg.units })
+          .update({ balance: groupWallet.balance + units })
           .eq("group_id", groupId);
       } else {
         await serviceClient.from("group_wallets")
-          .insert({ group_id: groupId, balance: pkg.units });
+          .insert({ group_id: groupId, balance: units });
       }
     }
+
+    const planLabel = packageType ? `ku_${packageType}_${target}` : `ku_custom_${units}_${target}`;
 
     // Log transaction
     await serviceClient.from("ku_transactions").insert({
       user_id: user.id,
       group_id: target === "group" ? groupId : null,
-      amount: pkg.units,
+      amount: units,
       type: "purchase",
-      description: `Purchased ${pkg.units} KU (${packageType}) for ${target} wallet`,
+      description: `Purchased ${units} KU for ${target} wallet`,
     });
 
     // Record payment
     await serviceClient.from("payment_history").insert({
       user_id: user.id, amount: paystackData.data.amount,
       currency: "NGN", paystack_reference: reference,
-      plan: `ku_${packageType}_${target}`, status: "success",
+      plan: planLabel, status: "success",
     });
 
     // Get updated balance
@@ -178,7 +192,7 @@ Deno.serve(async (req) => {
       newBalance = data?.balance || 0;
     }
 
-    return new Response(JSON.stringify({ success: true, balance: newBalance, units: pkg.units }), {
+    return new Response(JSON.stringify({ success: true, balance: newBalance, units }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useKnowledgeUnits } from "@/hooks/useKnowledgeUnits";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +66,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
   const [processing, setProcessing] = useState<string | null>(null);
   const [target, setTarget] = useState<"personal" | "group">("personal");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
+  const [customAmount, setCustomAmount] = useState<string>("");
 
   const { data: adminGroups } = useQuery({
     queryKey: ["admin-groups", user?.id],
@@ -93,48 +95,38 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     });
   };
 
-  const handlePurchase = async (pkg: (typeof KU_PACKAGES)[0]) => {
+  const initiatePurchase = async (units: number, amount: number, label: string, packageType?: string) => {
     if (!user?.email) {
       toast({ title: "Email required", variant: "destructive" });
       return;
     }
     if (target === "group" && !selectedGroup) {
-      toast({
-        title: "Select a group",
-        description: "Choose which group to top up.",
-        variant: "destructive",
-      });
+      toast({ title: "Select a group", description: "Choose which group to top up.", variant: "destructive" });
       return;
     }
 
-    setProcessing(pkg.id);
+    setProcessing(label);
 
     try {
       await loadPaystackScript();
-      const reference = `ku_${pkg.id}_${target}_${user.id}_${Date.now()}`;
+      const reference = `ku_${label}_${target}_${user.id}_${Date.now()}`;
 
       const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: pkg.amount,
+        amount,
         currency: "NGN",
         ref: reference,
         metadata: {
           custom_fields: [
-            { display_name: "Package", variable_name: "package", value: pkg.id },
+            { display_name: "Package", variable_name: "package", value: label },
             { display_name: "Target", variable_name: "target", value: target },
-            {
-              display_name: "User ID",
-              variable_name: "user_id",
-              value: user.id,
-            },
+            { display_name: "User ID", variable_name: "user_id", value: user.id },
           ],
         },
         callback: (response: PaystackResponse) => {
           void (async () => {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/purchase-ku`,
               {
@@ -146,7 +138,8 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
                 },
                 body: JSON.stringify({
                   reference: response.reference,
-                  packageType: pkg.id,
+                  packageType: packageType || undefined,
+                  customUnits: packageType ? undefined : units,
                   target,
                   groupId: target === "group" ? selectedGroup : undefined,
                 }),
@@ -165,7 +158,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
 
             toast({
               title: "Knowledge Units added! 🧠",
-              description: `${pkg.units} KU added to your ${target === "group" ? "group" : "personal"} wallet.`,
+              description: `${units} KU added to your ${target === "group" ? "group" : "personal"} wallet.`,
             });
             refetch();
             onSuccess?.();
@@ -173,8 +166,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             .catch((error) => {
               toast({
                 title: "Verification failed",
-                description:
-                  error instanceof Error ? error.message : "Please contact support.",
+                description: error instanceof Error ? error.message : "Please contact support.",
                 variant: "destructive",
               });
             })
@@ -185,13 +177,23 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
 
       handler.openIframe();
     } catch (error) {
-      toast({
-        title: "Payment error",
-        description: "Failed to initialize payment.",
-        variant: "destructive",
-      });
+      toast({ title: "Payment error", description: "Failed to initialize payment.", variant: "destructive" });
       setProcessing(null);
     }
+  };
+
+  const handlePackagePurchase = (pkg: (typeof KU_PACKAGES)[0]) => {
+    initiatePurchase(pkg.units, pkg.amount, pkg.id, pkg.id);
+  };
+
+  const handleCustomPurchase = () => {
+    const units = parseInt(customAmount, 10);
+    if (!units || units < 1) {
+      toast({ title: "Invalid amount", description: "Enter at least 1 KU.", variant: "destructive" });
+      return;
+    }
+    const amount = units * 5000; // ₦50 per unit in kobo
+    initiatePurchase(units, amount, `custom_${units}`);
   };
 
   return (
@@ -254,7 +256,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             </div>
             <div className="text-xs text-muted-foreground mb-4">₦50/unit</div>
             <Button
-              onClick={() => handlePurchase(pkg)}
+              onClick={() => handlePackagePurchase(pkg)}
               disabled={processing !== null}
               className="w-full xp-gradient text-primary-foreground"
               size="sm"
@@ -267,6 +269,37 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             </Button>
           </div>
         ))}
+      </div>
+
+      {/* Custom Amount */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl bg-secondary/50 border border-border">
+        <div className="flex-1 w-full">
+          <label className="text-xs text-muted-foreground mb-1 block">Or enter custom amount</label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              placeholder="e.g. 15"
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+              className="w-28"
+            />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">KU</span>
+          </div>
+        </div>
+        {customAmount && parseInt(customAmount, 10) >= 1 && (
+          <div className="text-sm font-medium text-foreground whitespace-nowrap">
+            = ₦{(parseInt(customAmount, 10) * 50).toLocaleString()}
+          </div>
+        )}
+        <Button
+          onClick={handleCustomPurchase}
+          disabled={processing !== null || !customAmount || parseInt(customAmount, 10) < 1}
+          className="xp-gradient text-primary-foreground whitespace-nowrap"
+          size="sm"
+        >
+          {processing?.startsWith("custom") ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy Custom"}
+        </Button>
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
