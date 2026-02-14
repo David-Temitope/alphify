@@ -1,0 +1,1 @@
+ALTER TABLE public.ku_wallets ADD COLUMN library_slots integer NOT NULL DEFAULT 1;

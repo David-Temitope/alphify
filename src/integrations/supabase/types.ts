@@ -241,6 +241,7 @@ export type Database = {
           balance: number
           created_at: string
           id: string
+          library_slots: number
           updated_at: string
           user_id: string
         }
@@ -248,6 +249,7 @@ export type Database = {
           balance?: number
           created_at?: string
           id?: string
+          library_slots?: number
           updated_at?: string
           user_id: string
         }
@@ -255,6 +257,7 @@ export type Database = {
           balance?: number
           created_at?: string
           id?: string
+          library_slots?: number
           updated_at?: string
           user_id?: string
         }

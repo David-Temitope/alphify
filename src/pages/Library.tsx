@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { 
   ArrowLeft, 
   Search, 
@@ -16,7 +16,8 @@ import {
   Folder,
   Clock,
   ExternalLink,
-  Lock
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import FileUpload from '@/components/FileUpload';
@@ -28,12 +29,7 @@ export default function Library() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
-  const { currentPlan, limits } = useSubscription();
-
-  const canUploadMore = () => {
-    if (limits.maxLibraryFiles === Infinity) return true;
-    return (files?.length || 0) < limits.maxLibraryFiles;
-  };
+  const { balance, librarySlots, buyLibrarySlot, isBuyingSlot } = useKnowledgeUnits();
 
   const { data: files, isLoading } = useQuery({
     queryKey: ['library-files'],
@@ -47,25 +43,44 @@ export default function Library() {
     },
   });
 
+  const usedSlots = files?.length || 0;
+  const hasAvailableSlot = usedSlots < librarySlots;
+
   const deleteFile = useMutation({
     mutationFn: async (fileId: string) => {
       const file = files?.find(f => f.id === fileId);
       if (file) {
-        // Delete from storage
         await supabase.storage.from('user-files').remove([file.file_path]);
-        // Delete from database
         const { error } = await supabase.from('uploaded_files').delete().eq('id', fileId);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library-files'] });
-      toast({ title: 'File deleted' });
+      toast({ title: 'File deleted — slot freed up!' });
     },
     onError: () => {
       toast({ title: 'Failed to delete file', variant: 'destructive' });
     },
   });
+
+  const handleUploadClick = () => {
+    if (hasAvailableSlot) {
+      setShowUpload(true);
+    } else {
+      toast({
+        title: 'No slots available',
+        description: 'Buy more library space for 5 KU to upload another file.',
+      });
+    }
+  };
+
+  const handleBuySlot = async () => {
+    const success = await buyLibrarySlot();
+    if (success) {
+      queryClient.invalidateQueries({ queryKey: ['library-files'] });
+    }
+  };
 
   const filteredFiles = files?.filter(file => 
     file.file_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,45 +114,49 @@ export default function Library() {
             <div className="flex items-center gap-3">
               <Folder className="h-6 w-6 text-primary" />
               <h1 className="font-display font-semibold text-xl text-foreground">My Library</h1>
+              <span className="text-sm text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                {usedSlots}/{librarySlots} slots
+              </span>
             </div>
           </div>
 
-          <Button 
-            onClick={() => {
-              if (currentPlan === 'free') {
-                toast({
-                  title: 'Subscription required',
-                  description: 'Subscribe to upload files to your library.',
-                  variant: 'destructive',
-                });
-                navigate('/settings?tab=subscription');
-                return;
-              }
-              if (!canUploadMore()) {
-                toast({
-                  title: 'File limit reached',
-                  description: `Your ${currentPlan} plan allows ${limits.maxLibraryFiles} files. Upgrade for more!`,
-                  variant: 'destructive',
-                });
-                navigate('/settings?tab=subscription');
-                return;
-              }
-              setShowUpload(true);
-            }} 
-            className="xp-gradient text-primary-foreground"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Upload
-            {limits.maxLibraryFiles !== Infinity && (
-              <span className="ml-1 text-xs opacity-75">
-                ({files?.length || 0}/{limits.maxLibraryFiles})
-              </span>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBuySlot}
+              disabled={isBuyingSlot || balance < 5}
+              className="text-xs"
+            >
+              {isBuyingSlot ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />}
+              Buy Slot (5 KU)
+            </Button>
+            <Button 
+              onClick={handleUploadClick}
+              disabled={!hasAvailableSlot}
+              className="xp-gradient text-primary-foreground"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6 md:p-8">
+        {/* Slot info banner when full */}
+        {!hasAvailableSlot && usedSlots > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-secondary border border-border animate-fade-in">
+            <p className="text-sm text-foreground">
+              All {librarySlots} slot{librarySlots > 1 ? 's' : ''} used. 
+              <button onClick={handleBuySlot} disabled={isBuyingSlot || balance < 5} className="text-primary font-medium ml-1 hover:underline">
+                Buy another slot for 5 KU
+              </button>
+              {balance < 5 && <span className="text-muted-foreground ml-1">(need {5 - balance} more KU)</span>}
+            </p>
+          </div>
+        )}
+
         {/* Search */}
         <div className="mb-8 animate-fade-in">
           <div className="relative max-w-md">
@@ -154,7 +173,7 @@ export default function Library() {
         {/* Files Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className="glass-card p-4 rounded-xl animate-pulse">
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 bg-muted rounded-lg" />
@@ -204,13 +223,11 @@ export default function Library() {
                     variant="ghost" 
                     size="sm"
                     onClick={async () => {
-                      // Create a new conversation and navigate to it with the file
                       const { data, error } = await supabase
                         .from('conversations')
                         .insert({ user_id: user!.id, title: `Discussing: ${file.file_name}` })
                         .select()
                         .single();
-                      
                       if (!error && data) {
                         navigate(`/chat/${data.id}?file=${file.id}`);
                       }
@@ -237,7 +254,7 @@ export default function Library() {
             <FileText className="h-16 w-16 text-primary mx-auto mb-6" />
             <h2 className="font-display text-xl font-semibold mb-2">Your library is empty</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Upload your PDFs, documents, and study materials. I'll help you understand them in simple terms.
+              Upload your PDFs, documents, and study materials. You have {librarySlots} free slot{librarySlots > 1 ? 's' : ''} to start!
             </p>
             <Button onClick={() => setShowUpload(true)} className="xp-gradient text-primary-foreground">
               <Upload className="h-4 w-4 mr-2" />
@@ -247,7 +264,6 @@ export default function Library() {
         )}
       </main>
 
-      {/* Upload Modal */}
       {showUpload && (
         <FileUpload 
           conversationId={null}
