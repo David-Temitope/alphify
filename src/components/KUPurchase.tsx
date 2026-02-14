@@ -142,6 +142,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${session?.access_token}`,
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
                 },
                 body: JSON.stringify({
                   reference: response.reference,
@@ -151,6 +152,14 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
                 }),
               }
             );
+
+            const contentType = res.headers.get("content-type");
+            if (!contentType?.includes("application/json")) {
+              const text = await res.text();
+              console.error("Non-JSON response from purchase-ku:", text.substring(0, 500));
+              throw new Error("Payment was successful but verification got an unexpected response. Please contact support with your reference: " + response.reference);
+            }
+
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Verification failed");
 
