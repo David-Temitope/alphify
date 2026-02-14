@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSqu
 import gideonHero from '@/assets/gideon-hero.jpg';
 import robotFeatures from '@/assets/robot-features.jpg';
 import robotCommunity from '@/assets/robot-community.png';
+import xplaneLogo from '@/assets/xplane-logo.png';
 export default function Index() {
   const {
     user
@@ -67,8 +68,8 @@ export default function Index() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-display font-bold text-lg text-primary-foreground shadow-lg shadow-primary/25">Xp</div>
-          <span className="font-display font-semibold text-xl text-foreground">xPlane</span>
+          <img src={xplaneLogo} alt="X-Plane" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+          <span className="font-display font-semibold text-xl text-foreground">X-Plane</span>
         </div>
         
         <nav className="flex items-center gap-4">
@@ -297,10 +298,8 @@ export default function Index() {
       <footer className="relative z-10 border-t border-border px-6 py-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-display font-bold text-sm text-primary-foreground">
-              ​Xp
-            </div>
-            <span className="font-display font-medium text-foreground">​xPlane</span>
+            <img src={xplaneLogo} alt="X-Plane" className="w-8 h-8 rounded-lg shadow-md" />
+            <span className="font-display font-medium text-foreground">X-Plane</span>
           </div>
           <p className="text-muted-foreground text-sm text-center">
             Built with ❤️ by <span className="text-primary font-medium">Alphadominity</span>

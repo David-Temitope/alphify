@@ -24,6 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
+import xplaneLogo from '@/assets/xplane-logo.png';
 
 interface Message {
   id: string;
@@ -398,10 +399,8 @@ Student Profile:
           {/* Sidebar Header */}
           <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg xp-gradient flex items-center justify-center font-display font-bold text-primary-foreground">
-                G
-              </div>
-              <span className="font-display font-semibold text-sidebar-foreground">Gideon</span>
+            <img src={xplaneLogo} alt="X-Plane" className="w-9 h-9 rounded-lg shadow-md" />
+              <span className="font-display font-semibold text-sidebar-foreground">X-Plane</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="lg:hidden">
               <X className="h-5 w-5" />

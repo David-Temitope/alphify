@@ -10,6 +10,7 @@ import {
   ArrowLeft, Send, Users, Clock, Loader2, 
   BookOpen, AlertTriangle, CheckCircle, UserPlus
 } from 'lucide-react';
+import xplaneLogo from '@/assets/xplane-logo.png';
 import {
   Dialog,
   DialogContent,
@@ -463,9 +464,7 @@ export default function StudySession() {
             {/* Welcome message */}
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-6">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                  G
-                </div>
+                <img src={xplaneLogo} alt="Gideon" className="w-8 h-8 rounded-lg" />
                 <span className="font-medium text-foreground">Gideon</span>
               </div>
               <p className="text-muted-foreground">
@@ -481,9 +480,7 @@ export default function StudySession() {
                 className={`flex gap-3 ${msg.is_ai_message ? '' : 'justify-end'}`}
               >
                 {msg.is_ai_message && (
-                  <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-                    G
-                  </div>
+                  <img src={xplaneLogo} alt="Gideon" className="w-8 h-8 rounded-lg shrink-0" />
                 )}
                 <div className={`max-w-[80%] rounded-xl p-4 ${
                   msg.is_ai_message 
