@@ -44,9 +44,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-
-    if (!GOOGLE_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -91,38 +90,25 @@ Return format:
   ]
 }`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`;
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: "You are an exam generation AI. Return ONLY valid JSON." },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
 
-    let response: Response | null = null;
-    let errorText = "";
-
-    for (let attempt = 0; attempt < 2; attempt++) {
-      response = await fetch(geminiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 8192,
-          },
-        }),
-      });
-
-      if (response.ok) break;
-
-      errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
-
-      if (response.status === 429 && attempt === 0) {
-        await new Promise((r) => setTimeout(r, 2000));
-        continue;
-      }
-      break;
-    }
-
-    if (!response || !response.ok) {
-      if (response?.status === 429) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Lovable AI error:", response.status, errorText);
+      if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "AI rate limit exceeded. Please wait a few minutes and try again." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -134,10 +120,10 @@ Return format:
       );
     }
 
-    const geminiData = await response.json();
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const aiData = await response.json();
+    const rawText = aiData.choices?.[0]?.message?.content || '';
 
-    // Parse JSON from response (might be wrapped in markdown)
+    // Parse JSON from response
     let examData;
     try {
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);
@@ -154,7 +140,6 @@ Return format:
       );
     }
 
-    // Create exam attempt record
     const { data: attempt, error: insertError } = await supabase
       .from('exam_attempts')
       .insert({

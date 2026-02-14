@@ -62,7 +62,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -77,7 +76,6 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Validate the JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     
@@ -90,7 +88,6 @@ Deno.serve(async (req) => {
 
     const { sessionId, message, topic, course } = await req.json();
     
-    // Input validation
     if (!sessionId || typeof sessionId !== 'string') {
       return new Response(JSON.stringify({ error: 'Invalid session ID' }), {
         status: 400,
@@ -105,23 +102,22 @@ Deno.serve(async (req) => {
       });
     }
     
-    const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-    if (!GOOGLE_GEMINI_API_KEY) {
-      console.error("GOOGLE_GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     
-    // Initialize Supabase client with service role for fetching participant settings
+    // Fetch participant context
     let participantContext = "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (SUPABASE_URL && serviceRoleKey) {
       const serviceClient = createClient(SUPABASE_URL, serviceRoleKey);
       
-      // Get active participants in the session
       const { data: participants } = await serviceClient
         .from("session_participants")
         .select("user_id")
@@ -131,14 +127,12 @@ Deno.serve(async (req) => {
       if (participants && participants.length > 0) {
         const userIds = participants.map(p => p.user_id);
         
-        // Fetch user settings for all participants (including exam samples)
         const { data: settings } = await serviceClient
           .from("user_settings")
           .select("preferred_name, field_of_study, university_level, explanation_style, courses, exam_sample_text")
           .in("user_id", userIds);
         
         if (settings && settings.length > 0) {
-          // Combine personalization from all students
           const preferredNames = settings.map(s => s.preferred_name).filter(Boolean);
           const fieldsOfStudy = [...new Set(settings.map(s => s.field_of_study).filter(Boolean))];
           const universityLevels = [...new Set(settings.map(s => s.university_level).filter(Boolean))];
@@ -146,14 +140,12 @@ Deno.serve(async (req) => {
           const allCourses = [...new Set(settings.flatMap(s => s.courses || []))];
           const examSamples = settings.map(s => s.exam_sample_text).filter(Boolean);
           
-          // Determine the most common/appropriate explanation style
           const styleCounts: Record<string, number> = {};
           explanationStyles.forEach(style => {
             styleCounts[style] = (styleCounts[style] || 0) + 1;
           });
           const dominantStyle = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "five_year_old";
           
-          // Build merged exam sample context
           let examSampleContext = "";
           if (examSamples.length > 0) {
             examSampleContext = `\n\n## Exam Question Style Reference
@@ -183,52 +175,41 @@ ${participantContext}
 
 Stay strictly focused on this topic. Help students understand ${topic} thoroughly.`;
 
-    // Use Google Gemini API directly
-    const geminiContents = [
-      {
-        role: "user",
-        parts: [{ text: `System Instructions: ${systemPrompt}\n\nPlease acknowledge and wait for student questions.` }]
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      {
-        role: "model",
-        parts: [{ text: "I'm ready to teach! Let's learn about " + topic + " together." }]
-      },
-      {
-        role: "user",
-        parts: [{ text: message }]
-      }
-    ];
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: geminiContents,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 4096,
-          },
-        }),
-      }
-    );
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm having trouble responding right now. Please try again.";
+    const aiResponse = data.choices?.[0]?.message?.content || "I'm having trouble responding right now. Please try again.";
 
     return new Response(
       JSON.stringify({ response: aiResponse }),

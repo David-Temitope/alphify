@@ -2,10 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Allowed MIME types for image analysis
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 Deno.serve(async (req) => {
@@ -14,7 +13,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -29,7 +27,6 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Validate the JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     
@@ -41,13 +38,12 @@ Deno.serve(async (req) => {
     }
 
     const { imageBase64, mimeType, prompt } = await req.json();
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
     
-    if (!GOOGLE_API_KEY) {
-      throw new Error("GOOGLE_GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Input validation
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "No image data provided" }), {
         status: 400,
@@ -55,11 +51,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate mime type
     const validMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : 'image/jpeg';
 
-    // Validate base64 size (max ~10MB encoded)
-    const MAX_BASE64_LENGTH = 14000000; // ~10MB in base64
+    const MAX_BASE64_LENGTH = 14000000;
     if (imageBase64.length > MAX_BASE64_LENGTH) {
       return new Response(JSON.stringify({ error: "Image too large. Maximum size is 10MB." }), {
         status: 400,
@@ -67,7 +61,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate prompt length if provided
     const MAX_PROMPT_LENGTH = 5000;
     if (prompt && prompt.length > MAX_PROMPT_LENGTH) {
       return new Response(JSON.stringify({ error: "Prompt too long" }), {
@@ -76,26 +69,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use Google Gemini for image analysis
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`,
+    const imageDataUrl = `data:${validMimeType};base64,${imageBase64}`;
+
+    const userContent = [
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: validMimeType,
-                    data: imageBase64,
-                  },
-                },
-                {
-                  text: prompt || `You are an educational AI assistant. Analyze this image carefully and provide a detailed, educational explanation of what you see.
+        type: "image_url",
+        image_url: { url: imageDataUrl },
+      },
+      {
+        type: "text",
+        text: prompt || `You are an educational AI assistant. Analyze this image carefully and provide a detailed, educational explanation of what you see.
 
 IMPORTANT RULES:
 1. Describe EXACTLY what is in the image - do not make assumptions
@@ -108,28 +91,34 @@ IMPORTANT RULES:
 8. NEVER use LaTeX notation - use plain text like × for multiplication, ² for squared
 
 Start your response with: "Looking at your image, I can see..."`,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            topK: 32,
-            topP: 1,
-            maxOutputTokens: 4096,
+      },
+    ];
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "user",
+            content: userContent,
           },
-        }),
-      }
-    );
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
       throw new Error("Failed to analyze image");
     }
 
     const data = await response.json();
-    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to analyze the image. Please try again.";
+    const analysis = data.choices?.[0]?.message?.content || "Unable to analyze the image. Please try again.";
 
     return new Response(JSON.stringify({ analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -138,10 +127,7 @@ Start your response with: "Looking at your image, I can see..."`,
     console.error("Image analysis error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

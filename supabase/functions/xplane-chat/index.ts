@@ -234,7 +234,6 @@ Deno.serve(async (req) => {
       });
     }
     
-    // Validate message structure and limit content length
     const MAX_MESSAGE_LENGTH = 50000;
     for (const msg of messages) {
       if (!msg.role || !msg.content) {
@@ -251,101 +250,62 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Use Google Gemini API
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
-
-    if (!GOOGLE_API_KEY) {
-      console.error("GOOGLE_GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Build context-aware system message
+    // Build system message
     let systemContent = GIDEON_SYSTEM_PROMPT;
 
-    // Add personalization context if provided
     if (personalization) {
       systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
     }
 
-    // Add file content context if provided
     if (fileContent) {
       systemContent += `\n\nThe student has uploaded a document. Here is the content:\n\n${fileContent}\n\nPlease analyze this content and help the student understand it. Focus ONLY on what is actually in this document.`;
     }
 
-    // Convert messages to Gemini format
-    const geminiContents = [];
+    // Build OpenAI-compatible messages
+    const apiMessages = [
+      { role: "system", content: systemContent },
+      ...messages.map((msg: any) => ({
+        role: msg.role === "user" ? "user" : "assistant",
+        content: msg.content,
+      })),
+    ];
 
-    // Add system instruction via user message (Gemini doesn't have system role)
-    geminiContents.push({
-      role: "user",
-      parts: [{ text: `System Instructions: ${systemContent}\n\nPlease acknowledge these instructions and wait for my question.` }],
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: apiMessages,
+        stream: true,
+      }),
     });
-    geminiContents.push({
-      role: "model",
-      parts: [{ text: "I understand. I'm Gideon, your AI study companion. I'll follow all the formatting and teaching guidelines. How can I help you today?" }],
-    });
 
-    // Add conversation messages
-    for (const msg of messages) {
-      geminiContents.push({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }],
-      });
-    }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Lovable AI error:", response.status, errorText);
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GOOGLE_API_KEY}`;
-
-    let response: Response | null = null;
-    let errorText = "";
-
-    // Retry once on 429 (rate limit)
-    for (let attempt = 0; attempt < 2; attempt++) {
-      response = await fetch(geminiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: geminiContents,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 8192,
-          },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          ],
-        }),
-      });
-
-      if (response.ok) break;
-
-      errorText = await response.text();
-      console.error("Gemini API error:", response.status, errorText);
-
-      if (response.status === 429 && attempt === 0) {
-        await new Promise((r) => setTimeout(r, 1200));
-        continue;
-      }
-
-      break;
-    }
-
-    if (!response || !response.ok) {
-      if (response?.status === 429) {
+      if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add credits to your workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -355,49 +315,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Transform Gemini SSE stream to OpenAI-compatible format
-    const transformStream = new TransformStream({
-      transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        const lines = text.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6);
-            if (jsonStr.trim() === '[DONE]') {
-              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-              continue;
-            }
-            
-            try {
-              const geminiData = JSON.parse(jsonStr);
-              const content = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              
-              if (content) {
-                // Convert to OpenAI-compatible SSE format
-                const openAIFormat = {
-                  choices: [{
-                    delta: { content },
-                    index: 0,
-                    finish_reason: null
-                  }]
-                };
-                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
-              }
-            } catch {
-              // Skip malformed JSON
-            }
-          }
-        }
-      },
-      flush(controller) {
-        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-      }
-    });
-
-    const transformedStream = response.body?.pipeThrough(transformStream);
-
-    return new Response(transformedStream, {
+    // Stream directly — Lovable AI already returns OpenAI-compatible SSE
+    return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
