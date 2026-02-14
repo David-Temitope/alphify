@@ -27,7 +27,7 @@ export function useKnowledgeUnits() {
   const balance = wallet?.balance ?? 0;
   const canChat = balance > 0;
   const canStartExam = balance >= 70;
-  const librarySlots = (wallet as any)?.library_slots ?? 1;
+  const librarySlots = wallet?.library_slots ?? 1;
 
   const buyLibrarySlot = async () => {
     if (!user || !wallet) return false;
@@ -37,27 +37,19 @@ export function useKnowledgeUnits() {
     }
     setIsBuyingSlot(true);
     try {
-      const { error: walletError } = await supabase
-        .from('ku_wallets')
-        .update({
-          balance: balance - 5,
-          library_slots: librarySlots + 1,
-        })
-        .eq('user_id', user.id);
-      if (walletError) throw walletError;
-
-      await supabase.from('ku_transactions').insert({
-        user_id: user.id,
-        amount: -5,
-        type: 'library_slot',
-        description: 'Purchased 1 library slot',
-      });
+      // @ts-expect-error - purchase_library_slot is added via migration and might not be in the generated types yet
+      const { error } = await supabase.rpc('purchase_library_slot');
+      if (error) throw error;
 
       await refetch();
       toast({ title: 'Slot purchased!', description: 'You now have a new library slot.' });
       return true;
-    } catch {
-      toast({ title: 'Purchase failed', variant: 'destructive' });
+    } catch (error) {
+      toast({
+        title: 'Purchase failed',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive'
+      });
       return false;
     } finally {
       setIsBuyingSlot(false);
