@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useSubscription, SubscriptionPlan, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { Check, Crown, Loader2, Sparkles, Zap } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useSubscription, SubscriptionPlan, PLAN_DISPLAY_PRICES } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Check, Crown, Loader2, Sparkles, Zap } from "lucide-react";
 
 // Paystack public key (publishable - safe to store in code)
-const PAYSTACK_PUBLIC_KEY = 'pk_test_138ebaa183ec16342d00c7eee0ad68862d438581';
+const PAYSTACK_PUBLIC_KEY = "pk_live_b65b60f97ee0b66e9631df6b1301ef83d383913a";
 
 interface PaystackResponse {
   reference: string;
@@ -42,32 +42,24 @@ declare global {
 }
 
 const planFeatures: Record<SubscriptionPlan, string[]> = {
-  free: [
-    'No access to features',
-    'Upgrade to start learning',
-  ],
-  basic: [
-    '2 files in library',
-    '1 chat per day',
-    '15 prompts per chat',
-    'Basic AI assistance',
-  ],
+  free: ["No access to features", "Upgrade to start learning"],
+  basic: ["2 files in library", "1 chat per day", "15 prompts per chat", "Basic AI assistance"],
   pro: [
-    '5 files in library',
-    '3 chats per day',
-    '25 prompts per chat',
-    'Create study groups',
-    'Upload exam samples',
-    'Priority AI responses',
+    "5 files in library",
+    "3 chats per day",
+    "25 prompts per chat",
+    "Create study groups",
+    "Upload exam samples",
+    "Priority AI responses",
   ],
   premium: [
-    'Unlimited library files',
-    'Unlimited chats',
-    'Unlimited prompts',
-    'Create study groups',
-    'Upload exam samples',
-    'Premium badge in community',
-    'Priority support',
+    "Unlimited library files",
+    "Unlimited chats",
+    "Unlimited prompts",
+    "Create study groups",
+    "Upload exam samples",
+    "Premium badge in community",
+    "Priority support",
   ],
 };
 
@@ -94,20 +86,20 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
         resolve();
         return;
       }
-      const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
+      const script = document.createElement("script");
+      script.src = "https://js.paystack.co/v1/inline.js";
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Paystack'));
+      script.onerror = () => reject(new Error("Failed to load Paystack"));
       document.body.appendChild(script);
     });
   };
 
-  const handleSubscribe = async (plan: Exclude<SubscriptionPlan, 'free'>) => {
+  const handleSubscribe = async (plan: Exclude<SubscriptionPlan, "free">) => {
     if (!user?.email) {
       toast({
-        title: 'Email required',
-        description: 'Please add an email to your account first.',
-        variant: 'destructive',
+        title: "Email required",
+        description: "Please add an email to your account first.",
+        variant: "destructive",
       });
       return;
     }
@@ -118,42 +110,38 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
       await loadPaystackScript();
 
       const reference = `sub_${plan}_${user.id}_${Date.now()}`;
-      const amount = plan === 'basic' ? 300000 : plan === 'pro' ? 500000 : 1000000;
+      const amount = plan === "basic" ? 300000 : plan === "pro" ? 500000 : 1000000;
 
       // Paystack validates that `callback` is a *plain* function. Some versions
       // of inline.js reject `async` functions, even though they are callable.
       // Keep the callback non-async and delegate async work inside.
       const verifyPaymentAndActivate = async (paystackReference: string) => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-        const verifyResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session?.access_token}`,
-            },
-            body: JSON.stringify({
-              reference: paystackReference,
-              plan,
-            }),
-          }
-        );
+        const verifyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            reference: paystackReference,
+            plan,
+          }),
+        });
 
-        const isJson = verifyResponse.headers
-          .get('content-type')
-          ?.toLowerCase()
-          .includes('application/json');
+        const isJson = verifyResponse.headers.get("content-type")?.toLowerCase().includes("application/json");
 
         const result = isJson ? await verifyResponse.json() : null;
 
         if (!verifyResponse.ok) {
-          throw new Error(result?.error || 'Payment verification failed');
+          throw new Error(result?.error || "Payment verification failed");
         }
 
         toast({
-          title: 'Subscription activated!',
+          title: "Subscription activated!",
           description: `You're now on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan.`,
         });
         onSuccess?.();
@@ -166,32 +154,32 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
         amount,
-        currency: 'NGN',
+        currency: "NGN",
         ref: reference,
         metadata: {
           custom_fields: [
-            { display_name: 'Plan', variable_name: 'plan', value: plan },
-            { display_name: 'User ID', variable_name: 'user_id', value: user.id },
+            { display_name: "Plan", variable_name: "plan", value: plan },
+            { display_name: "User ID", variable_name: "user_id", value: user.id },
           ],
         },
         callback: (response: PaystackResponse) => {
           void (async () => {
             if (!response?.reference) {
-              throw new Error('Missing Paystack reference. Please try again.');
+              throw new Error("Missing Paystack reference. Please try again.");
             }
             await verifyPaymentAndActivate(response.reference);
-          })().catch((error) => {
-            console.error('Payment verification error:', error);
-            toast({
-              title: 'Verification failed',
-              description: error instanceof Error
-                ? error.message
-                : 'Please contact support if payment was deducted.',
-              variant: 'destructive',
+          })()
+            .catch((error) => {
+              console.error("Payment verification error:", error);
+              toast({
+                title: "Verification failed",
+                description: error instanceof Error ? error.message : "Please contact support if payment was deducted.",
+                variant: "destructive",
+              });
+            })
+            .finally(() => {
+              setProcessingPlan(null);
             });
-          }).finally(() => {
-            setProcessingPlan(null);
-          });
         },
         onClose: () => {
           setProcessingPlan(null);
@@ -200,11 +188,11 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
 
       handler.openIframe();
     } catch (error) {
-      console.error('Payment initialization error:', error);
+      console.error("Payment initialization error:", error);
       toast({
-        title: 'Payment error',
-        description: 'Failed to initialize payment. Please try again.',
-        variant: 'destructive',
+        title: "Payment error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive",
       });
       setProcessingPlan(null);
     }
@@ -218,19 +206,19 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
     );
   }
 
-  const plans: Array<Exclude<SubscriptionPlan, 'free'>> = ['basic', 'pro', 'premium'];
+  const plans: Array<Exclude<SubscriptionPlan, "free">> = ["basic", "pro", "premium"];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {plans.map((plan) => {
         const isCurrentPlan = currentPlan === plan;
-        const isPro = plan === 'pro';
-        
+        const isPro = plan === "pro";
+
         return (
           <div
             key={plan}
             className={`relative glass-card p-6 rounded-2xl flex flex-col ${
-              isPro ? 'border-primary border-2 shadow-lg shadow-primary/20' : ''
+              isPro ? "border-primary border-2 shadow-lg shadow-primary/20" : ""
             }`}
           >
             {isPro && (
@@ -240,18 +228,23 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
             )}
 
             <div className="flex items-center gap-2 mb-4">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                plan === 'premium' 
-                  ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white'
-                  : plan === 'pro'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-foreground'
-              }`}>
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  plan === "premium"
+                    ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
+                    : plan === "pro"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-foreground"
+                }`}
+              >
                 {planIcons[plan]}
               </div>
               <div>
                 <h3 className="font-display font-semibold text-lg capitalize">{plan}</h3>
-                <p className="text-2xl font-bold text-foreground">{PLAN_DISPLAY_PRICES[plan]}<span className="text-sm text-muted-foreground font-normal">/mo</span></p>
+                <p className="text-2xl font-bold text-foreground">
+                  {PLAN_DISPLAY_PRICES[plan]}
+                  <span className="text-sm text-muted-foreground font-normal">/mo</span>
+                </p>
               </div>
             </div>
 
@@ -268,13 +261,13 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
               onClick={() => handleSubscribe(plan)}
               disabled={isCurrentPlan || processingPlan !== null}
               className={`w-full ${
-                isCurrentPlan 
-                  ? 'bg-secondary text-foreground cursor-default'
-                  : isPro 
-                  ? 'xp-gradient text-primary-foreground' 
-                  : ''
+                isCurrentPlan
+                  ? "bg-secondary text-foreground cursor-default"
+                  : isPro
+                    ? "xp-gradient text-primary-foreground"
+                    : ""
               }`}
-              variant={isCurrentPlan ? 'secondary' : isPro ? 'default' : 'outline'}
+              variant={isCurrentPlan ? "secondary" : isPro ? "default" : "outline"}
             >
               {processingPlan === plan ? (
                 <>
@@ -282,9 +275,9 @@ export default function SubscriptionPlans({ onSuccess }: SubscriptionPlansProps)
                   Processing...
                 </>
               ) : isCurrentPlan ? (
-                'Current Plan'
+                "Current Plan"
               ) : (
-                'Subscribe'
+                "Subscribe"
               )}
             </Button>
           </div>
