@@ -7,10 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useVoice } from '@/hooks/useVoice';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import ChatMessage from '@/components/ChatMessage';
 import FileUpload from '@/components/FileUpload';
-import UsageLimitBanner from '@/components/UsageLimitBanner';
 import { 
   ArrowLeft, 
   Send, 
@@ -66,8 +65,8 @@ export default function Chat() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   
-  // Subscription
-  const { currentPlan, canSendPrompt, incrementPromptCount, limits, getPromptsRemaining } = useSubscription();
+  // Knowledge Units
+  const { balance, canChat, refetch: refetchKU } = useKnowledgeUnits();
 
   // Voice input
   const { isListening, transcript, startListening, stopListening, isSupported: voiceSupported } = useVoice({
@@ -186,20 +185,11 @@ export default function Chat() {
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isStreaming || !conversationId) return;
 
-    // Check subscription limits
-    if (currentPlan === 'free') {
+    // Check KU balance
+    if (!canChat) {
       toast({
-        title: 'Subscription required',
-        description: 'Please subscribe to start chatting with Gideon.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!canSendPrompt(conversationId)) {
-      toast({
-        title: 'Prompt limit reached',
-        description: `You've used all ${limits.maxPromptsPerChat} prompts in this chat. Continue tomorrow or upgrade your plan!`,
+        title: 'No Knowledge Units',
+        description: 'You need at least 1 KU to chat with Gideon. Top up your wallet!',
         variant: 'destructive',
       });
       return;
@@ -209,9 +199,6 @@ export default function Chat() {
     setInput('');
     setIsStreaming(true);
     setStreamingContent('');
-
-    // Increment prompt count
-    incrementPromptCount.mutate(conversationId);
 
     try {
       // Save user message
@@ -353,6 +340,7 @@ Student Profile:
       await refetchMessages();
       setFileContent(null);
       queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['ku-wallet'] });
     } catch (error) {
       toast({
         title: 'Error',
@@ -363,7 +351,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient, currentPlan, canSendPrompt, limits, incrementPromptCount]);
+  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient, canChat]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -606,10 +594,18 @@ Student Profile:
           </div>
         )}
 
-        {/* Usage Limit Banner */}
-        {conversationId && (
-          <div className="px-4">
-            <UsageLimitBanner type="prompt" conversationId={conversationId} />
+        {/* KU Balance Indicator */}
+        {balance <= 3 && balance > 0 && (
+          <div className="mx-4 p-2 rounded-lg bg-primary/5 border border-primary/20 text-center">
+            <p className="text-xs text-muted-foreground">
+              {balance} Knowledge Unit{balance > 1 ? 's' : ''} remaining
+            </p>
+          </div>
+        )}
+        {balance === 0 && (
+          <div className="mx-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
+            <p className="text-sm text-destructive font-medium">No Knowledge Units left</p>
+            <button onClick={() => navigate('/settings?tab=wallet')} className="text-xs text-primary underline mt-1">Top up now</button>
           </div>
         )}
 

@@ -101,6 +101,58 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Group KU Balance Check & Deduction
+    const groupServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!groupServiceKey) {
+      return new Response(JSON.stringify({ error: "Service configuration error" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const groupServiceClient = createClient(SUPABASE_URL, groupServiceKey);
+
+    // Look up session's group_id
+    const { data: sessionLookup } = await groupServiceClient
+      .from('study_sessions')
+      .select('group_id')
+      .eq('id', sessionId)
+      .single();
+
+    if (!sessionLookup) {
+      return new Response(JSON.stringify({ error: 'Session not found' }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check group wallet balance
+    const { data: groupWallet } = await groupServiceClient
+      .from('group_wallets')
+      .select('balance')
+      .eq('group_id', sessionLookup.group_id)
+      .maybeSingle();
+
+    if (!groupWallet || groupWallet.balance <= 0) {
+      return new Response(JSON.stringify({ 
+        error: "Group Knowledge Units exhausted. The group admin needs to top up.",
+        code: "INSUFFICIENT_GROUP_KU"
+      }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Deduct 1 KU from group wallet
+    await groupServiceClient
+      .from('group_wallets')
+      .update({ balance: groupWallet.balance - 1 })
+      .eq('group_id', sessionLookup.group_id);
+
+    await groupServiceClient.from('ku_transactions').insert({
+      user_id: authData.user.id,
+      group_id: sessionLookup.group_id,
+      amount: -1,
+      type: 'group_prompt',
+      description: `Group session: ${topic || 'Study session'}`
+    });
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

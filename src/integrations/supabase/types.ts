@@ -127,6 +127,38 @@ export type Database = {
           },
         ]
       }
+      group_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          group_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          group_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_wallets_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_warnings: {
         Row: {
           group_id: string
@@ -165,6 +197,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ku_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          group_id: string | null
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          group_id?: string | null
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ku_transactions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ku_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {

@@ -36,9 +36,9 @@ import {
   FileText,
   MessageSquare
 } from 'lucide-react';
-import SubscriptionPlans from '@/components/SubscriptionPlans';
+import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
-import { useSubscription, PLAN_DISPLAY_PRICES } from '@/hooks/useSubscription';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { format } from 'date-fns';
 
 const STUDENT_TYPES = [
@@ -108,7 +108,7 @@ export default function Settings() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { subscription, currentPlan, isLoading: subscriptionLoading, limits } = useSubscription();
+  const { balance, isLoading: kuLoading, refetch: refetchKU } = useKnowledgeUnits();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
 
   const [settings, setSettings] = useState<UserSettings>({
@@ -261,9 +261,9 @@ export default function Settings() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-secondary">
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="subscription" className="flex items-center gap-2">
+            <TabsTrigger value="wallet" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Subscription</span>
+              <span className="hidden sm:inline">Wallet</span>
             </TabsTrigger>
             <TabsTrigger value="account" className="flex items-center gap-2">
               <User className="h-4 w-4" />
@@ -271,30 +271,31 @@ export default function Settings() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="subscription" className="space-y-6">
-            {/* Current Plan */}
+          <TabsContent value="wallet" className="space-y-6">
+            {/* KU Balance */}
             <section className="glass-card p-6 rounded-2xl animate-fade-in">
-              <h2 className="font-display text-lg font-semibold mb-4">Current Plan</h2>
+              <h2 className="font-display text-lg font-semibold mb-4">Knowledge Units Balance</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold capitalize">{currentPlan}</p>
-                  <p className="text-muted-foreground">
-                    {subscription?.status === 'active' 
-                      ? `Renews ${subscription.current_period_end ? format(new Date(subscription.current_period_end), 'MMM d, yyyy') : 'soon'}`
-                      : 'No active subscription'}
-                  </p>
+                  <p className="text-4xl font-bold text-foreground">{balance}</p>
+                  <p className="text-muted-foreground">Knowledge Units available</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold">{PLAN_DISPLAY_PRICES[currentPlan]}</p>
-                  <p className="text-muted-foreground">/month</p>
+                  <p className="text-sm text-muted-foreground">1 KU = 1 prompt</p>
+                  <p className="text-sm text-muted-foreground">₦50 per unit</p>
                 </div>
               </div>
+              {balance <= 5 && (
+                <p className="text-sm text-primary mt-3">
+                  {balance === 0 ? '🔴 No units left — top up to continue learning!' : '⚡ Running low — top up soon!'}
+                </p>
+              )}
             </section>
 
-            {/* Plans */}
+            {/* Purchase Packages */}
             <section className="animate-fade-in-up">
-              <h2 className="font-display text-lg font-semibold mb-4">Choose a Plan</h2>
-              <SubscriptionPlans onSuccess={() => queryClient.invalidateQueries({ queryKey: ['subscription'] })} />
+              <h2 className="font-display text-lg font-semibold mb-4">Buy Knowledge Units</h2>
+              <KUPurchase onSuccess={() => refetchKU()} />
             </section>
           </TabsContent>
 
@@ -543,9 +544,6 @@ export default function Settings() {
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes and exams.
-            {!limits.canUploadExamSample && (
-              <span className="ml-1 text-primary">(Pro or Premium required)</span>
-            )}
           </p>
           
           {/* Course-specific exam samples */}
@@ -558,23 +556,11 @@ export default function Settings() {
                     key={course}
                     type="button"
                     onClick={() => {
-                      if (!limits.canUploadExamSample) {
-                        toast({
-                          title: 'Upgrade required',
-                          description: 'Upgrade to Pro or Premium to add exam samples.',
-                          variant: 'destructive',
-                        });
-                        return;
-                      }
                       // Set active course for sample upload
                       const input = document.getElementById(`exam-file-${course}`) as HTMLInputElement;
                       if (input) input.click();
                     }}
-                    className={`px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
-                      limits.canUploadExamSample 
-                        ? 'bg-secondary border border-border hover:border-primary/50 cursor-pointer' 
-                        : 'bg-secondary/50 opacity-50 cursor-not-allowed'
-                    }`}
+                    className="px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 bg-secondary border border-border hover:border-primary/50 cursor-pointer"
                   >
                     <Upload className="h-3 w-3" />
                     {course}
@@ -666,7 +652,7 @@ export default function Settings() {
               value={settings.exam_sample_text || ''}
               onChange={(e) => setSettings(prev => ({ ...prev, exam_sample_text: e.target.value }))}
               className="mt-2 w-full min-h-[150px] rounded-lg bg-secondary border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
-              disabled={!limits.canUploadExamSample}
+              
             />
             <p className="text-xs text-muted-foreground mt-2">
               These samples help Gideon set questions in the same style as your professor. General samples apply to all courses unless you upload course-specific ones.
