@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         
         const { data: settings } = await serviceClient
           .from("user_settings")
-          .select("preferred_name, field_of_study, university_level, explanation_style, courses, exam_sample_text")
+          .select("preferred_name, field_of_study, university_level, explanation_style, courses, exam_sample_text, bio")
           .in("user_id", userIds);
         
         if (settings && settings.length > 0) {
