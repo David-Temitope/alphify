@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, 
   Settings as SettingsIcon, 
@@ -32,7 +33,8 @@ import {
   Trash2,
   AlertTriangle,
   Upload,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import SubscriptionPlans from '@/components/SubscriptionPlans';
 import AccountDeletion from '@/components/AccountDeletion';
@@ -97,6 +99,7 @@ interface UserSettings {
   preferred_name: string | null;
   explanation_style: string | null;
   exam_sample_text: string | null;
+  bio: string | null;
 }
 
 export default function Settings() {
@@ -118,6 +121,7 @@ export default function Settings() {
     preferred_name: null,
     explanation_style: 'five_year_old',
     exam_sample_text: null,
+    bio: null,
   });
   const [customCourse, setCustomCourse] = useState('');
 
@@ -146,6 +150,7 @@ export default function Settings() {
         preferred_name: existingSettings.preferred_name,
         explanation_style: existingSettings.explanation_style || 'five_year_old',
         exam_sample_text: existingSettings.exam_sample_text || null,
+        bio: (existingSettings as any).bio || null,
       });
     }
   }, [existingSettings]);
@@ -311,6 +316,22 @@ export default function Settings() {
                 onChange={(e) => setSettings(prev => ({ ...prev, preferred_name: e.target.value }))}
                 className="mt-1 bg-secondary border-border"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="bio">Tell Gideon about yourself</Label>
+              <p className="text-sm text-muted-foreground mt-1 mb-2">
+                Describe your interests, hobbies, and background so Gideon can use relatable examples when explaining things to you
+              </p>
+              <Textarea
+                id="bio"
+                placeholder="e.g. I'm David, I love WWE, I sing, I write code using HTML, CSS & JS, I love building new things, I'm a Yoruba boy..."
+                value={settings.bio || ''}
+                onChange={(e) => setSettings(prev => ({ ...prev, bio: e.target.value }))}
+                className="mt-1 bg-secondary border-border min-h-[100px]"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1 text-right">{(settings.bio || '').length}/500</p>
             </div>
           </div>
         </section>

@@ -251,6 +251,7 @@ Student Profile:
 - Preferred AI Personality: ${userSettings.ai_personality?.join(', ') || 'friendly'}
 - Explanation Style: ${userSettings.explanation_style || 'five_year_old'}
 - Quiz Performance: ${userSettings.quiz_score_percentage || 0}% (${userSettings.total_quizzes_taken || 0} quizzes taken)
+- About the Student: ${(userSettings as any).bio || 'Not provided'}
 `;
       }
 

@@ -654,6 +654,7 @@ export type Database = {
       user_settings: {
         Row: {
           ai_personality: string[] | null
+          bio: string | null
           country: string | null
           courses: string[] | null
           created_at: string
@@ -673,6 +674,7 @@ export type Database = {
         }
         Insert: {
           ai_personality?: string[] | null
+          bio?: string | null
           country?: string | null
           courses?: string[] | null
           created_at?: string
@@ -692,6 +694,7 @@ export type Database = {
         }
         Update: {
           ai_personality?: string[] | null
+          bio?: string | null
           country?: string | null
           courses?: string[] | null
           created_at?: string
