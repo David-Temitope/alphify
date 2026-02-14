@@ -263,6 +263,14 @@ Stay strictly focused on this topic. Help students understand ${topic} thoroughl
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || "I'm having trouble responding right now. Please try again.";
 
+    // Insert AI message server-side using service role (bypasses RLS)
+    await groupServiceClient.from('session_messages').insert({
+      session_id: sessionId,
+      user_id: authData.user.id,
+      content: aiResponse,
+      is_ai_message: true,
+    });
+
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
