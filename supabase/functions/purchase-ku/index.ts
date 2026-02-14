@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
-    if (!PAYSTACK_SECRET_KEY) throw new Error("PAYSTACK_SECRET_KEY not configured");
+    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY") || Deno.env.get("PAYSTACK_API_KEY");
+    if (!PAYSTACK_SECRET_KEY) throw new Error("Paystack secret key not configured");
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -64,15 +64,16 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check duplicate
-    const { data: existingPayment } = await serviceClient
+    // Check duplicate SUCCESSFUL payment
+    const { data: existingSuccess } = await serviceClient
       .from("payment_history")
       .select("id")
       .eq("paystack_reference", reference)
+      .eq("status", "success")
       .maybeSingle();
 
-    if (existingPayment) {
-      return new Response(JSON.stringify({ error: "Payment already processed" }), {
+    if (existingSuccess) {
+      return new Response(JSON.stringify({ error: "Payment already processed and units credited" }), {
         status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
