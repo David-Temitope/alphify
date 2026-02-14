@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import xplaneLogo from '@/assets/xplane-logo.png';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -81,9 +82,7 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-2xl text-primary-foreground xp-glow mb-4">
-            Xp
-          </div>
+          <img src={xplaneLogo} alt="X-Plane" className="w-16 h-16 rounded-2xl xp-glow mb-4 shadow-lg shadow-primary/25" />
           <h1 className="font-display text-2xl font-bold text-foreground">
             {isLogin ? 'Welcome Back' : 'Join Xplane'}
           </h1>
