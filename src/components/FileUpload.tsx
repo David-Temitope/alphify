@@ -146,8 +146,40 @@ Start your response with: "Looking at your image, I can see..."`,
         // For text files, read content directly
         textContent = await uploadedFile.text();
       } else if (uploadedFile.type === 'application/pdf') {
-        // For PDFs, we'll pass a message to the AI about analyzing the PDF
-        textContent = `[User uploaded PDF: ${uploadedFile.name}. Please note this is a PDF document that I'd like you to help me understand. For now, please ask me what specific topics or sections from this document I'd like to explore.]`;
+        // Extract text from PDF using the extract-pdf-text edge function
+        try {
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onload = () => {
+              const result = reader.result as string;
+              const base64 = result.split(',')[1];
+              resolve(base64);
+            };
+            reader.onerror = reject;
+          });
+          reader.readAsDataURL(uploadedFile);
+          const pdfBase64 = await base64Promise;
+
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            throw new Error('Please log in to continue');
+          }
+
+          const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
+            body: { pdfBase64, mimeType: uploadedFile.type },
+          });
+
+          if (extractionError) {
+            console.error('PDF extraction error:', extractionError);
+            textContent = `[User uploaded PDF: ${uploadedFile.name}. PDF text extraction failed. Please ask the student what specific topics from this document they'd like to explore.]`;
+          } else {
+            textContent = extractionData.text || `[User uploaded PDF: ${uploadedFile.name}. No text could be extracted.]`;
+            console.log(`PDF extracted: ${extractionData.pageCount} pages`);
+          }
+        } catch (pdfError) {
+          console.error('PDF processing error:', pdfError);
+          textContent = `[User uploaded PDF: ${uploadedFile.name}. PDF processing failed. Please ask the student what specific topics from this document they'd like to explore.]`;
+        }
       } else {
         textContent = `[User uploaded file: ${uploadedFile.name} (${uploadedFile.type}). This is a document I'd like help understanding. Please ask me what specific topics from this file I'd like to explore.]`;
       }
