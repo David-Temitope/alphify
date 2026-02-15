@@ -65,6 +65,7 @@ export default function Chat() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isExtractingFile, setIsExtractingFile] = useState(false);
   
   // Knowledge Units
   const { balance, canChat, refetch: refetchKU } = useKnowledgeUnits();
@@ -106,17 +107,86 @@ export default function Chat() {
     enabled: !!fileIdFromLibrary,
   });
 
-  // Set file content when coming from library
+  // Set file content when coming from library - extract PDF text if applicable
   useEffect(() => {
-    if (libraryFile && !fileContent) {
-      const content = `[User wants to discuss file: ${libraryFile.file_name} (${libraryFile.file_type}). This is a document from their library that they'd like help understanding. Please ask them what specific topics from this file they'd like to explore.]`;
-      setFileContent(content);
-      toast({
-        title: 'File loaded from library',
-        description: `Ready to discuss: ${libraryFile.file_name}`,
-      });
+    if (libraryFile && !fileContent && !isExtractingFile) {
+      const isPdf = libraryFile.file_type === 'application/pdf';
+      
+      if (isPdf) {
+        // Extract actual text from PDF
+        const extractPdfText = async () => {
+          setIsExtractingFile(true);
+          try {
+            // Download the file from storage
+            const { data: fileBlob, error: downloadError } = await supabase.storage
+              .from('user-files')
+              .download(libraryFile.file_path);
+            
+            if (downloadError || !fileBlob) {
+              throw new Error('Failed to download file from storage');
+            }
+
+            // Convert to base64
+            const arrayBuffer = await fileBlob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+              binary += String.fromCharCode(uint8Array[i]);
+            }
+            const pdfBase64 = btoa(binary);
+
+            // Get session for auth
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+              throw new Error('Please log in to continue');
+            }
+
+            // Call extract-pdf-text edge function
+            const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
+              body: { pdfBase64, mimeType: 'application/pdf' },
+            });
+
+            if (extractionError) {
+              console.error('PDF extraction error:', extractionError);
+              throw new Error('PDF text extraction failed');
+            }
+
+            const extractedText = extractionData?.text;
+            if (extractedText) {
+              setFileContent(extractedText);
+              console.log(`Library PDF extracted: ${extractionData.pageCount} pages`);
+              toast({
+                title: 'Document text extracted',
+                description: `Ready to discuss: ${libraryFile.file_name} (${extractionData.pageCount} pages)`,
+              });
+            } else {
+              throw new Error('No text could be extracted');
+            }
+          } catch (error) {
+            console.error('Library PDF extraction error:', error);
+            // Fallback to placeholder
+            setFileContent(`[User wants to discuss file: ${libraryFile.file_name} (${libraryFile.file_type}). PDF text extraction failed. Please ask the student what specific topics from this document they'd like to explore.]`);
+            toast({
+              title: 'File loaded from library',
+              description: `Ready to discuss: ${libraryFile.file_name} (text extraction failed, limited mode)`,
+              variant: 'destructive',
+            });
+          } finally {
+            setIsExtractingFile(false);
+          }
+        };
+        extractPdfText();
+      } else {
+        // Non-PDF: keep current placeholder behavior
+        const content = `[User wants to discuss file: ${libraryFile.file_name} (${libraryFile.file_type}). This is a document from their library that they'd like help understanding. Please ask them what specific topics from this file they'd like to explore.]`;
+        setFileContent(content);
+        toast({
+          title: 'File loaded from library',
+          description: `Ready to discuss: ${libraryFile.file_name}`,
+        });
+      }
     }
-  }, [libraryFile, fileContent, toast]);
+  }, [libraryFile, fileContent, isExtractingFile, toast]);
 
   // Fetch conversation
   const { data: conversation } = useQuery({
@@ -543,6 +613,13 @@ Student Profile:
                 created_at: new Date().toISOString() 
               }} 
             />
+          )}
+
+          {isExtractingFile && (
+            <div className="flex items-center gap-2 text-muted-foreground p-4">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm">Extracting document text... This may take a moment.</span>
+            </div>
           )}
 
           {isStreaming && !streamingContent && (
