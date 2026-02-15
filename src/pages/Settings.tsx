@@ -94,6 +94,7 @@ interface UserSettings {
   field_of_study: string | null;
   country: string | null;
   university_level: string | null;
+  university: string | null;
   ai_personality: string[];
   courses: string[];
   preferred_name: string | null;
@@ -116,6 +117,7 @@ export default function Settings() {
     field_of_study: null,
     country: null,
     university_level: null,
+    university: null,
     ai_personality: ['friendly_teacher'],
     courses: [],
     preferred_name: null,
@@ -145,6 +147,7 @@ export default function Settings() {
         field_of_study: existingSettings.field_of_study,
         country: existingSettings.country,
         university_level: existingSettings.university_level,
+        university: (existingSettings as any).university || null,
         ai_personality: existingSettings.ai_personality || ['friendly_teacher'],
         courses: existingSettings.courses || [],
         preferred_name: existingSettings.preferred_name,
@@ -164,6 +167,7 @@ export default function Settings() {
         field_of_study: settings.field_of_study,
         country: settings.country,
         university_level: settings.university_level,
+        university: settings.university,
         ai_personality: settings.ai_personality,
         courses: settings.courses,
         preferred_name: settings.preferred_name,
@@ -434,6 +438,20 @@ export default function Settings() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="university">University Name</Label>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-1">
+                This determines which shared course files and exam samples you can access
+              </p>
+              <Input
+                id="university"
+                placeholder="e.g. University of Abuja"
+                value={settings.university || ''}
+                onChange={(e) => setSettings(prev => ({ ...prev, university: e.target.value }))}
+                className="mt-1 bg-secondary border-border"
+              />
             </div>
           </div>
         </section>

@@ -303,6 +303,36 @@ Deno.serve(async (req) => {
       systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
     }
 
+    // Query shared exam samples for this student's profile
+    try {
+      const { data: userSettings } = await serviceClient
+        .from('user_settings')
+        .select('university, field_of_study, university_level, courses')
+        .eq('user_id', authData.user.id)
+        .maybeSingle();
+
+      if (userSettings?.university && userSettings?.field_of_study && userSettings?.university_level) {
+        const { data: examSamples } = await serviceClient
+          .from('shared_files')
+          .select('course_code, extracted_text, file_name')
+          .eq('university', userSettings.university)
+          .eq('department', userSettings.field_of_study)
+          .eq('level', userSettings.university_level)
+          .eq('file_category', 'exam_sample')
+          .not('extracted_text', 'is', null);
+
+        if (examSamples && examSamples.length > 0) {
+          systemContent += `\n\n## UNIVERSITY EXAM SAMPLES REFERENCE\nThe following are past exam questions from this student's university (${userSettings.university}, ${userSettings.field_of_study}, ${userSettings.university_level}). When generating quizzes or exams, use these as style references to mimic the professor's question patterns:\n\n`;
+          for (const sample of examSamples) {
+            systemContent += `--- ${sample.course_code} (${sample.file_name}) ---\n${sample.extracted_text?.substring(0, 5000)}\n\n`;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching shared exam samples:', e);
+      // Non-fatal, continue without exam samples
+    }
+
     // Check if the last user message contains LECTURE_MODE
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
     const isLectureMode = lastUserMessage?.content?.includes('[LECTURE_MODE]');

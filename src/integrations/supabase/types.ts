@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      department_admins: {
+        Row: {
+          created_at: string
+          department: string
+          id: string
+          level: string
+          university: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          id?: string
+          level: string
+          university: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          id?: string
+          level?: string
+          university?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exam_attempts: {
         Row: {
           answers: Json
@@ -526,6 +553,54 @@ export type Database = {
           },
         ]
       }
+      shared_files: {
+        Row: {
+          course_code: string
+          created_at: string
+          department: string
+          extracted_text: string | null
+          file_category: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          level: string
+          university: string
+          uploaded_by: string
+        }
+        Insert: {
+          course_code: string
+          created_at?: string
+          department: string
+          extracted_text?: string | null
+          file_category?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          level: string
+          university: string
+          uploaded_by: string
+        }
+        Update: {
+          course_code?: string
+          created_at?: string
+          department?: string
+          extracted_text?: string | null
+          file_category?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          level?: string
+          university?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       study_group_members: {
         Row: {
           group_id: string
@@ -813,6 +888,7 @@ export type Database = {
           star_rating: number | null
           student_type: string | null
           total_quizzes_taken: number | null
+          university: string | null
           university_level: string | null
           updated_at: string
           user_id: string
@@ -833,6 +909,7 @@ export type Database = {
           star_rating?: number | null
           student_type?: string | null
           total_quizzes_taken?: number | null
+          university?: string | null
           university_level?: string | null
           updated_at?: string
           user_id: string
@@ -853,6 +930,7 @@ export type Database = {
           star_rating?: number | null
           student_type?: string | null
           total_quizzes_taken?: number | null
+          university?: string | null
           university_level?: string | null
           updated_at?: string
           user_id?: string
@@ -876,6 +954,14 @@ export type Database = {
         Args: { _user_id1: string; _user_id2: string }
         Returns: boolean
       }
+      get_admin_assignments: {
+        Args: { _user_id: string }
+        Returns: {
+          department: string
+          level: string
+          university: string
+        }[]
+      }
       get_public_profiles: {
         Args: never
         Returns: {
@@ -883,6 +969,16 @@ export type Database = {
           star_rating: number
           user_id: string
         }[]
+      }
+      is_any_department_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_department_admin: {
+        Args: {
+          _department: string
+          _level: string
+          _university: string
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }
@@ -894,6 +990,15 @@ export type Database = {
       }
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_matches_shared_file: {
+        Args: {
+          _department: string
+          _level: string
+          _university: string
+          _user_id: string
+        }
         Returns: boolean
       }
       users_share_group: {
