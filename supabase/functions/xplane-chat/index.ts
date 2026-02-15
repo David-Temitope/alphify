@@ -303,8 +303,29 @@ Deno.serve(async (req) => {
       systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
     }
 
+    // Check if the last user message contains LECTURE_MODE
+    const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
+    const isLectureMode = lastUserMessage?.content?.includes('[LECTURE_MODE]');
+
     if (fileContent) {
-      systemContent += `\n\nThe student has uploaded a document. Here is the content:\n\n${fileContent}\n\nPlease analyze this content and help the student understand it. Focus ONLY on what is actually in this document.`;
+      systemContent += `\n\nThe student has uploaded a document. Here is the EXTRACTED TEXT from their document:\n\n--- DOCUMENT TEXT START ---\n${fileContent}\n--- DOCUMENT TEXT END ---\n`;
+
+      if (isLectureMode) {
+        systemContent += `\n\nCRITICAL INSTRUCTION - DOCUMENT LECTURE MODE:
+You are in Document Lecture Mode. You MUST follow these rules strictly:
+
+1. You must ONLY teach content that appears in the document text above between "DOCUMENT TEXT START" and "DOCUMENT TEXT END".
+2. Start by identifying the document structure: title page, table of contents, and content pages.
+3. Begin lecturing from where the ACTUAL CONTENT starts, NOT from the title page or author information.
+4. Skip metadata pages (title pages, author names, publisher info, copyright notices) — acknowledge them briefly if relevant, then move to actual topics.
+5. NEVER fabricate, hallucinate, or add information that is NOT in the document. Every fact you teach must come directly from the document text.
+6. If something in the document is unclear or incomplete, say so honestly: "The document doesn't elaborate on this point."
+7. Follow the document's structure and order of topics.
+8. If the document references concepts without explaining them, note that: "The document mentions [X] but doesn't provide details on it."
+9. Lecture systematically — cover each section/topic thoroughly before moving to the next.`;
+      } else {
+        systemContent += `\nPlease analyze this content and help the student understand it. Focus ONLY on what is actually in this document. Do NOT add information that is not present in the document.`;
+      }
     }
 
     // Build OpenAI-compatible messages
