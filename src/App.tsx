@@ -15,6 +15,7 @@ import Community from "./pages/Community";
 import StudySession from "./pages/StudySession";
 import ExamMode from "./pages/ExamMode";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

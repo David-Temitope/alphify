@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GIDEON_SYSTEM_PROMPT = `You are Gideon, an expert educational AI assistant created by Alphadominity, specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
+const EZRA_SYSTEM_PROMPT = `You are Ezra, an expert educational AI assistant created by Alphadominity, specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
 
 ## CRITICAL: Response Formatting - MUST FOLLOW
 Your responses MUST be structured and easy to read. NEVER write article-style paragraphs.
@@ -198,12 +198,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -213,24 +211,20 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Validate the JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !authData.user) {
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const { messages, fileContent, personalization } = await req.json();
     
-    // Input validation
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     
@@ -238,19 +232,16 @@ Deno.serve(async (req) => {
     for (const msg of messages) {
       if (!msg.role || !msg.content) {
         return new Response(JSON.stringify({ error: 'Invalid message structure' }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (typeof msg.content === 'string' && msg.content.length > MAX_MESSAGE_LENGTH) {
         return new Response(JSON.stringify({ error: 'Message content too long' }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
 
-    // KU Balance Check & Deduction
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!serviceRoleKey) {
       return new Response(JSON.stringify({ error: "Service configuration error" }), {
@@ -274,7 +265,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Deduct 1 KU before AI call
     await serviceClient
       .from('ku_wallets')
       .update({ balance: kuWallet.balance - 1 })
@@ -284,20 +274,18 @@ Deno.serve(async (req) => {
       user_id: authData.user.id,
       amount: -1,
       type: 'chat_prompt',
-      description: 'Chat with Gideon'
+      description: 'Chat with Ezra'
     });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Build system message
-    let systemContent = GIDEON_SYSTEM_PROMPT;
+    let systemContent = EZRA_SYSTEM_PROMPT;
 
     if (personalization) {
       systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
@@ -330,10 +318,8 @@ Deno.serve(async (req) => {
       }
     } catch (e) {
       console.error('Error fetching shared exam samples:', e);
-      // Non-fatal, continue without exam samples
     }
 
-    // Check if the last user message contains LECTURE_MODE
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
     const isLectureMode = lastUserMessage?.content?.includes('[LECTURE_MODE]');
 
@@ -358,7 +344,6 @@ You are in Document Lecture Mode. You MUST follow these rules strictly:
       }
     }
 
-    // Build OpenAI-compatible messages
     const apiMessages = [
       { role: "system", content: systemContent },
       ...messages.map((msg: any) => ({
@@ -383,35 +368,28 @@ You are in Document Lecture Mode. You MUST follow these rules strictly:
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Lovable AI error:", response.status, errorText);
-
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to your workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits to your workspace." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-
       return new Response(JSON.stringify({ error: "AI service temporarily unavailable" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Stream directly — Lovable AI already returns OpenAI-compatible SSE
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
     console.error("Chat function error:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

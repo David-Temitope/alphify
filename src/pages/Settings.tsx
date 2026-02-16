@@ -339,9 +339,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <Label htmlFor="bio">Tell Gideon about yourself</Label>
+              <Label htmlFor="bio">Tell Ezra about yourself</Label>
               <p className="text-sm text-muted-foreground mt-1 mb-2">
-                Describe your interests, hobbies, and background so Gideon can use relatable examples when explaining things to you
+                Describe your interests, hobbies, and background so Ezra can use relatable examples when explaining things to you
               </p>
               <Textarea
                 id="bio"
@@ -576,7 +576,7 @@ export default function Settings() {
             <h2 className="font-display text-lg font-semibold">Exam Question Style</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Upload past exam papers or type sample questions so Gideon understands your professor's style when setting quizzes and exams.
+            Upload past exam papers or type sample questions so Ezra understands your professor's style when setting quizzes and exams.
           </p>
           
           {/* Course-specific exam samples */}
@@ -643,7 +643,7 @@ export default function Settings() {
                           
                           toast({ 
                             title: `${course} exam paper uploaded!`, 
-                            description: 'Gideon will reference this when creating quizzes for this course.' 
+                            description: 'Ezra will reference this when creating quizzes for this course.' 
                           });
                         } catch (error) {
                           console.error('Upload error:', error);
@@ -688,7 +688,7 @@ export default function Settings() {
               
             />
             <p className="text-xs text-muted-foreground mt-2">
-              These samples help Gideon set questions in the same style as your professor. General samples apply to all courses unless you upload course-specific ones.
+              These samples help Ezra set questions in the same style as your professor. General samples apply to all courses unless you upload course-specific ones.
             </p>
           </div>
         </section>
