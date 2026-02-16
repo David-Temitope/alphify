@@ -65,7 +65,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         'flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center font-display font-bold text-sm',
         isUser ? 'bg-secondary text-foreground' : 'bg-gradient-to-br from-primary to-primary/60 text-primary-foreground'
       )}>
-        {isUser ? '👤' : 'G'}
+        {isUser ? '👤' : 'E'}
       </div>
 
       {/* Message Content */}

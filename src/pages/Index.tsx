@@ -2,15 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
-import gideonHero from '@/assets/gideon-hero.jpg';
-import robotFeatures from '@/assets/robot-features.jpg';
-import robotCommunity from '@/assets/robot-community.png';
-import xplaneLogo from '@/assets/xplane-logo.png';
+import praxelLogo from '@/assets/praxel-logo.png';
+
 export default function Index() {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
   const features = [{
     icon: Brain,
     title: 'Smart Explanations',
@@ -18,11 +15,11 @@ export default function Index() {
   }, {
     icon: FileText,
     title: 'Upload Documents',
-    description: 'Upload PDFs and images - Gideon explains them in simple terms'
+    description: 'Upload PDFs and images - Ezra explains them in simple terms'
   }, {
     icon: BookOpen,
-    title: 'Personal Library',
-    description: 'All your documents saved and organized for easy access'
+    title: 'Course Library',
+    description: 'Shared course materials organized by university and department'
   }, {
     icon: GraduationCap,
     title: 'Adaptive Tests',
@@ -36,13 +33,14 @@ export default function Index() {
     title: 'Community',
     description: 'Connect with study mates and share knowledge'
   }];
+
   const howItWorks = [{
     step: '01',
     title: 'Sign Up Free',
     description: 'Create your account and set your preferences'
   }, {
     step: '02',
-    title: 'Ask Gideon',
+    title: 'Ask Ezra',
     description: 'Type your question or upload study materials'
   }, {
     step: '03',
@@ -53,23 +51,20 @@ export default function Index() {
     title: 'Join Sessions',
     description: 'Collaborate with peers in live study sessions'
   }];
+
   return <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" style={{
-        animationDelay: '1s'
-      }} />
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" style={{
-        animationDelay: '2s'
-      }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
-          <img src={xplaneLogo} alt="X-Plane" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-          <span className="font-display font-semibold text-xl text-foreground">X-Plane</span>
+          <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+          <span className="font-display font-semibold text-xl text-foreground">Praxel</span>
         </div>
         
         <nav className="flex items-center gap-4">
@@ -92,7 +87,6 @@ export default function Index() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
-              
               <span className="text-sm text-primary font-medium">AI-Powered Learning by Alphadominity</span>
             </div>
 
@@ -103,31 +97,23 @@ export default function Index() {
               <span className="text-foreground text-3xl md:text-5xl lg:text-5xl">Your AI Study Companion</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 animate-fade-in-up mx-auto lg:mx-0" style={{
-            animationDelay: '0.2s'
-          }}>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 animate-fade-in-up mx-auto lg:mx-0" style={{ animationDelay: '0.2s' }}>
               Break down complex university topics with real-world examples. 
               Learn faster, understand deeper, and ace your exams with personalized AI tutoring.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up justify-center lg:justify-start" style={{
-            animationDelay: '0.4s'
-          }}>
+            <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up justify-center lg:justify-start" style={{ animationDelay: '0.4s' }}>
               <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-primary text-primary-foreground px-8 py-6 text-lg shadow-xl shadow-primary/30 hover:bg-primary/90 hover:shadow-primary/40 transition-all">
                 Start Learning Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({
-              behavior: 'smooth'
-            })} className="px-8 py-6 text-lg border-border hover:bg-secondary">
+              <Button size="lg" variant="outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="px-8 py-6 text-lg border-border hover:bg-secondary">
                 See How It Works
               </Button>
             </div>
 
             {/* Trust indicators */}
-            <div className="flex items-center gap-8 mt-12 justify-center lg:justify-start animate-fade-in-up" style={{
-            animationDelay: '0.6s'
-          }}>
+            <div className="flex items-center gap-8 mt-12 justify-center lg:justify-start animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">10K+</p>
                 <p className="text-sm text-muted-foreground">Students</p>
@@ -146,14 +132,10 @@ export default function Index() {
           </div>
 
           {/* Hero Image */}
-          <div className="relative animate-fade-in-up" style={{
-          animationDelay: '0.3s'
-        }}>
+          <div className="relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
-            <img alt="Gideon AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
-            <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-2xl p-4 shadow-xl animate-fade-in-up" style={{
-            animationDelay: '0.8s'
-          }}>
+            <img alt="Ezra AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
+            <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-2xl p-4 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Brain className="h-5 w-5 text-primary" />
@@ -176,14 +158,12 @@ export default function Index() {
               Everything You Need to <span className="text-primary">Excel</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-               Ezra combines AI-powered explanations, document analysis, adaptive testing, and collaborative learning in one powerful platform.
+              Ezra combines AI-powered explanations, document analysis, adaptive testing, and collaborative learning in one powerful platform.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => <div key={feature.title} className="group bg-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in-up" style={{
-            animationDelay: `${0.1 * index}s`
-          }}>
+            {features.map((feature, index) => <div key={feature.title} className="group bg-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${0.1 * index}s` }}>
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -217,7 +197,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How <span className="text-primary">​Ezra</span> Works
+              How <span className="text-primary">Ezra</span> Works
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Get started in minutes and transform the way you learn
@@ -225,9 +205,7 @@ export default function Index() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {howItWorks.map((step, index) => <div key={step.step} className="relative animate-fade-in-up" style={{
-            animationDelay: `${0.15 * index}s`
-          }}>
+            {howItWorks.map((step, index) => <div key={step.step} className="relative animate-fade-in-up" style={{ animationDelay: `${0.15 * index}s` }}>
                 {index < howItWorks.length - 1 && <div className="hidden lg:block absolute top-8 left-[60%] w-full h-px bg-gradient-to-r from-primary/50 to-transparent" />}
                 <div className="text-4xl font-display font-bold text-primary/20 mb-4">{step.step}</div>
                 <h3 className="font-display font-semibold text-lg text-foreground mb-2">{step.title}</h3>
@@ -271,7 +249,7 @@ export default function Index() {
               </Button>
             </div>
             <div>
-              <img src={robotCommunity} alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" />
+              <img src="/lovable-uploads/aad7da7c-566e-4e11-b90d-652616e8bc3b.png" alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" />
             </div>
           </div>
         </div>
@@ -284,7 +262,7 @@ export default function Index() {
             Ready to Transform Your Learning?
           </h2>
           <p className="text-muted-foreground mb-10">
-            Join thousands of students who are already learning smarter with Gideon. 
+            Join thousands of students who are already learning smarter with Ezra. 
             Start for free today.
           </p>
           <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-primary text-primary-foreground px-10 py-6 text-lg shadow-xl shadow-primary/30 hover:bg-primary/90">
@@ -298,8 +276,13 @@ export default function Index() {
       <footer className="relative z-10 border-t border-border px-6 py-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={xplaneLogo} alt="X-Plane" className="w-8 h-8 rounded-lg shadow-md" />
-            <span className="font-display font-medium text-foreground">X-Plane</span>
+            <img src={praxelLogo} alt="Praxel" className="w-8 h-8 rounded-lg shadow-md" />
+            <span className="font-display font-medium text-foreground">Praxel</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/terms')} className="text-muted-foreground text-sm hover:text-foreground transition-colors">
+              Terms of Service
+            </button>
           </div>
           <p className="text-muted-foreground text-sm text-center">
             Built with ❤️ by <span className="text-primary font-medium">Alphadominity</span>

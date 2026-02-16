@@ -7,7 +7,7 @@ import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
 import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap, Coins } from 'lucide-react';
 import { format } from 'date-fns';
-import xplaneLogo from '@/assets/xplane-logo.png';
+import praxelLogo from '@/assets/praxel-logo.png';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -37,7 +37,7 @@ export default function Dashboard() {
     if (!canChat) {
       toast({
         title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Gideon. Top up your wallet!',
+        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
         variant: 'destructive',
       });
       navigate('/settings?tab=wallet');
@@ -67,8 +67,8 @@ export default function Dashboard() {
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4 md:px-8">
           <div className="flex items-center gap-3">
-            <img src={xplaneLogo} alt="X-Plane" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">X-Plane</span>
+            <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Praxel</span>
           </div>
 
           <nav className="flex items-center gap-1 md:gap-2">

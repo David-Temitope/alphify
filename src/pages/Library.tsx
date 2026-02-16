@@ -348,7 +348,7 @@ export default function Library() {
                           className="text-xs"
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
-                          Ask Gideon
+                          Ask Ezra
                         </Button>
                         {isAdmin && file.uploaded_by === user?.id && (
                           <Button

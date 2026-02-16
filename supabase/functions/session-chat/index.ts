@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GIDEON_SESSION_PROMPT = `You are Gideon, an expert educational AI tutor created by Alphadominity, leading a live study session with university students.
+const EZRA_SESSION_PROMPT = `You are Ezra, an expert educational AI tutor created by Alphadominity, leading a live study session with university students.
 
 ## Session Context
 You are teaching a specific topic to a group of students in real-time. Your role is to:
@@ -218,7 +218,7 @@ Personalize your teaching for this group. Use their names when addressing them, 
       }
     }
 
-    const systemPrompt = `${GIDEON_SESSION_PROMPT}
+    const systemPrompt = `${EZRA_SESSION_PROMPT}
 
 ## Current Session
 - Topic: ${topic}

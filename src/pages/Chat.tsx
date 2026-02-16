@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import xplaneLogo from '@/assets/xplane-logo.png';
+import praxelLogo from '@/assets/praxel-logo.png';
 
 interface Message {
   id: string;
@@ -299,7 +299,7 @@ export default function Chat() {
     if (!canChat) {
       toast({
         title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Gideon. Top up your wallet!',
+        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
         variant: 'destructive',
       });
       return;
@@ -377,7 +377,7 @@ Student Profile:
         
         // Handle rate limit / quota exhaustion with friendly message
         if (response.status === 429) {
-          throw new Error('🚫 Gideon is currently overloaded. The AI service has reached its usage limit. Please wait a few minutes and try again. If this persists, the service may need a quota upgrade.');
+          throw new Error('🚫 Ezra is currently overloaded. The AI service has reached its usage limit. Please wait a few minutes and try again. If this persists, the service may need a quota upgrade.');
         }
         
         throw new Error(errorData.error || 'Failed to get response');
@@ -508,8 +508,8 @@ Student Profile:
           {/* Sidebar Header */}
           <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-            <img src={xplaneLogo} alt="X-Plane" className="w-9 h-9 rounded-lg shadow-md" />
-              <span className="font-display font-semibold text-sidebar-foreground">X-Plane</span>
+            <img src={praxelLogo} alt="Praxel" className="w-9 h-9 rounded-lg shadow-md" />
+              <span className="font-display font-semibold text-sidebar-foreground">Praxel</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="lg:hidden">
               <X className="h-5 w-5" />
@@ -615,10 +615,10 @@ Student Profile:
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
-                G
+                E
               </div>
               <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
-                Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Gideon 👋
+                Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Ezra 👋
               </h2>
               <p className="text-muted-foreground max-w-md mb-8">
                 I'm here to help you understand complex topics using real-world examples from your everyday student life. 
@@ -668,7 +668,7 @@ Student Profile:
                 <span className="typing-dot" />
                 <span className="typing-dot" />
               </div>
-              <span className="text-sm">Gideon is thinking...</span>
+              <span className="text-sm">Ezra is thinking...</span>
             </div>
           )}
 
