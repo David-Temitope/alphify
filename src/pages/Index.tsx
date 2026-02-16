@@ -98,7 +98,7 @@ export default function Index() {
 
             <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
               <span className="text-foreground">Meet </span>
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Gideon</span>
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Ezra</span>
               <br />
               <span className="text-foreground text-3xl md:text-5xl lg:text-5xl">Your AI Study Companion</span>
             </h1>
@@ -176,7 +176,7 @@ export default function Index() {
               Everything You Need to <span className="text-primary">Excel</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Gideon combines AI-powered explanations, document analysis, adaptive testing, and collaborative learning in one powerful platform.
+               Ezra combines AI-powered explanations, document analysis, adaptive testing, and collaborative learning in one powerful platform.
             </p>
           </div>
 
@@ -217,7 +217,7 @@ export default function Index() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How <span className="text-primary">Gideon</span> Works
+              How <span className="text-primary">​Ezra</span> Works
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Get started in minutes and transform the way you learn
@@ -246,7 +246,7 @@ export default function Index() {
                 Learn Together with <span className="text-primary">Study Sessions</span>
               </h2>
               <p className="text-muted-foreground mb-8">
-                Join study groups, participate in live sessions led by Gideon, and compete with peers through real-time quizzes. Learning is better together.
+                Join study groups, participate in live sessions led by Ezra, and compete with peers through real-time quizzes. Learning is better together.
               </p>
               <div className="space-y-4 mb-8">
                 {[{
