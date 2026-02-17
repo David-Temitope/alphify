@@ -82,7 +82,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     enabled: !!user,
   });
 
-  // Fetch pending checkouts for this user
+  // Fetch pending checkouts for this user (only those not expired — within 2 hours)
   const { data: pendingCheckouts, refetch: refetchPending } = useQuery({
     queryKey: ["pending-checkouts", user?.id],
     queryFn: async () => {
@@ -92,6 +92,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "pending")
+        .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
       return data || [];
     },

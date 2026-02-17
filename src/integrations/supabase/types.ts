@@ -954,6 +954,7 @@ export type Database = {
         Args: { _user_id1: string; _user_id2: string }
         Returns: boolean
       }
+      expire_stale_checkouts: { Args: never; Returns: undefined }
       get_admin_assignments: {
         Args: { _user_id: string }
         Returns: {
