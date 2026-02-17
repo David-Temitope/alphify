@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Index() {
   const { user } = useAuth();
@@ -63,8 +63,8 @@ export default function Index() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
-          <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-          <span className="font-display font-semibold text-xl text-foreground">Praxel</span>
+          <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+          <span className="font-display font-semibold text-xl text-foreground">Alphify</span>
         </div>
         
         <nav className="flex items-center gap-4">
@@ -134,7 +134,7 @@ export default function Index() {
           {/* Hero Image */}
           <div className="relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
-            <img alt="Ezra AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/9b3e0efc-8098-4e34-a618-4e386401f0d7.png" />
+            <img alt="Ezra AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
             <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-2xl p-4 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function Index() {
           {/* Feature Showcase */}
           <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <img alt="AI Features" className="rounded-3xl shadow-xl border-border/50 w-full max-w-md mx-auto border-0" src="/lovable-uploads/76027c1b-e05e-481d-87b6-626c20a19d11.png" />
+              <img alt="AI Features" className="rounded-3xl shadow-xl border-border/50 w-full max-w-md mx-auto border-0" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png" />
             </div>
             <div className="order-1 lg:order-2">
               <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
@@ -249,7 +249,7 @@ export default function Index() {
               </Button>
             </div>
             <div>
-              <img alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" src="/lovable-uploads/e17d6776-0c30-40da-aec4-9a536059911f.png" />
+              <img src="/lovable-uploads/aad7da7c-566e-4e11-b90d-652616e8bc3b.png" alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" />
             </div>
           </div>
         </div>
@@ -276,8 +276,8 @@ export default function Index() {
       <footer className="relative z-10 border-t border-border px-6 py-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={praxelLogo} alt="Praxel" className="w-8 h-8 rounded-lg shadow-md" />
-            <span className="font-display font-medium text-foreground">Praxel</span>
+            <img src={alphifyLogo} alt="Alphify" className="w-8 h-8 rounded-lg shadow-md" />
+            <span className="font-display font-medium text-foreground">Alphify</span>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/terms')} className="text-muted-foreground text-sm hover:text-foreground transition-colors">
