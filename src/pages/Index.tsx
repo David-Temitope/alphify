@@ -134,7 +134,7 @@ export default function Index() {
           {/* Hero Image */}
           <div className="relative animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
-            <img alt="Ezra AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/1b783510-de26-4d00-98d5-3e569496e733.png" />
+            <img alt="Ezra AI Assistant" className="relative rounded-3xl shadow-2xl shadow-primary/20 w-full max-w-lg mx-auto border-border/50 border-0" src="/lovable-uploads/9b3e0efc-8098-4e34-a618-4e386401f0d7.png" />
             <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-2xl p-4 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function Index() {
           {/* Feature Showcase */}
           <div className="mt-20 grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <img alt="AI Features" className="rounded-3xl shadow-xl border-border/50 w-full max-w-md mx-auto border-0" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png" />
+              <img alt="AI Features" className="rounded-3xl shadow-xl border-border/50 w-full max-w-md mx-auto border-0" src="/lovable-uploads/76027c1b-e05e-481d-87b6-626c20a19d11.png" />
             </div>
             <div className="order-1 lg:order-2">
               <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
@@ -249,7 +249,7 @@ export default function Index() {
               </Button>
             </div>
             <div>
-              <img alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" src="/lovable-uploads/db252ba4-c4ed-4ebb-9b03-8ce70dd01219.png" />
+              <img alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" src="/lovable-uploads/e17d6776-0c30-40da-aec4-9a536059911f.png" />
             </div>
           </div>
         </div>
