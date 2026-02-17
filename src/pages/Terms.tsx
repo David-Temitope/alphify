@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Terms() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function Terms() {
               <ArrowLeft className="h-4 w-4 mr-2" /> Back
             </Button>
             <div className="flex items-center gap-3">
-              <img src={praxelLogo} alt="Praxel" className="w-8 h-8 rounded-lg" />
+              <img src={alphifyLogo} alt="Alphify" className="w-8 h-8 rounded-lg" />
               <h1 className="font-display font-semibold text-xl text-foreground">Terms of Service</h1>
             </div>
           </div>
@@ -27,12 +27,12 @@ export default function Terms() {
 
         <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">1. Acceptance of Terms</h2>
         <p className="text-muted-foreground leading-relaxed">
-          By accessing or using Praxel ("the Platform"), operated by Alphadominity ("we", "us", "our"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.
+          By accessing or using Alphify ("the Platform"), operated by Alphadominity ("we", "us", "our"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.
         </p>
 
         <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">2. Description of Service</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Praxel is an AI-powered educational platform that provides personalized tutoring through an AI assistant named Ezra. The Platform offers features including but not limited to: AI-powered explanations, document analysis, adaptive testing, study sessions, and community collaboration tools.
+          Alphify is an AI-powered educational platform that provides personalized tutoring through an AI assistant named Ezra. The Platform offers features including but not limited to: AI-powered explanations, document analysis, adaptive testing, study sessions, and community collaboration tools.
         </p>
 
         <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">3. User Accounts</h2>
@@ -63,7 +63,7 @@ export default function Terms() {
 
         <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">7. Intellectual Property</h2>
         <p className="text-muted-foreground leading-relaxed">
-          The Praxel name, logo, and all associated branding are the exclusive property of Alphadominity. All content, features, and functionality of the Platform are owned by Alphadominity and are protected by international copyright, trademark, and other intellectual property laws. Users retain ownership of content they upload but grant us a license to process it for Platform functionality.
+          The Alphify name, logo, and all associated branding are the exclusive property of Alphadominity. All content, features, and functionality of the Platform are owned by Alphadominity and are protected by international copyright, trademark, and other intellectual property laws. Users retain ownership of content they upload but grant us a license to process it for Platform functionality.
         </p>
 
         <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">8. User-Uploaded Content</h2>

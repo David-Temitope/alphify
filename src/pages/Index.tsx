@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Index() {
   const { user } = useAuth();
@@ -63,8 +63,8 @@ export default function Index() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
-          <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-          <span className="font-display font-semibold text-xl text-foreground">Praxel</span>
+          <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+          <span className="font-display font-semibold text-xl text-foreground">Alphify</span>
         </div>
         
         <nav className="flex items-center gap-4">
@@ -276,8 +276,8 @@ export default function Index() {
       <footer className="relative z-10 border-t border-border px-6 py-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={praxelLogo} alt="Praxel" className="w-8 h-8 rounded-lg shadow-md" />
-            <span className="font-display font-medium text-foreground">Praxel</span>
+            <img src={alphifyLogo} alt="Alphify" className="w-8 h-8 rounded-lg shadow-md" />
+            <span className="font-display font-medium text-foreground">Alphify</span>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/terms')} className="text-muted-foreground text-sm hover:text-foreground transition-colors">

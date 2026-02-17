@@ -6,8 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
 import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap, Coins } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 import { format } from 'date-fns';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -67,11 +68,12 @@ export default function Dashboard() {
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4 md:px-8">
           <div className="flex items-center gap-3">
-            <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Praxel</span>
+            <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Alphify</span>
           </div>
 
           <nav className="flex items-center gap-1 md:gap-2">
+            <ThemeToggle />
             {/* KU Balance */}
             <button
               onClick={() => navigate('/settings?tab=wallet')}
