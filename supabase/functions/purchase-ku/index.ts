@@ -224,6 +224,31 @@ Deno.serve(async (req) => {
       .update({ status: "completed" })
       .eq("reference", reference);
 
+    // Expire stale pending checkouts
+    await serviceClient.rpc("expire_stale_checkouts").catch(() => {});
+
+    // Send Slack notification (fire-and-forget)
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/slack-notify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          event: "payment_success",
+          data: {
+            email: user.email,
+            amount: paystackData.data.amount,
+            units,
+            target,
+          },
+        }),
+      });
+    } catch (e) {
+      console.error("Slack notify failed:", e);
+    }
+
     // Get updated balance
     let newBalance = 0;
     if (target === "personal") {

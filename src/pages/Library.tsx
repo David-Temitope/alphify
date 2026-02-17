@@ -25,9 +25,12 @@ import {
   Loader2,
   BookOpen,
   GraduationCap,
-  Shield
+  Shield,
+  AlertTriangle,
+  Coins
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 
 export default function Library() {
   const { user } = useAuth();
@@ -40,6 +43,7 @@ export default function Library() {
   const [uploadCategory, setUploadCategory] = useState<string>('course_material');
   const [uploadCourseCode, setUploadCourseCode] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const { balance, librarySlots, buyLibrarySlot, isBuyingSlot, refetch: refetchKU } = useKnowledgeUnits();
 
   // Fetch user settings (university, field_of_study, level)
   const { data: userSettings } = useQuery({
@@ -68,6 +72,20 @@ export default function Library() {
   });
 
   const isAdmin = adminAssignments && adminAssignments.length > 0;
+
+  // Fetch user's personal uploaded files count
+  const { data: personalFileCount } = useQuery({
+    queryKey: ['personal-file-count', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('uploaded_files')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+      return count || 0;
+    },
+  });
+
+  const hasFreeSlotsLeft = (personalFileCount || 0) < librarySlots;
 
   // Fetch shared files matching student's profile
   const { data: files, isLoading } = useQuery({
@@ -102,68 +120,93 @@ export default function Library() {
   });
 
   const handleUpload = async () => {
-    if (!uploadFile || !uploadCourseCode.trim() || !adminAssignments?.length) return;
+    if (!uploadFile || !uploadCourseCode.trim()) return;
 
     setIsUploading(true);
     try {
-      const assignment = adminAssignments[0]; // Use first assignment
-      const courseCode = uploadCourseCode.trim().toUpperCase();
-      const filePath = `shared/${assignment.university}/${assignment.department}/${assignment.level}/${courseCode}/${Date.now()}_${uploadFile.name}`;
+      if (isAdmin && adminAssignments?.length) {
+        // Admin upload to shared_files
+        const assignment = adminAssignments[0];
+        const courseCode = uploadCourseCode.trim().toUpperCase();
+        const filePath = `shared/${assignment.university}/${assignment.department}/${assignment.level}/${courseCode}/${Date.now()}_${uploadFile.name}`;
 
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('user-files')
-        .upload(filePath, uploadFile);
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('user-files')
+          .upload(filePath, uploadFile);
+        if (uploadError) throw uploadError;
 
-      // Extract text if PDF
-      let extractedText: string | null = null;
-      if (uploadFile.type === 'application/pdf') {
-        try {
-          const reader = new FileReader();
-          const base64Promise = new Promise<string>((resolve, reject) => {
-            reader.onload = () => {
-              const result = reader.result as string;
-              resolve(result.split(',')[1]);
-            };
-            reader.onerror = reject;
-          });
-          reader.readAsDataURL(uploadFile);
-          const pdfBase64 = await base64Promise;
-
-          const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
-            body: { pdfBase64, mimeType: 'application/pdf' },
-          });
-
-          if (!extractionError && extractionData?.text) {
-            extractedText = extractionData.text;
+        let extractedText: string | null = null;
+        if (uploadFile.type === 'application/pdf') {
+          try {
+            const reader = new FileReader();
+            const base64Promise = new Promise<string>((resolve, reject) => {
+              reader.onload = () => { resolve((reader.result as string).split(',')[1]); };
+              reader.onerror = reject;
+            });
+            reader.readAsDataURL(uploadFile);
+            const pdfBase64 = await base64Promise;
+            const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
+              body: { pdfBase64, mimeType: 'application/pdf' },
+            });
+            if (!extractionError && extractionData?.text) extractedText = extractionData.text;
+          } catch (e) {
+            console.error('PDF extraction failed:', e);
           }
-        } catch (e) {
-          console.error('PDF extraction failed during upload:', e);
         }
+
+        const { error: insertError } = await supabase.from('shared_files').insert({
+          uploaded_by: user!.id,
+          university: assignment.university,
+          department: assignment.department,
+          level: assignment.level,
+          course_code: courseCode,
+          file_name: uploadFile.name,
+          file_path: filePath,
+          file_type: uploadFile.type,
+          file_size: uploadFile.size,
+          extracted_text: extractedText,
+          file_category: uploadCategory,
+        });
+        if (insertError) throw insertError;
+
+        queryClient.invalidateQueries({ queryKey: ['shared-files'] });
+        toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
+      } else {
+        // Personal upload — check slots
+        if (!hasFreeSlotsLeft) {
+          // Need to buy a slot first
+          const bought = await buyLibrarySlot();
+          if (!bought) {
+            setIsUploading(false);
+            return;
+          }
+        }
+
+        const courseCode = uploadCourseCode.trim().toUpperCase();
+        const filePath = `personal/${user!.id}/${courseCode}/${Date.now()}_${uploadFile.name}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('user-files')
+          .upload(filePath, uploadFile);
+        if (uploadError) throw uploadError;
+
+        const { error: insertError } = await supabase.from('uploaded_files').insert({
+          user_id: user!.id,
+          file_name: uploadFile.name,
+          file_path: filePath,
+          file_type: uploadFile.type,
+          file_size: uploadFile.size,
+        });
+        if (insertError) throw insertError;
+
+        queryClient.invalidateQueries({ queryKey: ['personal-file-count'] });
+        refetchKU();
+        toast({ title: 'File uploaded!', description: `${uploadFile.name} saved to your personal library.` });
       }
 
-      // Save to shared_files table
-      const { error: insertError } = await supabase.from('shared_files').insert({
-        uploaded_by: user!.id,
-        university: assignment.university,
-        department: assignment.department,
-        level: assignment.level,
-        course_code: courseCode,
-        file_name: uploadFile.name,
-        file_path: filePath,
-        file_type: uploadFile.type,
-        file_size: uploadFile.size,
-        extracted_text: extractedText,
-        file_category: uploadCategory,
-      });
-      if (insertError) throw insertError;
-
-      queryClient.invalidateQueries({ queryKey: ['shared-files'] });
       setShowUpload(false);
       setUploadFile(null);
       setUploadCourseCode('');
-      toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
     } catch (error) {
       toast({
         title: 'Upload failed',
@@ -226,7 +269,7 @@ export default function Library() {
             </div>
           </div>
 
-          {isAdmin && (
+          {(isAdmin || true) && (
             <Button
               onClick={() => setShowUpload(true)}
               className="xp-gradient text-primary-foreground"
@@ -242,12 +285,13 @@ export default function Library() {
         {/* Profile incomplete warning */}
         {!hasProfile && (
           <div className="mb-6 p-4 rounded-xl bg-secondary border border-border animate-fade-in">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Complete your academic profile</p>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Set your university to access your school's library</p>
                 <p className="text-xs text-muted-foreground">
-                  Set your university name, field of study, and level in Settings to see shared course files.
+                  You can still upload your own files, but to see shared course materials from your university,
+                  set your university name, field of study, and level in Settings.
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
@@ -388,11 +432,31 @@ export default function Library() {
         )}
       </main>
 
-      {/* Admin Upload Modal */}
-      {showUpload && isAdmin && (
+      {/* Upload Modal - available to all users */}
+      {showUpload && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="glass-card w-full max-w-lg rounded-2xl p-6 animate-scale-in">
-            <h2 className="font-display text-xl font-semibold text-foreground mb-6">Upload Shared File</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground mb-2">
+              {isAdmin ? 'Upload Shared File' : 'Upload Personal File'}
+            </h2>
+
+            {!isAdmin && (
+              <div className="mb-4 p-3 rounded-lg bg-secondary border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
+                    {hasFreeSlotsLeft
+                      ? `Free upload (${librarySlots - (personalFileCount || 0)} slot${librarySlots - (personalFileCount || 0) > 1 ? 's' : ''} left)`
+                      : 'Additional slot costs 5 KU'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {hasFreeSlotsLeft
+                    ? 'This upload is free. Additional uploads cost 5 KU each.'
+                    : `You have ${balance} KU. 5 KU will be deducted for a new slot.`}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
