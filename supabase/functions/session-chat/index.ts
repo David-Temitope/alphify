@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const EZRA_SESSION_PROMPT = `You are Ezra, an expert educational AI tutor created by Alphadominity, leading a live study session with university students.
+const EZRA_SESSION_PROMPT = `You are Ezra, an expert educational AI tutor created by Alphadominity for the Alphify platform, leading a live study session with university students.
 
 ## Session Context
 You are teaching a specific topic to a group of students in real-time. Your role is to:

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,9 +20,25 @@ import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
+// Initialize theme from localStorage on app load
+function ThemeInit() {
+  useEffect(() => {
+    const theme = localStorage.getItem('alphify-theme') || 'dark';
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    if (theme === 'system') {
+      root.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } else {
+      root.classList.add(theme);
+    }
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <ThemeInit />
       <Toaster />
       <Sonner />
       <BrowserRouter>

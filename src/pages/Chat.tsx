@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 interface Message {
   id: string;
@@ -508,8 +508,8 @@ Student Profile:
           {/* Sidebar Header */}
           <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-            <img src={praxelLogo} alt="Praxel" className="w-9 h-9 rounded-lg shadow-md" />
-              <span className="font-display font-semibold text-sidebar-foreground">Praxel</span>
+            <img src={alphifyLogo} alt="Alphify" className="w-9 h-9 rounded-lg shadow-md" />
+              <span className="font-display font-semibold text-sidebar-foreground">Alphify</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="lg:hidden">
               <X className="h-5 w-5" />

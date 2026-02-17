@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
-import praxelLogo from '@/assets/praxel-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Auth() {
   const { user, loading: authLoading } = useAuth();
@@ -43,7 +43,7 @@ export default function Auth() {
           options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
         });
         if (error) throw error;
-        toast({ title: 'Welcome to Praxel! 🎉', description: "Your account has been created. Let's start learning!" });
+        toast({ title: 'Welcome to Alphify! 🎉', description: "Your account has been created. Let's start learning!" });
         navigate('/dashboard');
       }
     } catch (error) {
@@ -67,9 +67,9 @@ export default function Auth() {
 
       <div className="w-full max-w-md animate-fade-in-up">
         <div className="flex flex-col items-center mb-8">
-          <img src={praxelLogo} alt="Praxel" className="w-16 h-16 rounded-2xl xp-glow mb-4 shadow-lg shadow-primary/25" />
+          <img src={alphifyLogo} alt="Alphify" className="w-16 h-16 rounded-2xl xp-glow mb-4 shadow-lg shadow-primary/25" />
           <h1 className="font-display text-2xl font-bold text-foreground">
-            {isLogin ? 'Welcome Back' : 'Join Praxel'}
+            {isLogin ? 'Welcome Back' : 'Join Alphify'}
           </h1>
           <p className="text-muted-foreground mt-2">
             {isLogin ? 'Sign in to continue learning' : 'Start your learning journey'}
