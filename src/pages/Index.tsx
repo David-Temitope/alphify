@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import praxelLogo from '@/assets/praxel-logo.png';
 
 export default function Index() {
   const { user } = useAuth();
@@ -63,8 +63,8 @@ export default function Index() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
-          <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-          <span className="font-display font-semibold text-xl text-foreground">Alphify</span>
+          <img src={praxelLogo} alt="Praxel" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
+          <span className="font-display font-semibold text-xl text-foreground">Praxel</span>
         </div>
         
         <nav className="flex items-center gap-4">
@@ -249,7 +249,7 @@ export default function Index() {
               </Button>
             </div>
             <div>
-              <img src="/lovable-uploads/aad7da7c-566e-4e11-b90d-652616e8bc3b.png" alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" />
+              <img alt="Community Learning" className="rounded-3xl shadow-xl border border-border/50 w-full max-w-md mx-auto lg:ml-auto" src="/lovable-uploads/db252ba4-c4ed-4ebb-9b03-8ce70dd01219.png" />
             </div>
           </div>
         </div>
@@ -276,8 +276,8 @@ export default function Index() {
       <footer className="relative z-10 border-t border-border px-6 py-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={alphifyLogo} alt="Alphify" className="w-8 h-8 rounded-lg shadow-md" />
-            <span className="font-display font-medium text-foreground">Alphify</span>
+            <img src={praxelLogo} alt="Praxel" className="w-8 h-8 rounded-lg shadow-md" />
+            <span className="font-display font-medium text-foreground">Praxel</span>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/terms')} className="text-muted-foreground text-sm hover:text-foreground transition-colors">
