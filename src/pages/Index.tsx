@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.png';
+import { blogPosts } from '@/data/blogPosts';
 
 export default function Index() {
   const { user } = useAuth();
@@ -256,76 +257,39 @@ export default function Index() {
       </section>
 
       {/* Blog / Study Tips Section */}
-      <section className="relative z-10 px-6 py-20">
+      <section className="relative z-10 px-6 py-20" id="blog">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
               Study Tips for <span className="text-primary">Nigerian Students</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Practical advice to help you excel in your university exams
+              Practical, SEO-optimized advice to help you excel in your university exams — from the best way to study in 2026 to passing JAMB and Post-UTME
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: '5 Ways to Study Smarter, Not Harder',
-                excerpt: 'Stop reading your textbook 10 times. Use active recall, spaced repetition, and the Feynman technique to actually remember what you study.',
-                tag: 'Study Hacks',
-                emoji: '🧠',
-              },
-              {
-                title: 'How to Prepare for CBT Exams',
-                excerpt: 'Computer-based tests are different from pen-and-paper. Learn time management tricks, elimination strategies, and how to handle JAMB-style questions.',
-                tag: 'Exam Prep',
-                emoji: '💻',
-              },
-              {
-                title: 'Understanding Your Lecturer\'s Past Questions',
-                excerpt: 'Past questions are gold. Learn how to analyze question patterns, predict what\'s coming, and use them to structure your revision effectively.',
-                tag: 'Past Questions',
-                emoji: '📝',
-              },
-              {
-                title: 'Group Study: The Right Way to Do It',
-                excerpt: 'Most group study sessions are just gist sessions. Here\'s how to make yours productive with timed topics, quiz rounds, and accountability.',
-                tag: 'Collaboration',
-                emoji: '👥',
-              },
-              {
-                title: 'Managing Academic Stress in Nigerian Unis',
-                excerpt: 'Between carry-overs, ASUU strikes, and tough lecturers — stress is real. Learn practical mental health tips that actually work for students.',
-                tag: 'Wellness',
-                emoji: '🧘',
-              },
-              {
-                title: 'How AI is Changing Education in Africa',
-                excerpt: 'From personalized tutoring to instant explanations, AI tools like Ezra are helping students understand topics their lecturers couldn\'t explain.',
-                tag: 'EdTech',
-                emoji: '🤖',
-              },
-            ].map((post, index) => (
-              <article
-                key={post.title}
-                className="group bg-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in-up cursor-pointer"
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {blogPosts.slice(0, 8).map((post, index) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                className="group bg-card border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 animate-fade-in-up block"
                 style={{ animationDelay: `${0.1 * index}s` }}
-                onClick={() => navigate(user ? '/dashboard' : '/auth')}
               >
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-2xl">{post.emoji}</span>
                   <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">{post.tag}</span>
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-3 text-foreground group-hover:text-primary transition-colors">
+                <h3 className="font-display font-semibold text-sm mb-3 text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {post.title}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-muted-foreground text-xs leading-relaxed line-clamp-3">
                   {post.excerpt}
                 </p>
                 <div className="mt-4 text-primary text-sm font-medium flex items-center gap-1">
                   Read more <ArrowRight className="h-3 w-3" />
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
