@@ -49,10 +49,10 @@ declare global {
 }
 
 const KU_PACKAGES = [
-  { id: "starter", name: "Starter", units: 10, price: 500, amount: 50000 },
-  { id: "standard", name: "Standard", units: 25, price: 1250, amount: 125000 },
-  { id: "bulk", name: "Bulk", units: 50, price: 2500, amount: 250000 },
-  { id: "mega", name: "Mega", units: 100, price: 5000, amount: 500000 },
+  { id: "starter", name: "Starter", units: 10, price: 350, amount: 35000 },
+  { id: "standard", name: "Standard", units: 25, price: 875, amount: 87500 },
+  { id: "bulk", name: "Bulk", units: 50, price: 1750, amount: 175000 },
+  { id: "mega", name: "Mega", units: 100, price: 3500, amount: 350000 },
 ];
 
 interface KUPurchaseProps {
@@ -294,7 +294,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
       toast({ title: "Invalid amount", description: "Enter at least 1 KU.", variant: "destructive" });
       return;
     }
-    const amount = units * 5000; // ₦50 per unit in kobo
+    const amount = units * 3500; // ₦35 per unit in kobo
     initiatePurchase(units, amount, `custom_${units}`);
   };
 
@@ -388,7 +388,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             <div className="text-lg font-bold text-foreground mb-1">
               ₦{pkg.price.toLocaleString()}
             </div>
-            <div className="text-xs text-muted-foreground mb-4">₦50/unit</div>
+            <div className="text-xs text-muted-foreground mb-4">₦35/unit</div>
             <Button
               onClick={() => handlePackagePurchase(pkg)}
               disabled={processing !== null}
@@ -423,7 +423,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
         </div>
         {customAmount && parseInt(customAmount, 10) >= 1 && (
           <div className="text-sm font-medium text-foreground whitespace-nowrap">
-            = ₦{(parseInt(customAmount, 10) * 50).toLocaleString()}
+            = ₦{(parseInt(customAmount, 10) * 35).toLocaleString()}
           </div>
         )}
         <Button

@@ -1003,6 +1003,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      increment_star_rating: {
+        Args: { _amount: number; _user_id: string }
+        Returns: undefined
+      }
       is_any_department_admin: { Args: { _user_id: string }; Returns: boolean }
       is_department_admin: {
         Args: {

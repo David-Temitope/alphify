@@ -148,7 +148,11 @@
 @layer components {
   /* Glassmorphism card */
   .glass-card {
-    @apply bg-card/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+    @apply bg-card/80 backdrop-blur-xl border border-border shadow-lg;
+  }
+
+  .dark .glass-card {
+    @apply bg-card/40 border-white/10 shadow-2xl;
   }
 
   /* Xplane glow effect */
@@ -175,7 +179,7 @@
   .xp-bg-gradient {
     background: linear-gradient(135deg, 
       hsl(var(--background)) 0%,
-      hsl(222 47% 8%) 50%,
+      hsl(var(--secondary)) 50%,
       hsl(var(--background)) 100%
     );
   }
@@ -324,17 +328,21 @@
 
 /* Chat bubble styling */
 .chat-bubble-user {
-  @apply bg-primary/20 border border-primary/30 text-foreground;
+  @apply bg-primary/10 border border-primary/20 text-foreground;
 }
 
 .chat-bubble-assistant {
-  @apply bg-secondary border border-border text-foreground;
+  @apply bg-card border border-border text-foreground;
 }
 
 /* Calculation card for math-heavy responses */
 .calculation-card {
-  @apply bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-primary/30;
+  @apply bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/30;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.dark .calculation-card {
+  @apply from-blue-900/20 to-purple-900/20;
 }
 
 .calculation-card p {
@@ -351,35 +359,43 @@
 
 /* Markdown content styling - clear, readable formatting */
 .markdown-content {
-  @apply space-y-4;
+  @apply space-y-1;
+}
+
+.markdown-content > * + * {
+  @apply mt-3;
 }
 
 .markdown-content h1 {
-  @apply text-2xl font-bold mt-6 mb-4 gradient-text block;
+  @apply text-xl font-bold mt-6 mb-3 gradient-text block;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-semibold mt-5 mb-3 text-foreground block;
+  @apply text-lg font-semibold mt-5 mb-2 text-foreground block;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-medium mt-4 mb-2 text-foreground block;
+  @apply text-base font-medium mt-4 mb-2 text-foreground block;
 }
 
 .markdown-content p {
-  @apply mb-4 leading-relaxed block;
+  @apply mb-3 leading-relaxed block;
 }
 
 .markdown-content ul {
-  @apply mb-4 pl-6 space-y-2 list-disc block;
+  @apply mb-3 pl-5 space-y-1.5 list-disc block;
 }
 
 .markdown-content ol {
-  @apply mb-4 pl-6 space-y-2 list-decimal block;
+  @apply mb-3 pl-5 space-y-1.5 list-decimal block;
 }
 
 .markdown-content li {
-  @apply leading-relaxed block py-1;
+  @apply leading-relaxed;
+}
+
+.markdown-content li > p {
+  @apply mb-1;
 }
 
 .markdown-content li::marker {
@@ -387,7 +403,7 @@
 }
 
 .markdown-content code {
-  @apply bg-secondary px-2 py-1 rounded text-sm font-mono text-primary;
+  @apply bg-secondary px-1.5 py-0.5 rounded text-sm font-mono text-primary;
 }
 
 .markdown-content pre {
@@ -406,7 +422,6 @@
   @apply border-l-4 border-primary pl-4 italic my-4 text-muted-foreground block;
 }
 
-/* Ensure proper line breaks for math and structured content */
-.markdown-content br {
-  @apply block my-2;
+.markdown-content hr {
+  @apply my-4 border-border;
 }

@@ -39,8 +39,20 @@ export default function ChatMessage({ message }: ChatMessageProps) {
   const { speak, stopSpeaking, isSpeaking } = useVoice();
   const [isThisSpeaking, setIsThisSpeaking] = useState(false);
   
-  // Format content to remove LaTeX
-  const formattedContent = formatMathToPlainText(message.content);
+  // Format content to remove LaTeX and ensure proper line breaks
+  const rawFormatted = formatMathToPlainText(message.content);
+  // Ensure single newlines become double newlines for markdown paragraph breaks
+  // This fixes the "jam-packed" issue where content runs together
+  const formattedContent = rawFormatted
+    .replace(/\r\n/g, '\n')
+    // Ensure list items (•, -, *, numbered) get proper spacing
+    .replace(/([^\n])\n([\s]*[•\-\*\d]+[\.\)]\s)/g, '$1\n\n$2')
+    // Ensure headings get proper spacing  
+    .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+    // Ensure **bold** section headers on new lines get spacing
+    .replace(/([^\n])\n(\*\*[A-Z])/g, '$1\n\n$2')
+    // Convert single newlines between content paragraphs to double
+    .replace(/([a-zA-Z0-9.!?:;)\]"])\n([a-zA-Z0-9\*#•\-\d([])/g, '$1\n\n$2');
   const isMath = !isUser && isMathHeavy(formattedContent);
 
   const handleSpeak = () => {
@@ -116,16 +128,16 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         {isUser ? (
           <p className="text-foreground whitespace-pre-wrap">{formattedContent}</p>
         ) : (
-          <div className="markdown-content text-foreground space-y-4">
+          <div className="markdown-content text-foreground">
             <ReactMarkdown
               components={{
-                p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
+                p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
                 h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-3 gradient-text">{children}</h1>,
                 h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-3">{children}</h2>,
                 h3: ({ children }) => <h3 className="text-base font-medium mt-4 mb-2">{children}</h3>,
-                ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
-                li: ({ children }) => <li className="text-foreground leading-relaxed pl-1">{children}</li>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-4 space-y-1.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-4 space-y-1.5">{children}</ol>,
+                li: ({ children }) => <li className="text-foreground leading-relaxed">{children}</li>,
                 strong: ({ children }) => <strong className="font-semibold text-primary">{children}</strong>,
                 em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
                 code: ({ children, className }) => {
@@ -140,7 +152,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 blockquote: ({ children }) => (
                   <blockquote className="border-l-4 border-primary pl-4 italic my-4 text-muted-foreground">{children}</blockquote>
                 ),
-                br: () => <br className="my-2" />,
+                hr: () => <hr className="my-4 border-border" />,
               }}
             >
               {formattedContent}
