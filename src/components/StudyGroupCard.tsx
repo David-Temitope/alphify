@@ -74,13 +74,8 @@ export default function StudyGroupCard({ group, onJoinSession }: StudyGroupCardP
     }
   };
 
-  // Navigate to a group chat/detail page (for now, just show the group info)
   const handleEnterGroup = () => {
-    // TODO: Navigate to group detail page when implemented
-    // For now, we'll show group context via a toast or navigate to session if active
-    if (activeSession) {
-      handleJoinSession();
-    }
+    navigate(`/group/${group.id}`);
   };
 
   return (
