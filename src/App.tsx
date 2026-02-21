@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Community from "./pages/Community";
 import StudySession from "./pages/StudySession";
 import ExamMode from "./pages/ExamMode";
+import GroupChat from "./pages/GroupChat";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 
@@ -83,6 +84,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/group/:groupId"
+              element={
+                <ProtectedRoute>
+                  <GroupChat />
                 </ProtectedRoute>
               }
             />
