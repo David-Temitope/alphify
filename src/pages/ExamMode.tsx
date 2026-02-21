@@ -172,9 +172,35 @@ export default function ExamMode() {
 
       return { ...currentExam, answers, score, status: "completed" };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setCurrentExam(data);
       setStage("results");
+      
+      // Update star rating: exams grant 0.4 stars
+      try {
+        const percentage = ((data.score || 0) / data.max_score) * 100;
+        if (percentage >= 50) {
+          await supabase.rpc('increment_star_rating' as any, { _user_id: user!.id, _amount: 0.4 });
+        }
+        // Update quiz stats
+        const { data: settings } = await supabase
+          .from('user_settings')
+          .select('total_quizzes_taken, quiz_score_percentage')
+          .eq('user_id', user!.id)
+          .maybeSingle();
+        
+        const prevTotal = settings?.total_quizzes_taken || 0;
+        const prevAvg = settings?.quiz_score_percentage || 0;
+        const newTotal = prevTotal + 1;
+        const newAvg = Math.round(((prevAvg * prevTotal) + percentage) / newTotal);
+        
+        await supabase
+          .from('user_settings')
+          .update({ total_quizzes_taken: newTotal, quiz_score_percentage: newAvg })
+          .eq('user_id', user!.id);
+      } catch (e) {
+        console.error('Star rating update error:', e);
+      }
     },
     onError: (error) => {
       toast({
