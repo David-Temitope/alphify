@@ -89,8 +89,10 @@ export function formatMathToPlainText(text: string): string {
   result = result.replace(/\\,/g, ' ');
   result = result.replace(/\\\\/g, '\n');
   
-  // Clean up extra spaces
-  result = result.replace(/\s+/g, ' ').trim();
+  // Clean up extra spaces on each line, but preserve newlines
+  result = result.replace(/[^\S\n]+/g, ' ');
+  result = result.replace(/ *\n */g, '\n');
+  result = result.trim();
   
   return result;
 }
