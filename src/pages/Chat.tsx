@@ -597,7 +597,10 @@ Student Profile:
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Chat Header */}
-        <header className="sticky top-0 z-10 border-b border-border bg-background/50 backdrop-blur-xl p-4 flex items-center gap-4 flex-shrink-0">
+        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex items-center gap-3 flex-shrink-0">
+          <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
           <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>

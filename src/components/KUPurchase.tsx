@@ -437,7 +437,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        1 Knowledge Unit = 1 prompt with Ezra. Like buying airtime — simple!
+        Knowledge Units — like buying airtime for learning. Simple!
       </p>
     </div>
   );
