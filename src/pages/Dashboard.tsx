@@ -5,13 +5,25 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquarePlus, BookOpen, Clock, LogOut, ChevronRight, Sparkles, FileText, Settings, Users, GraduationCap, Coins } from 'lucide-react';
+import {
+  MessageSquarePlus,
+  BookOpen,
+  ChevronRight,
+  Sparkles,
+  FileText,
+  GraduationCap,
+  Coins,
+  Bell,
+  Search,
+  Clock,
+} from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import BottomNav from '@/components/BottomNav';
 import { format } from 'date-fns';
 import alphifyLogo from '@/assets/alphify-logo.png';
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance, canChat } = useKnowledgeUnits();
@@ -22,7 +34,7 @@ export default function Dashboard() {
       const { data, error } = await supabase.from('conversations').select('*').order('updated_at', { ascending: false }).limit(5);
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   const { data: files } = useQuery({
@@ -31,7 +43,16 @@ export default function Dashboard() {
       const { data, error } = await supabase.from('uploaded_files').select('*').order('created_at', { ascending: false }).limit(3);
       if (error) throw error;
       return data;
-    }
+    },
+  });
+
+  const { data: userSettings } = useQuery({
+    queryKey: ['user-settings', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('user_settings').select('courses').eq('user_id', user!.id).single();
+      return data;
+    },
+    enabled: !!user,
   });
 
   const handleNewChat = async () => {
@@ -47,7 +68,7 @@ export default function Dashboard() {
 
     const { data, error } = await supabase.from('conversations').insert({
       user_id: user!.id,
-      title: 'New Conversation'
+      title: 'New Conversation',
     }).select().single();
 
     if (!error && data) {
@@ -55,181 +76,189 @@ export default function Dashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
+  const courses = userSettings?.courses || [];
 
   return (
-    <div className="min-h-screen xp-bg-gradient">
-      {/* Header */}
-      <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between p-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/25" />
-            <span className="font-display font-semibold text-xl text-foreground hidden sm:block">Alphify</span>
+    <div className="min-h-[100dvh] bg-background pb-20">
+      {/* Top Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Good {getTimeOfDay()} 👋</p>
+            <h1 className="font-display text-xl font-bold text-foreground">Hi, {firstName}</h1>
           </div>
-
-          <nav className="flex items-center gap-1 md:gap-2">
-            <ThemeToggle />
-            {/* KU Balance */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/settings?tab=wallet')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
             >
               <Coins className="h-3.5 w-3.5" />
-              <span>{balance} KU</span>
+              {balance} KU
             </button>
-
-            <Button variant="ghost" size="icon" onClick={() => navigate('/library')} className="text-muted-foreground hover:text-foreground md:w-auto md:px-3">
-              <BookOpen className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Library</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/community')} className="text-muted-foreground hover:text-foreground md:w-auto md:px-3">
-              <Users className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Community</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/settings')} className="text-muted-foreground hover:text-foreground md:w-auto md:px-3">
-              <Settings className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Settings</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground md:w-auto md:px-3">
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Sign Out</span>
-            </Button>
-          </nav>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
-        {/* Welcome Section */}
-        <div className="animate-fade-in-up">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Good {getTimeOfDay()}, {firstName}! 👋
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Ready to understand something new today?
-          </p>
-          {balance <= 5 && balance > 0 && (
-            <p className="text-sm text-primary mt-2">
-              ⚡ You have {balance} KU remaining.{' '}
-              <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-medium">Top up</button>
-            </p>
-          )}
-          {balance === 0 && (
-            <p className="text-sm text-destructive mt-2">
-              🔴 No Knowledge Units left.{' '}
-              <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-medium">Buy KU to continue learning</button>
-            </p>
-          )}
-        </div>
+      <main className="px-4 space-y-6">
+        {/* Low balance warning */}
+        {balance <= 5 && balance > 0 && (
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-sm text-primary">
+            ⚡ {balance} KU left.{' '}
+            <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-semibold">Top up</button>
+          </div>
+        )}
+        {balance === 0 && (
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+            🔴 No KU left.{' '}
+            <button onClick={() => navigate('/settings?tab=wallet')} className="underline font-semibold">Buy KU</button>
+          </div>
+        )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <button onClick={handleNewChat} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-all">
-              <MessageSquarePlus className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-lg text-foreground">Start New Chat</h3>
-              <p className="text-muted-foreground text-sm">Ask anything - I'll explain it simply</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
-          </button>
+        {/* Quick Actions - Horizontal scroll cards */}
+        <section>
+          <h2 className="font-display text-base font-semibold text-foreground mb-3">Quick Actions</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            <button
+              onClick={handleNewChat}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 p-4 text-left hover:border-primary/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3">
+                <MessageSquarePlus className="h-5 w-5 text-primary" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Ask Ezra</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Start chat</p>
+            </button>
 
-          <button onClick={() => navigate('/exam')} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/25 group-hover:shadow-yellow-500/40 transition-all">
-              <GraduationCap className="h-7 w-7 text-white" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-lg text-foreground">Exam Mode</h3>
-              <p className="text-muted-foreground text-sm">Test yourself with AI-generated exams</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
-          </button>
+            <button
+              onClick={() => navigate('/exam')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20 p-4 text-left hover:border-amber-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mb-3">
+                <GraduationCap className="h-5 w-5 text-amber-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Exam Mode</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Practice tests</p>
+            </button>
 
-          <button onClick={() => navigate('/library')} className="glass-card p-6 rounded-2xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
-            <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center">
-              <BookOpen className="h-7 w-7 text-primary" />
+            <button
+              onClick={() => navigate('/library')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20 p-4 text-left hover:border-blue-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
+                <BookOpen className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Library</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{files?.length ?? 0} docs</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/community')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 p-4 text-left hover:border-violet-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center mb-3">
+                <Sparkles className="h-5 w-5 text-violet-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Community</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Study mates</p>
+            </button>
+          </div>
+        </section>
+
+        {/* Courses section */}
+        {courses.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-base font-semibold text-foreground">Your Courses</h2>
+              <span className="text-xs text-muted-foreground">{courses.length} courses</span>
             </div>
-            <div>
-              <h3 className="font-display font-semibold text-lg text-foreground">My Library</h3>
-              <p className="text-muted-foreground text-sm">
-                {files?.length ?? 0} documents uploaded
-              </p>
+            <div className="flex gap-2 flex-wrap">
+              {courses.slice(0, 6).map((course: string) => (
+                <span
+                  key={course}
+                  className="px-3 py-1.5 rounded-full bg-secondary text-xs font-medium text-foreground border border-border"
+                >
+                  {course}
+                </span>
+              ))}
+              {courses.length > 6 && (
+                <span className="px-3 py-1.5 rounded-full bg-primary/10 text-xs font-medium text-primary">
+                  +{courses.length - 6} more
+                </span>
+              )}
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
-          </button>
-        </div>
+          </section>
+        )}
 
         {/* Recent Conversations */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Recent Conversations
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Recent Chats
             </h2>
           </div>
 
           {conversations && conversations.length > 0 ? (
-            <div className="space-y-3">
-              {conversations.map(conv => (
-                <button key={conv.id} onClick={() => navigate(`/chat/${conv.id}`)} className="w-full glass-card p-4 rounded-xl flex items-center gap-4 hover:border-primary/30 transition-all group text-left">
-                  <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+            <div className="space-y-2">
+              {conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => navigate(`/chat/${conv.id}`)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-foreground truncate">{conv.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {conv.subject || 'General learning'} • {format(new Date(conv.updated_at), 'MMM d, h:mm a')}
+                    <h4 className="font-medium text-sm text-foreground truncate">{conv.title}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {conv.subject || 'General'} · {format(new Date(conv.updated_at), 'MMM d')}
                     </p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </button>
               ))}
             </div>
           ) : (
-            <div className="glass-card p-8 rounded-2xl text-center">
-              <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h3 className="font-display font-semibold text-lg mb-2">No conversations yet</h3>
-              <p className="text-muted-foreground mb-4">Start your first chat and let me help you understand anything!</p>
-              <Button onClick={handleNewChat} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <div className="rounded-2xl bg-card border border-border p-8 text-center">
+              <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
+              <h3 className="font-display font-semibold text-base mb-1">No conversations yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Ask Ezra anything to get started</p>
+              <Button onClick={handleNewChat} size="sm" className="bg-primary text-primary-foreground">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Start Learning
               </Button>
             </div>
           )}
-        </div>
+        </section>
 
         {/* Recent Files */}
         {files && files.length > 0 && (
-          <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-primary" />
+          <section>
+            <h2 className="font-display text-base font-semibold text-foreground flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-primary" />
               Recent Uploads
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {files.map(file => (
-                <div key={file.id} className="glass-card p-4 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-foreground truncate text-sm">{file.file_name}</h4>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(file.created_at), 'MMM d, yyyy')}
-                      </p>
-                    </div>
+            <div className="space-y-2">
+              {files.map((file) => (
+                <div key={file.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                  <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm text-foreground truncate">{file.file_name}</h4>
+                    <p className="text-xs text-muted-foreground">{format(new Date(file.created_at), 'MMM d, yyyy')}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
       </main>
+
+      <BottomNav />
     </div>
   );
 }
