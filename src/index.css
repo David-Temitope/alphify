@@ -335,7 +335,7 @@
   @apply bg-card border border-border text-foreground;
 }
 
-/* Calculation card for math-heavy responses */
+/* Calculation card for math-heavy responses (boxed variant — legacy) */
 .calculation-card {
   @apply bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/30;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -355,6 +355,15 @@
 
 .calculation-card code {
   @apply bg-primary/10 text-primary;
+}
+
+/* Calculation content for Gemini-style (no box) */
+.calculation-content p {
+  @apply leading-loose;
+}
+
+.calculation-content li {
+  @apply py-1;
 }
 
 /* Markdown content styling - clear, readable formatting */

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -611,7 +612,7 @@ Student Profile:
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 py-4 space-y-6">
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
@@ -724,52 +725,62 @@ Student Profile:
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="sticky bottom-0 z-10 border-t border-border bg-background/50 backdrop-blur-xl p-4 flex-shrink-0">
-          <div className="max-w-5xl mx-auto flex items-end gap-2 md:gap-3">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setShowFileUpload(true)}
-              className="flex-shrink-0"
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
+        {/* Input Area — Gemini-style clean bottom bar */}
+        <div className="sticky bottom-0 z-10 bg-background/80 backdrop-blur-xl px-3 pb-3 pt-2 flex-shrink-0">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative flex items-end bg-secondary rounded-2xl border border-border focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+              {/* Left action buttons */}
+              <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowFileUpload(true)}
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                {voiceSupported && (
+                  <Button 
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleVoiceToggle}
+                    className={cn(
+                      "h-8 w-8 rounded-full",
+                      isListening ? "text-destructive bg-destructive/10" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                )}
+              </div>
 
-            {voiceSupported && (
-              <Button 
-                variant={isListening ? "destructive" : "outline"}
-                size="icon"
-                onClick={handleVoiceToggle}
-                className="flex-shrink-0"
-              >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
-            )}
-            
-            <div className="flex-1 relative">
+              {/* Textarea */}
               <Textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything... I'll explain it simply"
-                className="min-h-[52px] max-h-[200px] resize-none bg-secondary border-border focus:border-primary input-glow pr-12 transition-all duration-200 focus:min-h-[80px]"
+                placeholder="Ask Ezra"
+                className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-transparent border-0 focus-visible:ring-0 shadow-none py-3 px-2 text-[15px] placeholder:text-muted-foreground/60"
                 rows={1}
               />
-            </div>
 
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isStreaming}
-              className="xp-gradient text-primary-foreground flex-shrink-0"
-            >
-              {isStreaming ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+              {/* Send button */}
+              <div className="pr-2 pb-2.5 flex-shrink-0">
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isStreaming}
+                  size="icon"
+                  className="h-8 w-8 rounded-full xp-gradient text-primary-foreground disabled:opacity-30"
+                >
+                  {isStreaming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
