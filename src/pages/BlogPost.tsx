@@ -146,7 +146,7 @@ export default function BlogPost() {
   );
 }
 
-// Update document title and meta tags
+// Update document title, meta tags, and JSON-LD structured data
 function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
   useEffect(() => {
     if (!post) return;
@@ -176,12 +176,37 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('twitter:title', post.title);
     setMeta('twitter:description', post.metaDescription);
 
+    // JSON-LD Article structured data for Google rich results
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      description: post.metaDescription,
+      author: { '@type': 'Organization', name: 'Alphify by Alphadominity', url: 'https://alphify.lovable.app' },
+      publisher: { '@type': 'Organization', name: 'Alphify', url: 'https://alphify.lovable.app' },
+      datePublished: post.publishedDate,
+      dateModified: post.publishedDate,
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://alphify.lovable.app/blog/${post.slug}` },
+      keywords: post.keywords.join(', '),
+      inLanguage: 'en',
+      isAccessibleForFree: true,
+    };
+
+    let scriptEl = document.querySelector('script[data-jsonld="blog"]') as HTMLScriptElement | null;
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.type = 'application/ld+json';
+      scriptEl.setAttribute('data-jsonld', 'blog');
+      document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify(jsonLd);
+
     return () => {
       document.title = 'Alphify — AI Study Companion';
+      scriptEl?.remove();
     };
   }, [post]);
 
   if (!post) return null;
-
   return null;
 }
