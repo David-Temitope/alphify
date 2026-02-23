@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useVoice } from '@/hooks/useVoice';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
@@ -758,13 +757,13 @@ Student Profile:
               </div>
 
               {/* Textarea */}
-              <Textarea
+              <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Ezra"
-                className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-transparent border-0 focus-visible:ring-0 shadow-none py-3 px-2 text-[15px] placeholder:text-muted-foreground/60"
+                className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-transparent border-0 focus-visible:ring-0 focus:outline-none shadow-none py-3 px-2 text-[15px] text-foreground placeholder:text-muted-foreground/60"
                 rows={1}
               />
 
