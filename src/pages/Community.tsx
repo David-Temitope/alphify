@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import {
-  ArrowLeft,
   Search,
   Users,
-  Star,
   UserPlus,
   Check,
   X,
@@ -23,6 +21,7 @@ import {
 import StudyGroupCard from '@/components/StudyGroupCard';
 import CreateGroupModal from '@/components/CreateGroupModal';
 import BottomNav from '@/components/BottomNav';
+import StarRating from '@/components/StarRating';
 import { cn } from '@/lib/utils';
 
 interface UserProfile {
@@ -66,7 +65,6 @@ export default function Community() {
   const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'mates' | 'groups'>('discover');
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
-  // Fetch user's study groups
   const { data: myGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['my-study-groups', user?.id],
     queryFn: async () => {
@@ -171,18 +169,29 @@ export default function Community() {
     { id: 'groups' as const, label: 'Groups', icon: GraduationCap },
   ];
 
+  const renderUserCard = (profile: any, action: React.ReactNode) => (
+    <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+      <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+        {getName(profile).charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-sm text-foreground truncate">{getName(profile)}</h4>
+        {profile.settings?.field_of_study && (
+          <p className="text-xs text-muted-foreground truncate">{profile.settings.field_of_study}</p>
+        )}
+        <StarRating rating={profile.settings?.star_rating ?? 0} />
+      </div>
+      {action}
+    </div>
+  );
+
   return (
     <div className="min-h-[100dvh] bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl px-4 pt-4 pb-3">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <h1 className="font-display text-xl font-bold text-foreground flex-1">Community</h1>
-        </div>
+        <h1 className="font-display text-xl font-bold text-foreground">Community</h1>
 
-        {/* Tab bar - Facebook style */}
+        {/* Tab bar */}
         <div className="flex gap-1 mt-3 overflow-x-auto scrollbar-hide">
           {tabs.map(tab => (
             <button
@@ -201,28 +210,21 @@ export default function Community() {
                   {tab.badge}
                 </span>
               )}
-              {tab.count !== undefined && <span className="text-xs opacity-70">({tab.count})</span>}
+              {tab.count !== undefined && tab.count > 0 && <span className="text-xs opacity-70">({tab.count})</span>}
             </button>
           ))}
         </div>
       </header>
 
       <main className="px-4 pt-4">
-        {/* ===== DISCOVER / PEOPLE ===== */}
+        {/* DISCOVER */}
         {activeTab === 'discover' && (
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search people..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-card border-border rounded-xl"
-              />
+              <Input placeholder="Search people..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-card border-border rounded-xl" />
             </div>
-
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">People you may know</h3>
-
             {usersLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : users && users.filter(p => !mateIds.includes(p.user_id)).length > 0 ? (
@@ -230,47 +232,16 @@ export default function Community() {
                 {users.filter(p => !mateIds.includes(p.user_id)).map((profile) => {
                   const isPendingOut = outgoingRequests.some(r => r.to_user_id === profile.user_id);
                   const isPendingIn = incomingRequests.some(r => r.from_user_id === profile.user_id);
-
-                  return (
-                    <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
-                        {getName(profile).charAt(0).toUpperCase()}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-foreground truncate">{getName(profile)}</h4>
-                        {profile.settings?.field_of_study && (
-                          <p className="text-xs text-muted-foreground truncate">{profile.settings.field_of_study}</p>
-                        )}
-                        {profile.settings?.star_rating && profile.settings.star_rating > 0 && (
-                          <div className="flex items-center gap-0.5 mt-0.5">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            <span className="text-xs text-muted-foreground">{profile.settings.star_rating.toFixed(1)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action */}
-                      {isPendingOut ? (
-                        <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-secondary">Sent</span>
-                      ) : isPendingIn ? (
-                        <span className="text-xs text-primary px-3 py-1.5 rounded-full bg-primary/10">Respond</span>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full h-8 px-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
-                          onClick={() => sendRequest.mutate(profile.user_id)}
-                          disabled={sendRequest.isPending}
-                        >
-                          <UserPlus className="h-3.5 w-3.5 mr-1" />
-                          Add
-                        </Button>
-                      )}
-                    </div>
+                  const action = isPendingOut ? (
+                    <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-secondary">Sent</span>
+                  ) : isPendingIn ? (
+                    <span className="text-xs text-primary px-3 py-1.5 rounded-full bg-primary/10">Respond</span>
+                  ) : (
+                    <Button size="sm" variant="outline" className="rounded-full h-8 px-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground" onClick={() => sendRequest.mutate(profile.user_id)} disabled={sendRequest.isPending}>
+                      <UserPlus className="h-3.5 w-3.5 mr-1" /> Add
+                    </Button>
                   );
+                  return renderUserCard(profile, action);
                 })}
               </div>
             ) : (
@@ -283,7 +254,7 @@ export default function Community() {
           </div>
         )}
 
-        {/* ===== REQUESTS ===== */}
+        {/* REQUESTS */}
         {activeTab === 'requests' && (
           <div className="space-y-4">
             {incomingRequests.length > 0 && (
@@ -315,7 +286,6 @@ export default function Community() {
                 </div>
               </div>
             )}
-
             {outgoingRequests.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Sent Requests</h3>
@@ -337,7 +307,6 @@ export default function Community() {
                 </div>
               </div>
             )}
-
             {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
               <div className="rounded-2xl bg-card border border-border p-10 text-center">
                 <UserPlus className="h-12 w-12 text-primary mx-auto mb-3" />
@@ -348,82 +317,62 @@ export default function Community() {
           </div>
         )}
 
-        {/* ===== MATES ===== */}
+        {/* MATES */}
         {activeTab === 'mates' && (
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Study Mates</h3>
             {mateIds.length > 0 ? (
               <div className="space-y-2">
-                {users?.filter(u => mateIds.includes(u.user_id)).map((profile) => (
-                  <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
-                    <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
-                      {getName(profile).charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm text-foreground truncate">{getName(profile)}</h4>
-                      {profile.settings?.field_of_study && (
-                        <p className="text-xs text-muted-foreground truncate">{profile.settings.field_of_study}</p>
-                      )}
-                      {profile.settings?.star_rating && profile.settings.star_rating > 0 && (
-                        <div className="flex items-center gap-0.5 mt-0.5">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          <span className="text-xs text-muted-foreground">{profile.settings.star_rating.toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
+                {users?.filter(u => mateIds.includes(u.user_id)).map((profile) =>
+                  renderUserCard(profile, (
                     <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground">
                       <MessageCircle className="h-4 w-4" />
                     </Button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             ) : (
               <div className="rounded-2xl bg-card border border-border p-10 text-center">
                 <Users className="h-12 w-12 text-primary mx-auto mb-3" />
                 <h3 className="font-display font-semibold mb-1">No study mates yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Find people to study with!</p>
-                <Button onClick={() => setActiveTab('discover')} size="sm" className="bg-primary text-primary-foreground rounded-full">
-                  <Search className="mr-2 h-4 w-4" /> Find People
-                </Button>
+                <p className="text-sm text-muted-foreground">Send requests from the People tab!</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ===== GROUPS ===== */}
+        {/* GROUPS */}
         {activeTab === 'groups' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Groups</h3>
-              <Button size="sm" onClick={() => setShowCreateGroupModal(true)} className="rounded-full bg-primary text-primary-foreground h-8 px-3">
-                <Plus className="h-3.5 w-3.5 mr-1" /> New
+              <Button size="sm" onClick={() => setShowCreateGroupModal(true)} className="rounded-full bg-primary text-primary-foreground">
+                <Plus className="h-3.5 w-3.5 mr-1" /> Create
               </Button>
             </div>
-
             {groupsLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : myGroups && myGroups.length > 0 ? (
               <div className="space-y-3">
                 {myGroups.map((group) => (
-                  <StudyGroupCard key={group.id} group={group} onJoinSession={(sid) => navigate(`/session/${sid}`)} />
+                  <StudyGroupCard key={group.id} group={group} />
                 ))}
               </div>
             ) : (
               <div className="rounded-2xl bg-card border border-border p-10 text-center">
-                <Users className="h-12 w-12 text-primary mx-auto mb-3" />
+                <GraduationCap className="h-12 w-12 text-primary mx-auto mb-3" />
                 <h3 className="font-display font-semibold mb-1">No groups yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Create a group to study together</p>
-                <Button onClick={() => setShowCreateGroupModal(true)} size="sm" className="bg-primary text-primary-foreground rounded-full">
-                  <Plus className="mr-2 h-4 w-4" /> Create Group
+                <p className="text-sm text-muted-foreground mb-4">Create a group to study with friends!</p>
+                <Button onClick={() => setShowCreateGroupModal(true)} className="bg-primary text-primary-foreground">
+                  <Plus className="h-4 w-4 mr-2" /> Create Group
                 </Button>
               </div>
             )}
           </div>
         )}
-
-        <CreateGroupModal open={showCreateGroupModal} onOpenChange={setShowCreateGroupModal} />
       </main>
 
+      <CreateGroupModal open={showCreateGroupModal} onOpenChange={setShowCreateGroupModal} />
       <BottomNav />
     </div>
   );
