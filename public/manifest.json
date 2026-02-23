@@ -1,0 +1,30 @@
+{
+  "name": "Alphify — AI Study Companion",
+  "short_name": "Alphify",
+  "description": "Learn smarter with Ezra, your AI study companion. Explanations, exams, study groups.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1a",
+  "theme_color": "#0cbdcf",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education"],
+  "lang": "en"
+}

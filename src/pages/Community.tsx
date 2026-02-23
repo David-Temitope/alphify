@@ -6,10 +6,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  ArrowLeft, 
-  Search, 
-  Users, 
+import {
+  ArrowLeft,
+  Search,
+  Users,
   Star,
   UserPlus,
   Check,
@@ -17,25 +17,19 @@ import {
   Clock,
   GraduationCap,
   Loader2,
-  Plus
+  Plus,
+  MessageCircle,
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StudyGroupCard from '@/components/StudyGroupCard';
 import CreateGroupModal from '@/components/CreateGroupModal';
-import PremiumBadge from '@/components/PremiumBadge';
+import BottomNav from '@/components/BottomNav';
+import { cn } from '@/lib/utils';
 
 interface UserProfile {
   id: string;
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
-}
-
-interface UserSetting {
-  user_id: string;
-  field_of_study: string | null;
-  star_rating: number | null;
-  preferred_name: string | null;
 }
 
 interface StudyRequest {
@@ -69,399 +63,249 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('discover');
+  const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'mates' | 'groups'>('discover');
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
-  // Fetch user's study groups (where they are admin or member)
+  // Fetch user's study groups
   const { data: myGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['my-study-groups', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
-      // Get groups where user is admin
-      const { data: adminGroups } = await supabase
-        .from('study_groups')
-        .select('*')
-        .eq('admin_id', user.id);
-      
-      // Get groups where user is a member
-      const { data: membershipData } = await supabase
-        .from('study_group_members')
-        .select('group_id')
-        .eq('user_id', user.id);
-      
+      const { data: adminGroups } = await supabase.from('study_groups').select('*').eq('admin_id', user.id);
+      const { data: membershipData } = await supabase.from('study_group_members').select('group_id').eq('user_id', user.id);
       const memberGroupIds = membershipData?.map(m => m.group_id) || [];
-      
       let memberGroups: StudyGroup[] = [];
       if (memberGroupIds.length > 0) {
-        const { data } = await supabase
-          .from('study_groups')
-          .select('*')
-          .in('id', memberGroupIds);
+        const { data } = await supabase.from('study_groups').select('*').in('id', memberGroupIds);
         memberGroups = (data || []) as StudyGroup[];
       }
-      
-      // Combine and dedupe
       const allGroups = [...(adminGroups || []), ...memberGroups];
-      const uniqueGroups = allGroups.filter((group, index, self) => 
-        index === self.findIndex(g => g.id === group.id)
-      );
-      
-      return uniqueGroups as StudyGroup[];
+      return allGroups.filter((g, i, s) => i === s.findIndex(x => x.id === g.id)) as StudyGroup[];
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
-  // Fetch all users with their profiles and public settings
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['community-users', searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .neq('user_id', user!.id);
-      
-      if (searchQuery) {
-        query = query.ilike('full_name', `%${searchQuery}%`);
-      }
-
+      let query = supabase.from('profiles').select('*').neq('user_id', user!.id);
+      if (searchQuery) query = query.ilike('full_name', `%${searchQuery}%`);
       const { data: profiles, error } = await query;
       if (error) throw error;
-
-      // Get public profile info (star_rating, field_of_study) from the security definer function
       const { data: publicSettings } = await supabase.rpc('get_public_profiles');
-
-      // Combine profiles with public settings
       return profiles?.map(profile => ({
         ...profile,
-        settings: publicSettings?.find((s: { user_id: string; field_of_study: string | null; star_rating: number | null }) => s.user_id === profile.user_id) as { user_id: string; field_of_study: string | null; star_rating: number | null } | undefined,
+        settings: publicSettings?.find((s: any) => s.user_id === profile.user_id),
       }));
     },
   });
 
-  // Fetch ALL requests (sent and received) - include all statuses to check for existing requests
   const { data: requests } = useQuery({
     queryKey: ['study-requests'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('study_requests')
-        .select('*')
-        .or(`from_user_id.eq.${user!.id},to_user_id.eq.${user!.id}`);
+      const { data, error } = await supabase.from('study_requests').select('*').or(`from_user_id.eq.${user!.id},to_user_id.eq.${user!.id}`);
       if (error) throw error;
       return data as StudyRequest[];
     },
   });
 
-  // Fetch study mates
   const { data: studyMates } = useQuery({
     queryKey: ['study-mates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('study_mates')
-        .select('*')
-        .or(`user_id.eq.${user!.id},mate_id.eq.${user!.id}`);
+      const { data, error } = await supabase.from('study_mates').select('*').or(`user_id.eq.${user!.id},mate_id.eq.${user!.id}`);
       if (error) throw error;
       return data as StudyMate[];
     },
   });
 
-
-  // Send request mutation
   const sendRequest = useMutation({
     mutationFn: async (toUserId: string) => {
-      // Check if a request already exists (in any direction)
-      const existingRequest = requests?.find(
-        r => (r.from_user_id === user!.id && r.to_user_id === toUserId) ||
-             (r.from_user_id === toUserId && r.to_user_id === user!.id)
+      const existing = requests?.find(
+        r => (r.from_user_id === user!.id && r.to_user_id === toUserId) || (r.from_user_id === toUserId && r.to_user_id === user!.id)
       );
-      
-      if (existingRequest) {
-        throw new Error('A request already exists with this user');
-      }
-      
-      const { error } = await supabase
-        .from('study_requests')
-        .insert({ from_user_id: user!.id, to_user_id: toUserId });
+      if (existing) throw new Error('Request already exists');
+      const { error } = await supabase.from('study_requests').insert({ from_user_id: user!.id, to_user_id: toUserId });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['study-requests'] });
-      toast({ title: 'Request sent!' });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Failed to send request',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive'
-      });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Request sent!' }); },
+    onError: (e) => { toast({ title: 'Failed', description: e instanceof Error ? e.message : 'Error', variant: 'destructive' }); },
   });
 
-  // Accept request mutation
   const acceptRequest = useMutation({
     mutationFn: async (request: StudyRequest) => {
-      // Update request status first
-      const { error: updateError } = await supabase
-        .from('study_requests')
-        .update({ status: 'accepted' })
-        .eq('id', request.id);
-      
-      if (updateError) throw updateError;
-
-      // Create study mate connections (both directions) - insert one by one to handle individually
-      const { error: mate1Error } = await supabase.from('study_mates').insert({
-        user_id: request.from_user_id,
-        mate_id: request.to_user_id,
-      });
-      
-      if (mate1Error && !mate1Error.message.includes('duplicate')) {
-        console.error('Error creating first mate connection:', mate1Error);
-        throw mate1Error;
-      }
-
-      const { error: mate2Error } = await supabase.from('study_mates').insert({
-        user_id: request.to_user_id,
-        mate_id: request.from_user_id,
-      });
-      
-      if (mate2Error && !mate2Error.message.includes('duplicate')) {
-        console.error('Error creating second mate connection:', mate2Error);
-        throw mate2Error;
-      }
-
-      // Delete the request after successful acceptance to prevent "already exists" errors
-      await supabase
-        .from('study_requests')
-        .delete()
-        .eq('id', request.id);
+      await supabase.from('study_requests').update({ status: 'accepted' }).eq('id', request.id);
+      const { error: m1 } = await supabase.from('study_mates').insert({ user_id: request.from_user_id, mate_id: request.to_user_id });
+      if (m1 && !m1.message.includes('duplicate')) throw m1;
+      const { error: m2 } = await supabase.from('study_mates').insert({ user_id: request.to_user_id, mate_id: request.from_user_id });
+      if (m2 && !m2.message.includes('duplicate')) throw m2;
+      await supabase.from('study_requests').delete().eq('id', request.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['study-requests'] });
       queryClient.invalidateQueries({ queryKey: ['study-mates'] });
       queryClient.invalidateQueries({ queryKey: ['community-users'] });
-      toast({ title: 'Request accepted!', description: 'You are now study mates.' });
-      // Navigate to study mates tab
+      toast({ title: 'Accepted!', description: 'You are now study mates.' });
       setActiveTab('mates');
     },
-    onError: (error) => {
-      console.error('Accept request error:', error);
-      toast({
-        title: 'Failed to accept',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive'
-      });
-    },
+    onError: (e) => { toast({ title: 'Failed', description: e instanceof Error ? e.message : 'Error', variant: 'destructive' }); },
   });
 
-  // Reject request mutation - delete instead of update to avoid permission issues
   const rejectRequest = useMutation({
     mutationFn: async (requestId: string) => {
-      const { error } = await supabase
-        .from('study_requests')
-        .delete()
-        .eq('id', requestId);
+      const { error } = await supabase.from('study_requests').delete().eq('id', requestId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['study-requests'] });
-      toast({ title: 'Request declined' });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Declined' }); },
   });
 
   const incomingRequests = requests?.filter(r => r.to_user_id === user!.id && r.status === 'pending') || [];
   const outgoingRequests = requests?.filter(r => r.from_user_id === user!.id && r.status === 'pending') || [];
   const mateIds = studyMates?.map(m => m.user_id === user!.id ? m.mate_id : m.user_id) || [];
 
-  const renderStars = (rating: number | null) => {
-    const stars = Math.round(rating || 0);
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Star
-            key={i}
-            className={`h-3 w-3 ${i <= stars ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
-          />
-        ))}
-      </div>
-    );
-  };
+  const getName = (p: { full_name: string | null }) => p.full_name || 'Student';
 
-  const getUserName = (profile: { full_name: string | null }) => {
-    // Use full_name from profile (preferred_name is private and not exposed in public view)
-    return profile.full_name || 'Student';
-  };
+  const tabs = [
+    { id: 'discover' as const, label: 'People', icon: Search },
+    { id: 'requests' as const, label: 'Requests', icon: Clock, badge: incomingRequests.length },
+    { id: 'mates' as const, label: 'Mates', icon: Users, count: mateIds.length },
+    { id: 'groups' as const, label: 'Groups', icon: GraduationCap },
+  ];
 
   return (
-    <div className="min-h-screen xp-bg-gradient">
+    <div className="min-h-[100dvh] bg-background pb-20">
       {/* Header */}
-      <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-between p-4 md:px-8">
-          <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="md:w-auto md:px-3">
-              <ArrowLeft className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Back</span>
-            </Button>
-            <div className="flex items-center gap-2 md:gap-3">
-              <Users className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-              <h1 className="font-display font-semibold text-lg md:text-xl text-foreground">Community</h1>
-            </div>
-          </div>
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl px-4 pt-4 pb-3">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <h1 className="font-display text-xl font-bold text-foreground flex-1">Community</h1>
+        </div>
+
+        {/* Tab bar - Facebook style */}
+        <div className="flex gap-1 mt-3 overflow-x-auto scrollbar-hide">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                activeTab === tab.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {tab.label}
+              {tab.badge && tab.badge > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-xs min-w-[18px] text-center">
+                  {tab.badge}
+                </span>
+              )}
+              {tab.count !== undefined && <span className="text-xs opacity-70">({tab.count})</span>}
+            </button>
+          ))}
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-secondary flex-wrap h-auto gap-1 p-1">
-            <TabsTrigger value="discover" className="text-xs sm:text-sm px-2 sm:px-3">
-              <span className="hidden sm:inline">Discover</span>
-              <Search className="h-4 w-4 sm:hidden" />
-            </TabsTrigger>
-            <TabsTrigger value="requests" className="text-xs sm:text-sm px-2 sm:px-3">
-              <span className="hidden sm:inline">Requests</span>
-              <Clock className="h-4 w-4 sm:hidden" />
-              {incomingRequests.length > 0 && (
-                <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs">
-                  {incomingRequests.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="mates" className="text-xs sm:text-sm px-2 sm:px-3">
-              <span className="hidden sm:inline">Mates</span>
-              <Users className="h-4 w-4 sm:hidden" />
-              <span className="ml-1">({mateIds.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="groups" className="text-xs sm:text-sm px-2 sm:px-3">
-              <span className="hidden sm:inline">Groups</span>
-              <GraduationCap className="h-4 w-4 sm:hidden" />
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Discover Tab */}
-          <TabsContent value="discover" className="space-y-6">
-            {/* Search */}
-            <div className="relative max-w-md">
+      <main className="px-4 pt-4">
+        {/* ===== DISCOVER / PEOPLE ===== */}
+        {activeTab === 'discover' && (
+          <div className="space-y-4">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search for study mates..."
+                placeholder="Search people..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-secondary border-border"
+                className="pl-10 bg-card border-border rounded-xl"
               />
             </div>
 
-            {/* Users Grid */}
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">People you may know</h3>
+
             {usersLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : users && users.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {users
-                  .filter(profile => !mateIds.includes(profile.user_id)) // Hide study mates from discover
-                  .map((profile) => {
-                    const isPendingOutgoing = outgoingRequests.some(r => r.to_user_id === profile.user_id);
-                    const isPendingIncoming = incomingRequests.some(r => r.from_user_id === profile.user_id);
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : users && users.filter(p => !mateIds.includes(p.user_id)).length > 0 ? (
+              <div className="space-y-2">
+                {users.filter(p => !mateIds.includes(p.user_id)).map((profile) => {
+                  const isPendingOut = outgoingRequests.some(r => r.to_user_id === profile.user_id);
+                  const isPendingIn = incomingRequests.some(r => r.from_user_id === profile.user_id);
 
-                    return (
-                      <div
-                        key={profile.id}
-                        className="glass-card p-4 rounded-xl animate-fade-in"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-lg">
-                            {getUserName(profile).charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-medium text-foreground truncate">
-                                {getUserName(profile)}
-                              </h3>
-                              
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              {renderStars(profile.settings?.star_rating)}
-                            </div>
-                            {profile.settings?.field_of_study && (
-                              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                                <GraduationCap className="h-3 w-3" />
-                                <span className="truncate">{profile.settings.field_of_study}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          {isPendingOutgoing ? (
-                            <Button variant="secondary" size="sm" className="w-full" disabled>
-                              <Clock className="h-4 w-4 mr-2" />
-                              Request Sent
-                            </Button>
-                          ) : isPendingIncoming ? (
-                            <Button variant="secondary" size="sm" className="w-full" disabled>
-                              <Clock className="h-4 w-4 mr-2" />
-                              Pending Response
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="w-full xp-gradient text-primary-foreground"
-                              onClick={() => sendRequest.mutate(profile.user_id)}
-                              disabled={sendRequest.isPending}
-                            >
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Send Request
-                            </Button>
-                          )}
-                        </div>
+                  return (
+                    <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                      {/* Avatar */}
+                      <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+                        {getName(profile).charAt(0).toUpperCase()}
                       </div>
-                    );
-                  })}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm text-foreground truncate">{getName(profile)}</h4>
+                        {profile.settings?.field_of_study && (
+                          <p className="text-xs text-muted-foreground truncate">{profile.settings.field_of_study}</p>
+                        )}
+                        {profile.settings?.star_rating && profile.settings.star_rating > 0 && (
+                          <div className="flex items-center gap-0.5 mt-0.5">
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                            <span className="text-xs text-muted-foreground">{profile.settings.star_rating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action */}
+                      {isPendingOut ? (
+                        <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-secondary">Sent</span>
+                      ) : isPendingIn ? (
+                        <span className="text-xs text-primary px-3 py-1.5 rounded-full bg-primary/10">Respond</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full h-8 px-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
+                          onClick={() => sendRequest.mutate(profile.user_id)}
+                          disabled={sendRequest.isPending}
+                        >
+                          <UserPlus className="h-3.5 w-3.5 mr-1" />
+                          Add
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="glass-card p-12 rounded-2xl text-center">
-                <Users className="h-16 w-16 text-primary mx-auto mb-6" />
-                <h2 className="font-display text-xl font-semibold mb-2">No users found</h2>
-                <p className="text-muted-foreground">
-                  {searchQuery ? 'Try a different search term' : 'Be the first to invite your friends!'}
-                </p>
+              <div className="rounded-2xl bg-card border border-border p-10 text-center">
+                <Users className="h-12 w-12 text-primary mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-1">No people found</h3>
+                <p className="text-sm text-muted-foreground">{searchQuery ? 'Try a different name' : 'Be the first to invite friends!'}</p>
               </div>
             )}
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Requests Tab */}
-          <TabsContent value="requests" className="space-y-6">
+        {/* ===== REQUESTS ===== */}
+        {activeTab === 'requests' && (
+          <div className="space-y-4">
             {incomingRequests.length > 0 && (
               <div>
-                <h2 className="font-display font-semibold text-lg mb-4">Incoming Requests</h2>
-                <div className="space-y-3">
-                  {incomingRequests.map((request) => {
-                    const senderProfile = users?.find(u => u.user_id === request.from_user_id);
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Friend Requests</h3>
+                <div className="space-y-2">
+                  {incomingRequests.map((req) => {
+                    const sender = users?.find(u => u.user_id === req.from_user_id);
                     return (
-                      <div key={request.id} className="glass-card p-4 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                            {senderProfile ? getUserName(senderProfile).charAt(0).toUpperCase() : '?'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {senderProfile ? getUserName(senderProfile) : 'Unknown User'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">wants to be your study mate</p>
-                          </div>
+                      <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                        <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+                          {sender ? getName(sender).charAt(0).toUpperCase() : '?'}
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => rejectRequest.mutate(request.id)}
-                          >
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-foreground">{sender ? getName(sender) : 'Unknown'}</h4>
+                          <p className="text-xs text-muted-foreground">Wants to be your study mate</p>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground" onClick={() => rejectRequest.mutate(req.id)}>
                             <X className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            className="xp-gradient text-primary-foreground"
-                            onClick={() => acceptRequest.mutate(request)}
-                          >
+                          <Button size="icon" className="h-8 w-8 rounded-full bg-primary text-primary-foreground" onClick={() => acceptRequest.mutate(req)}>
                             <Check className="h-4 w-4" />
                           </Button>
                         </div>
@@ -474,25 +318,18 @@ export default function Community() {
 
             {outgoingRequests.length > 0 && (
               <div>
-                <h2 className="font-display font-semibold text-lg mb-4">Sent Requests</h2>
-                <div className="space-y-3">
-                  {outgoingRequests.map((request) => {
-                    const receiverProfile = users?.find(u => u.user_id === request.to_user_id);
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Sent Requests</h3>
+                <div className="space-y-2">
+                  {outgoingRequests.map((req) => {
+                    const receiver = users?.find(u => u.user_id === req.to_user_id);
                     return (
-                      <div key={request.id} className="glass-card p-4 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-semibold">
-                            {receiverProfile ? getUserName(receiverProfile).charAt(0).toUpperCase() : '?'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {receiverProfile ? getUserName(receiverProfile) : 'Unknown User'}
-                            </p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              Pending response
-                            </p>
-                          </div>
+                      <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                        <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-lg flex-shrink-0">
+                          {receiver ? getName(receiver).charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-foreground">{receiver ? getName(receiver) : 'Unknown'}</h4>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Pending</p>
                         </div>
                       </div>
                     );
@@ -502,108 +339,92 @@ export default function Community() {
             )}
 
             {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
-              <div className="glass-card p-12 rounded-2xl text-center">
-                <UserPlus className="h-16 w-16 text-primary mx-auto mb-6" />
-                <h2 className="font-display text-xl font-semibold mb-2">No pending requests</h2>
-                <p className="text-muted-foreground">Start connecting with other students!</p>
+              <div className="rounded-2xl bg-card border border-border p-10 text-center">
+                <UserPlus className="h-12 w-12 text-primary mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-1">No pending requests</h3>
+                <p className="text-sm text-muted-foreground">Go to People tab to connect!</p>
               </div>
             )}
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Study Mates Tab */}
-          <TabsContent value="mates" className="space-y-6">
+        {/* ===== MATES ===== */}
+        {activeTab === 'mates' && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Study Mates</h3>
             {mateIds.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
                 {users?.filter(u => mateIds.includes(u.user_id)).map((profile) => (
-                  <div
-                    key={profile.id}
-                    className="glass-card p-4 rounded-xl animate-fade-in"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-lg">
-                        {getUserName(profile).charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">
-                          {getUserName(profile)}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          {renderStars(profile.settings?.star_rating)}
-                        </div>
-                        {profile.settings?.field_of_study && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                            <GraduationCap className="h-3 w-3" />
-                            <span className="truncate">{profile.settings.field_of_study}</span>
-                          </div>
-                        )}
-                      </div>
+                  <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                    <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+                      {getName(profile).charAt(0).toUpperCase()}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm text-foreground truncate">{getName(profile)}</h4>
+                      {profile.settings?.field_of_study && (
+                        <p className="text-xs text-muted-foreground truncate">{profile.settings.field_of_study}</p>
+                      )}
+                      {profile.settings?.star_rating && profile.settings.star_rating > 0 && (
+                        <div className="flex items-center gap-0.5 mt-0.5">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span className="text-xs text-muted-foreground">{profile.settings.star_rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground">
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="glass-card p-12 rounded-2xl text-center">
-                <Users className="h-16 w-16 text-primary mx-auto mb-6" />
-                <h2 className="font-display text-xl font-semibold mb-2">No study mates yet</h2>
-                <p className="text-muted-foreground mb-6">Connect with other students to study together!</p>
-                <Button onClick={() => {}} className="xp-gradient text-primary-foreground">
-                  Find Study Mates
+              <div className="rounded-2xl bg-card border border-border p-10 text-center">
+                <Users className="h-12 w-12 text-primary mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-1">No study mates yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">Find people to study with!</p>
+                <Button onClick={() => setActiveTab('discover')} size="sm" className="bg-primary text-primary-foreground rounded-full">
+                  <Search className="mr-2 h-4 w-4" /> Find People
                 </Button>
               </div>
             )}
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Study Groups Tab */}
-          <TabsContent value="groups" className="space-y-6">
+        {/* ===== GROUPS ===== */}
+        {activeTab === 'groups' && (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-semibold text-foreground">Your Study Groups</h2>
-              <Button 
-                onClick={() => setShowCreateGroupModal(true)}
-                className="bg-primary text-primary-foreground"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Group
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Groups</h3>
+              <Button size="sm" onClick={() => setShowCreateGroupModal(true)} className="rounded-full bg-primary text-primary-foreground h-8 px-3">
+                <Plus className="h-3.5 w-3.5 mr-1" /> New
               </Button>
             </div>
 
             {groupsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : myGroups && myGroups.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-3">
                 {myGroups.map((group) => (
-                  <StudyGroupCard 
-                    key={group.id} 
-                    group={group}
-                    onJoinSession={(sessionId) => navigate(`/session/${sessionId}`)}
-                  />
+                  <StudyGroupCard key={group.id} group={group} onJoinSession={(sid) => navigate(`/session/${sid}`)} />
                 ))}
               </div>
             ) : (
-              <div className="glass-card p-12 rounded-2xl text-center">
-                <Users className="h-16 w-16 text-primary mx-auto mb-6" />
-                <h2 className="font-display text-xl font-semibold mb-2">No study groups yet</h2>
-                <p className="text-muted-foreground mb-6">
-                  Create a group to start collaborative study sessions with your mates!
-                </p>
-                <Button 
-                  onClick={() => setShowCreateGroupModal(true)} 
-                  className="bg-primary text-primary-foreground"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Group
+              <div className="rounded-2xl bg-card border border-border p-10 text-center">
+                <Users className="h-12 w-12 text-primary mx-auto mb-3" />
+                <h3 className="font-display font-semibold mb-1">No groups yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">Create a group to study together</p>
+                <Button onClick={() => setShowCreateGroupModal(true)} size="sm" className="bg-primary text-primary-foreground rounded-full">
+                  <Plus className="mr-2 h-4 w-4" /> Create Group
                 </Button>
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
 
-        <CreateGroupModal 
-          open={showCreateGroupModal} 
-          onOpenChange={setShowCreateGroupModal} 
-        />
+        <CreateGroupModal open={showCreateGroupModal} onOpenChange={setShowCreateGroupModal} />
       </main>
+
+      <BottomNav />
     </div>
   );
 }
