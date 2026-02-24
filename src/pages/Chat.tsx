@@ -292,8 +292,35 @@ export default function Chat() {
     }
   }, [transcript]);
 
+  const resolveConversationId = useCallback(async (): Promise<string | null> => {
+    if (conversationId) return conversationId;
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({ user_id: user.id, title: 'New Conversation' })
+      .select()
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: 'Error',
+        description: 'Unable to start a new chat right now. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
+    navigate(`/chat/${data.id}`, { replace: true });
+    return data.id;
+  }, [conversationId, user, queryClient, navigate, toast]);
+
   const handleSendMessage = useCallback(async () => {
-    if (!input.trim() || isStreaming || !conversationId) return;
+    if (!input.trim() || isStreaming) return;
+
+    const activeConversationId = await resolveConversationId();
+    if (!activeConversationId) return;
 
     // Check KU balance
     if (!canChat) {
@@ -313,7 +340,7 @@ export default function Chat() {
     try {
       // Save user message
       await supabase.from('messages').insert({
-        conversation_id: conversationId,
+        conversation_id: activeConversationId,
         user_id: user!.id,
         role: 'user',
         content: userMessage,
@@ -323,7 +350,7 @@ export default function Chat() {
       const { data: allMessages } = await supabase
         .from('messages')
         .select('role, content')
-        .eq('conversation_id', conversationId)
+        .eq('conversation_id', activeConversationId)
         .order('created_at', { ascending: true });
 
       const messageHistory = allMessages?.map(m => ({
@@ -426,7 +453,7 @@ Student Profile:
       // Save assistant message
       const isQuiz = fullContent.includes('[QUIZ]') || fullContent.includes('quiz') && fullContent.includes('?');
       await supabase.from('messages').insert({
-        conversation_id: conversationId,
+        conversation_id: activeConversationId,
         user_id: user!.id,
         role: 'assistant',
         content: fullContent,
@@ -439,15 +466,15 @@ Student Profile:
         await supabase
           .from('conversations')
           .update({ title, updated_at: new Date().toISOString() })
-          .eq('id', conversationId);
+          .eq('id', activeConversationId);
       } else {
         await supabase
           .from('conversations')
           .update({ updated_at: new Date().toISOString() })
-          .eq('id', conversationId);
+          .eq('id', activeConversationId);
       }
 
-      await refetchMessages();
+      queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] });
       setFileContent(null);
       queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
       queryClient.invalidateQueries({ queryKey: ['ku-wallet'] });
@@ -461,7 +488,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, conversationId, user, messages, fileContent, userSettings, refetchMessages, toast, queryClient, canChat]);
+  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, canChat]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -730,12 +757,19 @@ Student Profile:
         {/* Input Area — Gemini-style clean bottom bar */}
         <div className="sticky bottom-0 z-10 bg-background/80 backdrop-blur-xl px-3 pb-3 pt-2 flex-shrink-0">
           <div className="max-w-3xl mx-auto">
-            <div className="relative flex items-end bg-secondary rounded-2xl border border-border focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="relative flex items-end bg-secondary rounded-2xl border border-border focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+            >
               {/* Left action buttons */}
               <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0">
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  type="button"
                   onClick={() => setShowFileUpload(true)}
                   className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
                 >
@@ -745,6 +779,7 @@ Student Profile:
                   <Button 
                     variant="ghost"
                     size="icon"
+                    type="button"
                     onClick={handleVoiceToggle}
                     className={cn(
                       "h-8 w-8 rounded-full",
@@ -763,14 +798,14 @@ Student Profile:
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask Ezra"
-                className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-transparent border-0 focus-visible:ring-0 focus:outline-none shadow-none py-3 px-2 text-[15px] text-foreground placeholder:text-muted-foreground/60"
+                className="flex-1 min-h-[44px] max-h-[200px] resize-none appearance-none bg-transparent border-0 ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none py-3 px-2 text-[15px] text-foreground placeholder:text-muted-foreground/60"
                 rows={1}
               />
 
               {/* Send button */}
               <div className="pr-2 pb-2.5 flex-shrink-0">
                 <Button 
-                  onClick={handleSendMessage}
+                  type="submit"
                   disabled={!input.trim() || isStreaming}
                   size="icon"
                   className="h-8 w-8 rounded-full xp-gradient text-primary-foreground disabled:opacity-30"
@@ -782,7 +817,7 @@ Student Profile:
                   )}
                 </Button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </main>
