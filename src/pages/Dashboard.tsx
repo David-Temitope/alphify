@@ -16,6 +16,7 @@ import {
   Bell,
   Search,
   Clock,
+  LogOut,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
@@ -97,6 +98,16 @@ export default function Dashboard() {
               {balance} KU
             </button>
             <ThemeToggle />
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate('/');
+              }}
+              className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </header>
