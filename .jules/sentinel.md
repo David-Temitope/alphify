@@ -13,3 +13,11 @@
 **Learning:** Spreading state objects directly into database update calls is a "Mass Assignment" vulnerability. It bypasses the intention of separate UI sections and allows any field in the table to be updated if the RLS policy is too broad.
 
 **Prevention:** Always use explicit field mapping (allow-listing) in mutations that update database records. Only include fields that the specific UI component is intended to manage.
+
+## 2026-02-16 - Brittle Payment Verification & Potential Double-Spending
+
+**Vulnerability:** The payment verification logic in Edge Functions was brittle, only checking for any record with a given reference. This meant a previous failed attempt could block a future successful verification of the same reference. Additionally, the lack of a database-level unique constraint on `paystack_reference` risked duplicate transaction logging.
+
+**Learning:** Payment verification must be idempotent and robust against temporary failures. Relying solely on application logic for idempotency is risky; the database should enforce uniqueness on critical transaction identifiers.
+
+**Prevention:** Use `UNIQUE` constraints on transaction references. In verification logic, specifically check for *successful* previous records rather than any record, allowing users to retry verification if it previously failed or was interrupted.

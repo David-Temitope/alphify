@@ -12,9 +12,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY") || Deno.env.get("PAYSTACK_API_KEY");
     if (!PAYSTACK_SECRET_KEY) {
-      throw new Error("PAYSTACK_SECRET_KEY is not configured");
+      throw new Error("Paystack secret key is not configured");
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -143,20 +143,22 @@ Deno.serve(async (req) => {
       throw new Error("Paystack verification did not return a success transaction");
     }
 
-    const { data: existingPayment, error: existingPaymentError } =
+    // Check for an existing SUCCESSFUL payment to prevent double-activation
+    const { data: existingSuccess, error: existingPaymentError } =
       await supabaseClient
         .from("payment_history")
-        .select("id, status")
+        .select("id")
         .eq("paystack_reference", reference)
+        .eq("status", "success")
         .maybeSingle();
 
     if (existingPaymentError) {
       throw existingPaymentError;
     }
 
-    if (existingPayment) {
+    if (existingSuccess) {
       return new Response(
-        JSON.stringify({ error: "Payment already processed" }),
+        JSON.stringify({ error: "Payment already processed and activated" }),
         {
           status: 409,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
