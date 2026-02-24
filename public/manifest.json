@@ -9,17 +9,17 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "src": "/alphify-icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "src": "/alphify-icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png",
+      "src": "/alphify-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
