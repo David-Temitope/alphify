@@ -7,8 +7,63 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.png';
+import { useRef } from 'react';
+
+function FloatingParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles: { x: number; y: number; r: number; dx: number; dy: number; o: number }[] = [];
+    for (let i = 0; i < 40; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 0.5,
+        dx: (Math.random() - 0.5) * 0.3,
+        dy: (Math.random() - 0.5) * 0.3,
+        o: Math.random() * 0.4 + 0.1,
+      });
+    }
+
+    let animId: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(187, 85%, 53%, ${p.o})`;
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+      });
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />;
+}
 
 export default function Auth() {
   const { user, loading: authLoading } = useAuth();
@@ -54,61 +109,68 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen xp-bg-gradient flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-xp-glow/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Floating particles */}
+      <FloatingParticles />
+
+      {/* Radial glow */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
       </div>
 
-      <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-6 left-6 text-muted-foreground hover:text-foreground">
+      <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-6 left-6 z-10 text-muted-foreground hover:text-foreground">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back
       </Button>
 
-      <div className="w-full max-w-md animate-fade-in-up">
+      <div className="w-full max-w-md animate-fade-in-up relative z-10">
+        {/* Logo + heading */}
         <div className="flex flex-col items-center mb-8">
-          <img src={alphifyLogo} alt="Alphify" className="w-16 h-16 rounded-2xl xp-glow mb-4 shadow-lg shadow-primary/25" />
+          <div className="relative mb-4">
+            <div className="absolute inset-0 w-20 h-20 mx-auto bg-primary/30 rounded-full blur-2xl" />
+            <img src={alphifyLogo} alt="Alphify" className="relative w-16 h-16 rounded-2xl shadow-2xl shadow-primary/40" />
+          </div>
           <h1 className="font-display text-2xl font-bold text-foreground">
             {isLogin ? 'Welcome Back' : 'Join Alphify'}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm">
             {isLogin ? 'Sign in to continue learning' : 'Start your learning journey'}
           </p>
         </div>
 
-        <div className="glass-card p-8 rounded-2xl">
+        {/* Form card */}
+        <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-secondary border-border focus:border-primary input-glow" required />
+                <Label htmlFor="fullName" className="text-primary text-sm">Full Name</Label>
+                <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary border-border focus:border-primary input-glow" required />
+              <Label htmlFor="email" className="text-primary text-sm">Email Address</Label>
+              <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-primary text-sm">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary border-border focus:border-primary input-glow pr-10" required minLength={6} />
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary pr-10" required minLength={6} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full xp-gradient text-primary-foreground py-6 xp-glow-sm">
+            <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground py-6 shadow-lg shadow-primary/25 rounded-full">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
 
           <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or continue with</span></div>
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card/80 px-2 text-muted-foreground">Or continue with</span></div>
           </div>
 
-          <Button type="button" variant="outline" className="w-full mt-6 py-6" disabled={googleLoading} onClick={async () => {
+          <Button type="button" variant="outline" className="w-full mt-6 py-6 border-border/50 hover:bg-secondary/50 rounded-full" disabled={googleLoading} onClick={async () => {
             setGoogleLoading(true);
             try {
               const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
@@ -130,7 +192,7 @@ export default function Auth() {
           </Button>
 
           <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {isLogin ? "Don't have an account?" : 'Already have an account?'}
               <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-primary hover:underline font-medium">
                 {isLogin ? 'Sign Up' : 'Sign In'}
