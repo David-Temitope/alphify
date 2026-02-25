@@ -67,6 +67,14 @@ function FloatingParticles() {
 
 export default function Auth() {
   const { user, loading: authLoading } = useAuth();
+  useEffect(() => {
+    // Ensure canonical link is set to the custom domain
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://alphify.site/auth');
+    }
+  }, []);
+
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -153,7 +161,12 @@ export default function Auth() {
 
         {/* Form card */}
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-5" method="POST">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            method="POST"
+            aria-label={isLogin ? "Sign in to your account" : "Create a new account"}
+          >
             {!isLogin && (
               <>
                 <div className="space-y-2">
