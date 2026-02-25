@@ -17,6 +17,7 @@ import Community from "./pages/Community";
 import StudySession from "./pages/StudySession";
 import ExamMode from "./pages/ExamMode";
 import GroupChat from "./pages/GroupChat";
+import MateChat from "./pages/MateChat";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 
@@ -101,6 +102,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <StudySession />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mate-chat/:mateId"
+              element={
+                <ProtectedRoute>
+                  <MateChat />
                 </ProtectedRoute>
               }
             />

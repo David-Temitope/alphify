@@ -10,6 +10,7 @@ import {
   Search,
   Users,
   UserPlus,
+  UserMinus,
   Check,
   X,
   Clock,
@@ -154,6 +155,25 @@ export default function Community() {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Declined' }); },
+  });
+
+  const cancelRequest = useMutation({
+    mutationFn: async (requestId: string) => {
+      const { error } = await supabase.from('study_requests').delete().eq('id', requestId);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Request cancelled' }); },
+  });
+
+  const unfriendMate = useMutation({
+    mutationFn: async (mateUserId: string) => {
+      await supabase.from('study_mates').delete().or(`and(user_id.eq.${user!.id},mate_id.eq.${mateUserId}),and(user_id.eq.${mateUserId},mate_id.eq.${user!.id})`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['study-mates'] });
+      queryClient.invalidateQueries({ queryKey: ['community-users'] });
+      toast({ title: 'Study mate removed' });
+    },
   });
 
   const incomingRequests = requests?.filter(r => r.to_user_id === user!.id && r.status === 'pending') || [];
@@ -301,6 +321,9 @@ export default function Community() {
                           <h4 className="font-medium text-sm text-foreground">{receiver ? getName(receiver) : 'Unknown'}</h4>
                           <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Pending</p>
                         </div>
+                        <Button size="sm" variant="outline" className="rounded-full h-8 px-3 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => cancelRequest.mutate(req.id)} disabled={cancelRequest.isPending}>
+                          <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        </Button>
                       </div>
                     );
                   })}
@@ -325,9 +348,16 @@ export default function Community() {
               <div className="space-y-2">
                 {users?.filter(u => mateIds.includes(u.user_id)).map((profile) =>
                   renderUserCard(profile, (
-                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground">
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-primary" onClick={() => navigate(`/mate-chat/${profile.user_id}`)}>
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive" onClick={() => {
+                        if (confirm('Remove this study mate?')) unfriendMate.mutate(profile.user_id);
+                      }}>
+                        <UserMinus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))
                 )}
               </div>

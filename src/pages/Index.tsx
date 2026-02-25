@@ -262,7 +262,35 @@ export default function Index() {
           </div>
           <div className="relative">
             <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-            <img src="/lovable-uploads/aad7da7c-566e-4e11-b90d-652616e8bc3b.png" alt="Community Learning" className="relative rounded-3xl shadow-xl border border-border/30 w-full max-w-md mx-auto lg:ml-auto" />
+            <div className="relative rounded-3xl border border-border/30 bg-card/50 backdrop-blur-sm p-8 w-full max-w-md mx-auto lg:ml-auto space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">A</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-primary/20 rounded w-24 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-16" />
+                </div>
+                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Online</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold">B</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-amber-500/20 rounded w-28 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-20" />
+                </div>
+                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Online</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-500 font-bold">C</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-violet-500/20 rounded w-20 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-14" />
+                </div>
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Studying</span>
+              </div>
+              <div className="text-center pt-2">
+                <p className="text-xs text-muted-foreground">Real-time collaboration preview</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

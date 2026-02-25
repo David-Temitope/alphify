@@ -52,6 +52,7 @@ export default function Chat() {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
   const fileIdFromLibrary = searchParams.get('file');
+  const chatMode = searchParams.get('mode'); // 'assignment' or null
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -323,10 +324,11 @@ export default function Chat() {
     if (!activeConversationId) return;
 
     // Check KU balance
-    if (!canChat) {
+    const requiredKU = chatMode === 'assignment' ? 2 : 1;
+    if (balance < requiredKU) {
       toast({
-        title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
+        title: 'Not enough Knowledge Units',
+        description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
         variant: 'destructive',
       });
       return;
@@ -396,6 +398,7 @@ Student Profile:
           messages: messageHistory,
           fileContent: fileContent,
           personalization: personalizationContext,
+          mode: chatMode || undefined,
         }),
       });
 
@@ -635,7 +638,7 @@ Student Profile:
               {conversation?.title || 'New Conversation'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+              {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
             </p>
           </div>
         </header>
