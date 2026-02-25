@@ -290,7 +290,7 @@ export default function Settings() {
                     variant="outline"
                     className="w-full rounded-xl"
                     onClick={() => {
-                      const text = `Join me on Alphify — the AI study app for university students! Use my referral code: ${referralCode}\n\nhttps://alphify.lovable.app/auth`;
+                      const text = `Join me on Alphify — the AI study app for university students! Use my referral code: ${referralCode}\n\nhttps://alphify.site/auth`;
                       if (navigator.share) {
                         navigator.share({ title: 'Join Alphify', text });
                       } else {

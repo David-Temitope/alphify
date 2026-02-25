@@ -153,27 +153,67 @@ export default function Auth() {
 
         {/* Form card */}
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" method="POST">
             {!isLogin && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="text-primary text-sm">Full Name</Label>
-                  <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="bg-secondary/50 border-border/50 focus:border-primary"
+                    required
+                    autoComplete="name"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="referralCode" className="text-primary text-sm">Referral Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                  <Input id="referralCode" type="text" placeholder="e.g. DAV001" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} className="bg-secondary/50 border-border/50 focus:border-primary uppercase" maxLength={10} />
+                  <Input
+                    id="referralCode"
+                    name="referralCode"
+                    type="text"
+                    placeholder="e.g. DAV001"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    className="bg-secondary/50 border-border/50 focus:border-primary uppercase"
+                    maxLength={10}
+                  />
                 </div>
               </>
             )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-primary text-sm">Email Address</Label>
-              <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@university.edu"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-secondary/50 border-border/50 focus:border-primary"
+                required
+                autoComplete="email"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-primary text-sm">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary pr-10" required minLength={6} />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-secondary/50 border-border/50 focus:border-primary pr-10"
+                  required
+                  minLength={6}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
