@@ -122,6 +122,19 @@ export default function Auth() {
     }
   };
 
+  // Set canonical link for security scanners
+  useEffect(() => {
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    link.href = 'https://alphify.site/auth';
+    document.title = isLogin ? 'Sign In — Alphify' : 'Create Account — Alphify';
+    return () => { document.title = 'Alphify — AI Study Companion for Nigerian University Students'; };
+  }, [isLogin]);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
       {/* Floating particles */}
@@ -141,19 +154,19 @@ export default function Auth() {
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
             <div className="absolute inset-0 w-20 h-20 mx-auto bg-primary/30 rounded-full blur-2xl" />
-            <img src={alphifyLogo} alt="Alphify" className="relative w-16 h-16 rounded-2xl shadow-2xl shadow-primary/40" />
+            <img src={alphifyLogo} alt="Alphify Logo" className="relative w-16 h-16 rounded-2xl shadow-2xl shadow-primary/40" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">
             {isLogin ? 'Welcome Back' : 'Join Alphify'}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            {isLogin ? 'Sign in to continue learning' : 'Start your learning journey'}
+            {isLogin ? 'Sign in to your Alphify account' : 'Create your Alphify account to start learning'}
           </p>
         </div>
 
         {/* Form card */}
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-5" method="POST">
+          <form onSubmit={handleSubmit} className="space-y-5" method="POST" action="/auth">
             {!isLogin && (
               <>
                 <div className="space-y-2">
@@ -262,6 +275,16 @@ export default function Auth() {
               By signing up, you agree to our Terms of Service
             </button>
           </div>
+        </div>
+
+        {/* Site identity footer for security scanners */}
+        <div className="mt-6 text-center text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} Alphify by Alphadominity. All rights reserved.</p>
+          <p className="mt-1">
+            <a href="https://alphify.site" className="hover:text-foreground">alphify.site</a>
+            {' · '}
+            <a href="/terms" className="hover:text-foreground">Terms</a>
+          </p>
         </div>
       </div>
     </div>

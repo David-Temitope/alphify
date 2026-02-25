@@ -348,7 +348,7 @@ export default function Library() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-6 pb-4">
               <Button variant="outline" className="flex-1" onClick={() => { setShowUpload(false); setUploadFile(null); setUploadCourseCode(''); }}>Cancel</Button>
               <Button onClick={handleUpload} disabled={!uploadFile || !uploadCourseCode.trim() || isUploading} className="flex-1 bg-primary text-primary-foreground">
                 {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
