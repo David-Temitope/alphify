@@ -227,6 +227,11 @@ Deno.serve(async (req) => {
     // Expire stale pending checkouts
     try { await serviceClient.rpc("expire_stale_checkouts"); } catch { /* ignore */ }
 
+    // Reward referrer if this is the referred user's first purchase
+    if (target === "personal") {
+      try { await serviceClient.rpc("reward_referral_on_purchase", { _referred_user_id: user.id }); } catch { /* ignore */ }
+    }
+
     // Send Slack notification (fire-and-forget)
     try {
       await fetch(`${SUPABASE_URL}/functions/v1/slack-notify`, {

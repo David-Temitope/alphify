@@ -262,7 +262,7 @@ export default function Settings() {
                 <Gift className="h-4 w-4 text-primary" />
                 <h2 className="font-display text-base font-semibold">Referral Code</h2>
               </div>
-              <p className="text-xs text-muted-foreground mb-3">Share your code with friends. When they sign up, you earn <strong>5 free KU!</strong></p>
+              <p className="text-xs text-muted-foreground mb-3">Share your code with friends. When they sign up and make their first KU purchase, you earn <strong>5 free KU!</strong></p>
               {referralCode ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
