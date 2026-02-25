@@ -454,13 +454,30 @@ Student Profile:
       }
 
       // Save assistant message
-      const isQuiz = fullContent.includes('[QUIZ]') || fullContent.includes('quiz') && fullContent.includes('?');
+      const isQuiz = fullContent.includes('[QUIZ]') || (fullContent.includes('quiz') && fullContent.includes('?'));
+      
+      // Detect correct quiz answer and increment star rating
+      const correctIndicators = ['correct', '✅', 'well done', 'great job', 'that\'s right', 'you got it', 'right answer', 'correct answer'];
+      const lowerContent = fullContent.toLowerCase();
+      const wasCorrectAnswer = correctIndicators.some(indicator => lowerContent.includes(indicator)) && 
+        messages.length > 0 && messages[messages.length - 1]?.role === 'assistant' && 
+        (messages[messages.length - 1]?.is_quiz || messages[messages.length - 1]?.content?.includes('[QUIZ]'));
+      
+      if (wasCorrectAnswer) {
+        try {
+          await supabase.rpc('increment_star_rating' as any, { _user_id: user!.id, _amount: 0.1 });
+        } catch {
+          // Silent fail - star increment is non-critical
+        }
+      }
+      
       await supabase.from('messages').insert({
         conversation_id: activeConversationId,
         user_id: user!.id,
         role: 'assistant',
         content: fullContent,
         is_quiz: isQuiz,
+        quiz_passed: wasCorrectAnswer || undefined,
       });
 
       // Update conversation title if first exchange

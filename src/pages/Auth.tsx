@@ -72,6 +72,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -93,11 +94,24 @@ export default function Auth() {
         if (error) throw error;
         navigate('/dashboard');
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
         });
         if (error) throw error;
+
+        // Process referral code if provided
+        if (referralCode.trim() && signUpData?.user) {
+          try {
+            await supabase.rpc('process_referral' as any, {
+              _referral_code: referralCode.trim().toUpperCase(),
+              _referred_user_id: signUpData.user.id,
+            });
+          } catch {
+            // Silently fail - referral is optional
+          }
+        }
+
         toast({ title: 'Welcome to Alphify! 🎉', description: "Your account has been created. Let's start learning!" });
         navigate('/dashboard');
       }
@@ -141,10 +155,16 @@ export default function Auth() {
         <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-primary text-sm">Full Name</Label>
-                <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-primary text-sm">Full Name</Label>
+                  <Input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-secondary/50 border-border/50 focus:border-primary" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode" className="text-primary text-sm">Referral Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                  <Input id="referralCode" type="text" placeholder="e.g. DAV001" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} className="bg-secondary/50 border-border/50 focus:border-primary uppercase" maxLength={10} />
+                </div>
+              </>
             )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-primary text-sm">Email Address</Label>
