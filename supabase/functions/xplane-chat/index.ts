@@ -209,7 +209,57 @@ When you have fully covered a topic or PDF (or when the student requests an exam
 
 6. Keep the student focused on the current topic before moving on
 
-7. Generate exams after explaining topics thoroughly`;
+7. Generate exams after explaining topics thoroughly
+
+## CRITICAL: Visual Diagrams
+When explaining concepts that benefit from visual representation (waves, circuits, graphs, geometric shapes, molecular structures, trigonometric functions, force diagrams, etc.), you MUST create clear ASCII/text diagrams to illustrate.
+
+Example - Transverse Wave:
+\`\`\`
+     Crest
+      /\\        /\\
+     /  \\      /  \\
+----/    \\----/    \\----  ← Equilibrium
+          \\  /      \\  /
+           \\/        \\/
+         Trough
+|<-- Wavelength -->|
+\`\`\`
+
+Example - Right Triangle (Trigonometry):
+\`\`\`
+         /|
+        / |
+  c    /  | a (opposite)
+      /   |
+     / θ  |
+    /_____|
+       b (adjacent)
+
+sin θ = a/c    cos θ = b/c    tan θ = a/b
+\`\`\`
+
+Rules for diagrams:
+1. Use ASCII art with characters like / \\ | - _ ^ ~ = * + o
+2. Label ALL important parts with arrows (← →) or text
+3. Keep diagrams clean and readable
+4. ALWAYS explain the diagram after drawing it
+5. Use diagrams for: waves, forces, circuits, graphs, geometric shapes, molecular structures, tree diagrams, flowcharts, number lines, coordinate planes, electric fields, cell biology structures
+6. Wrap diagrams in triple backtick code blocks for proper formatting
+
+## ASSIGNMENT ASSIST MODE
+When the request includes mode "assignment", follow these DIFFERENT rules:
+
+1. You are helping the student WRITE their assignment, NOT lecturing them
+2. Write the answer as if YOU are the student - use language appropriate to their university level
+3. Use terms and concepts the student at their level (100L, 200L, 300L etc.) would realistically know
+4. Write naturally like a human student would, NOT like an AI or textbook
+5. Avoid overly sophisticated vocabulary beyond their level
+6. Structure the answer appropriately (introduction, body, conclusion for discussions/essays)
+7. For calculation assignments, show clear working steps
+8. DO NOT use the "Explain Then Define" method - just write the assignment directly
+9. After providing the answer, ALWAYS ask: "Would you like me to explain any part of this? In case your lecturer asks follow-up questions, it's good to truly understand the material 📚"
+10. This mode costs 2 KU per prompt - be thorough in your response`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -239,7 +289,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { messages, fileContent, personalization } = await req.json();
+    const { messages, fileContent, personalization, mode } = await req.json();
     
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
@@ -275,9 +325,11 @@ Deno.serve(async (req) => {
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
-    if (!kuWallet || kuWallet.balance <= 0) {
+    const kuCost = mode === 'assignment' ? 2 : 1;
+
+    if (!kuWallet || kuWallet.balance < kuCost) {
       return new Response(JSON.stringify({ 
-        error: "Insufficient Knowledge Units. Please top up your wallet.",
+        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU.${mode === 'assignment' ? ' Assignment Assist costs 2 KU per prompt.' : ''} Please top up your wallet.`,
         code: "INSUFFICIENT_KU"
       }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -286,14 +338,14 @@ Deno.serve(async (req) => {
 
     await serviceClient
       .from('ku_wallets')
-      .update({ balance: kuWallet.balance - 1 })
+      .update({ balance: kuWallet.balance - kuCost })
       .eq('user_id', authData.user.id);
 
     await serviceClient.from('ku_transactions').insert({
       user_id: authData.user.id,
-      amount: -1,
-      type: 'chat_prompt',
-      description: 'Chat with Ezra'
+      amount: -kuCost,
+      type: mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
+      description: mode === 'assignment' ? 'Assignment Assist' : 'Chat with Ezra'
     });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -305,6 +357,10 @@ Deno.serve(async (req) => {
     }
 
     let systemContent = EZRA_SYSTEM_PROMPT;
+
+    if (mode === 'assignment') {
+      systemContent += `\n\nCRITICAL: You are in ASSIGNMENT ASSIST MODE. Follow the Assignment Assist rules defined above. Write the assignment answer as if you are the student, using their level-appropriate language. DO NOT lecture. DO NOT use "Explain Then Define". Just write the assignment directly and ask if they want explanation afterward.`;
+    }
 
     if (personalization) {
       systemContent += `\n\nSTUDENT PERSONALIZATION CONTEXT:\n${personalization}\n\nUse this information to personalize your responses, tailor examples to their field, and enforce learning boundaries based on their courses/field of study.`;
