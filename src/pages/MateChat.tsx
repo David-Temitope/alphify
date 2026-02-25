@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Loader2, ShieldAlert } from 'lucide-react';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 const BLOCKED_PATTERNS = /(\b(sex|nude|naked|porn|xxx|dick|pussy|fuck|shit|ass\b|bitch|damn|bastard|cock|cunt|whore|slut)\b)/i;
 
@@ -18,6 +19,12 @@ export default function MateChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const { markAsRead } = useUnreadMessages();
+
+  // Mark as read when opening chat
+  useEffect(() => {
+    markAsRead();
+  }, []);
 
   const { data: mateProfile } = useQuery({
     queryKey: ['mate-profile', mateId],

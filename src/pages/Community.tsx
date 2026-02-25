@@ -24,6 +24,7 @@ import CreateGroupModal from '@/components/CreateGroupModal';
 import BottomNav from '@/components/BottomNav';
 import StarRating from '@/components/StarRating';
 import { cn } from '@/lib/utils';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface UserProfile {
   id: string;
@@ -65,6 +66,7 @@ export default function Community() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'mates' | 'groups'>('discover');
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const { unreadCount, markAsRead } = useUnreadMessages();
 
   const { data: myGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['my-study-groups', user?.id],
@@ -185,7 +187,7 @@ export default function Community() {
   const tabs = [
     { id: 'discover' as const, label: 'People', icon: Search },
     { id: 'requests' as const, label: 'Requests', icon: Clock, badge: incomingRequests.length },
-    { id: 'mates' as const, label: 'Mates', icon: Users, count: mateIds.length },
+    { id: 'mates' as const, label: 'Mates', icon: Users, count: mateIds.length, unread: unreadCount },
     { id: 'groups' as const, label: 'Groups', icon: GraduationCap },
   ];
 
@@ -216,9 +218,12 @@ export default function Community() {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === 'mates') markAsRead();
+              }}
               className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                'relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -231,6 +236,9 @@ export default function Community() {
                 </span>
               )}
               {tab.count !== undefined && tab.count > 0 && <span className="text-xs opacity-70">({tab.count})</span>}
+              {'unread' in tab && (tab as any).unread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
+              )}
             </button>
           ))}
         </div>

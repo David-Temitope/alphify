@@ -498,6 +498,51 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_user_id: string
+          referrer_user_id: string
+          rewarded: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_user_id: string
+          referrer_user_id: string
+          rewarded?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          rewarded?: boolean
+        }
+        Relationships: []
+      }
       session_messages: {
         Row: {
           content: string
@@ -1011,6 +1056,7 @@ export type Database = {
         Returns: boolean
       }
       expire_stale_checkouts: { Args: never; Returns: undefined }
+      generate_referral_code: { Args: { _user_id: string }; Returns: string }
       get_admin_assignments: {
         Args: { _user_id: string }
         Returns: {
@@ -1051,6 +1097,10 @@ export type Database = {
       }
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      process_referral: {
+        Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
       }
       user_matches_shared_file: {
