@@ -69,7 +69,7 @@ export default function Auth() {
   const { user, loading: authLoading } = useAuth();
   useEffect(() => {
     // Ensure canonical link is set to the custom domain
-    let canonical = document.querySelector('link[rel="canonical"]');
+    const canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
       canonical.setAttribute('href', 'https://alphify.site/auth');
     }
@@ -111,6 +111,7 @@ export default function Auth() {
         // Process referral code if provided
         if (referralCode.trim() && signUpData?.user) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await supabase.rpc('process_referral' as any, {
               _referral_code: referralCode.trim().toUpperCase(),
               _referred_user_id: signUpData.user.id,
