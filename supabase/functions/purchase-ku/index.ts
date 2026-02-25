@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
       .eq("reference", reference);
 
     // Expire stale pending checkouts
-    await serviceClient.rpc("expire_stale_checkouts").catch(() => {});
+    try { await serviceClient.rpc("expire_stale_checkouts"); } catch { /* ignore */ }
 
     // Send Slack notification (fire-and-forget)
     try {
