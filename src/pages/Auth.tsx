@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Loader2, BookOpen, Brain, Zap } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.png';
-import { useRef } from 'react';
 
-function FloatingParticles() {
+function HexGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,31 +26,39 @@ function FloatingParticles() {
     resize();
     window.addEventListener('resize', resize);
 
-    const particles: { x: number; y: number; r: number; dx: number; dy: number; o: number }[] = [];
-    for (let i = 0; i < 40; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 2 + 0.5,
-        dx: (Math.random() - 0.5) * 0.3,
-        dy: (Math.random() - 0.5) * 0.3,
-        o: Math.random() * 0.4 + 0.1,
-      });
-    }
-
+    let time = 0;
     let animId: number;
+
+    const drawHex = (cx: number, cy: number, r: number, opacity: number) => {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `hsla(187, 85%, 53%, ${opacity})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    };
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(187, 85%, 53%, ${p.o})`;
-        ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
-      });
+      const size = 40;
+      const h = size * Math.sqrt(3);
+      for (let row = -1; row < canvas.height / h + 1; row++) {
+        for (let col = -1; col < canvas.width / (size * 1.5) + 1; col++) {
+          const cx = col * size * 1.5;
+          const cy = row * h + (col % 2 ? h / 2 : 0);
+          const dist = Math.sqrt((cx - canvas.width / 2) ** 2 + (cy - canvas.height / 2) ** 2);
+          const wave = Math.sin(dist * 0.005 - time * 0.02) * 0.5 + 0.5;
+          const opacity = wave * 0.08;
+          if (opacity > 0.01) drawHex(cx, cy, size * 0.45, opacity);
+        }
+      }
+      time++;
       animId = requestAnimationFrame(draw);
     };
     draw();
@@ -79,48 +86,8 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!authLoading && user) {
-      navigate('/dashboard');
-    }
+    if (!authLoading && user) navigate('/dashboard');
   }, [user, authLoading, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate('/dashboard');
-      } else {
-        const { data: signUpData, error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
-        });
-        if (error) throw error;
-
-        // Process referral code if provided
-        if (referralCode.trim() && signUpData?.user) {
-          try {
-            await supabase.rpc('process_referral' as any, {
-              _referral_code: referralCode.trim().toUpperCase(),
-              _referred_user_id: signUpData.user.id,
-            });
-          } catch {
-            // Silently fail - referral is optional
-          }
-        }
-
-        toast({ title: 'Welcome to Alphify! 🎉', description: "Your account has been created. Let's start learning!" });
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Set canonical link for security scanners
   useEffect(() => {
@@ -135,115 +102,182 @@ export default function Auth() {
     return () => { document.title = 'Alphify — AI Study Companion for Nigerian University Students'; };
   }, [isLogin]);
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Floating particles */}
-      <FloatingParticles />
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate('/dashboard');
+      } else {
+        const { data: signUpData, error } = await supabase.auth.signUp({
+          email, password,
+          options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
+        });
+        if (error) throw error;
+        if (referralCode.trim() && signUpData?.user) {
+          try {
+            await supabase.rpc('process_referral' as any, {
+              _referral_code: referralCode.trim().toUpperCase(),
+              _referred_user_id: signUpData.user.id,
+            });
+          } catch { /* Silently fail - referral is optional */ }
+        }
+        toast({ title: 'Welcome to Alphify! 🎉', description: "Your account has been created. Let's start learning!" });
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {/* Radial glow */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
+  const features = [
+    { icon: Brain, label: 'AI Tutor Ezra', desc: 'Get instant explanations tailored to you' },
+    { icon: BookOpen, label: 'CBT Exam Mode', desc: 'Practice with real exam simulations' },
+    { icon: Zap, label: 'Smart Study Groups', desc: 'Collaborate with AI-powered sessions' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background flex relative overflow-hidden">
+      <HexGrid />
+
+      {/* Left panel - branding (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 relative z-10 flex-col justify-center px-16">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-10">
+            <img src={alphifyLogo} alt="Alphify Logo" className="w-14 h-14 rounded-2xl shadow-xl shadow-primary/30" />
+            <div>
+              <h2 className="font-display text-3xl font-bold text-foreground">Alphify</h2>
+              <p className="text-sm text-primary font-medium tracking-wide">AI Study Companion</p>
+            </div>
+          </div>
+
+          <h1 className="font-display text-4xl font-bold text-foreground leading-tight mb-6">
+            Study smarter,<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-400 to-blue-400">not harder.</span>
+          </h1>
+
+          <div className="space-y-5 mt-10">
+            {features.map((f, i) => (
+              <div key={i} className="flex items-start gap-4 group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <f.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">{f.label}</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 pt-6 border-t border-border/30">
+            <p className="text-xs text-muted-foreground">Trusted by thousands of Nigerian university students</p>
+          </div>
+        </div>
       </div>
 
-      <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-6 left-6 z-10 text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-      </Button>
+      {/* Right panel - form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative z-10">
+        <Button variant="ghost" onClick={() => navigate('/')} className="absolute top-6 left-6 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
 
-      <div className="w-full max-w-md animate-fade-in-up relative z-10">
-        {/* Logo + heading */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="relative mb-4">
-            <div className="absolute inset-0 w-20 h-20 mx-auto bg-primary/30 rounded-full blur-2xl" />
-            <img src={alphifyLogo} alt="Alphify Logo" className="relative w-16 h-16 rounded-2xl shadow-2xl shadow-primary/40" />
+        <div className="w-full max-w-md animate-fade-in-up">
+          {/* Mobile logo */}
+          <div className="flex flex-col items-center mb-8 lg:hidden">
+            <div className="relative mb-3">
+              <div className="absolute inset-0 w-16 h-16 mx-auto bg-primary/30 rounded-full blur-2xl" />
+              <img src={alphifyLogo} alt="Alphify Logo" className="relative w-14 h-14 rounded-2xl shadow-xl shadow-primary/30" />
+            </div>
+            <h1 className="font-display text-xl font-bold text-foreground">Alphify</h1>
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            {isLogin ? 'Welcome Back' : 'Join Alphify'}
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {isLogin ? 'Sign in to your Alphify account' : 'Create your Alphify account to start learning'}
-          </p>
-        </div>
 
-        {/* Form card */}
-        <div className="bg-card/50 backdrop-blur-xl border border-border/50 p-8 rounded-2xl shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-5" method="POST" action="/auth">
+          {/* Tab toggle */}
+          <div className="flex bg-secondary/50 rounded-2xl p-1 mb-8 border border-border/30">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${isLogin ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${!isLogin ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Create Account
+            </button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4" method="POST" action="/auth">
             {!isLogin && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-primary text-sm">Full Name</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Full Name</Label>
                   <Input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="bg-secondary/50 border-border/50 focus:border-primary"
-                    required
-                    autoComplete="name"
+                    id="fullName" name="fullName" type="text" placeholder="John Doe"
+                    value={fullName} onChange={(e) => setFullName(e.target.value)}
+                    className="bg-secondary/30 border-border/40 focus:border-primary h-12 rounded-xl"
+                    required autoComplete="name"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="referralCode" className="text-primary text-sm">Referral Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="referralCode" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Referral Code <span className="normal-case text-muted-foreground/60">(optional)</span>
+                  </Label>
                   <Input
-                    id="referralCode"
-                    name="referralCode"
-                    type="text"
-                    placeholder="e.g. DAV001"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                    className="bg-secondary/50 border-border/50 focus:border-primary uppercase"
-                    maxLength={10}
+                    id="referralCode" name="referralCode" type="text" placeholder="e.g. DAV001"
+                    value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    className="bg-secondary/30 border-border/40 focus:border-primary h-12 rounded-xl uppercase" maxLength={10}
                   />
                 </div>
               </>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-primary text-sm">Email Address</Label>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email Address</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@university.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-secondary/50 border-border/50 focus:border-primary"
-                required
-                autoComplete="email"
+                id="email" name="email" type="email" placeholder="you@university.edu"
+                value={email} onChange={(e) => setEmail(e.target.value)}
+                className="bg-secondary/30 border-border/40 focus:border-primary h-12 rounded-xl"
+                required autoComplete="email"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-primary text-sm">Password</Label>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</Label>
               <div className="relative">
                 <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-secondary/50 border-border/50 focus:border-primary pr-10"
-                  required
-                  minLength={6}
-                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  id="password" name="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+                  value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="bg-secondary/30 border-border/40 focus:border-primary h-12 rounded-xl pr-10"
+                  required minLength={6} autoComplete={isLogin ? "current-password" : "new-password"}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground py-6 shadow-lg shadow-primary/25 rounded-full">
+
+            <Button type="submit" disabled={loading} className="w-full h-12 bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl text-sm font-semibold mt-2">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLogin ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
 
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card/80 px-2 text-muted-foreground">Or continue with</span></div>
+          {/* Divider */}
+          <div className="my-6 relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/40" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-background px-3 text-muted-foreground">or</span></div>
           </div>
 
-          <Button type="button" variant="outline" className="w-full mt-6 py-6 border-border/50 hover:bg-secondary/50 rounded-full" disabled={googleLoading} onClick={async () => {
+          {/* Google */}
+          <Button type="button" variant="outline" className="w-full h-12 border-border/40 hover:bg-secondary/50 rounded-xl" disabled={googleLoading} onClick={async () => {
             setGoogleLoading(true);
             try {
               const { error } = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
@@ -264,27 +298,22 @@ export default function Auth() {
             Continue with Google
           </Button>
 
+          {/* Terms */}
           <div className="mt-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              {isLogin ? "Don't have an account?" : 'Already have an account?'}
-              <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-primary hover:underline font-medium">
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
-            <button onClick={() => navigate('/terms')} className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              By signing up, you agree to our Terms of Service
+            <button onClick={() => navigate('/terms')} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              By continuing, you agree to our Terms of Service
             </button>
           </div>
-        </div>
 
-        {/* Site identity footer for security scanners */}
-        <div className="mt-6 text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Alphify by Alphadominity. All rights reserved.</p>
-          <p className="mt-1">
-            <a href="https://alphify.site" className="hover:text-foreground">alphify.site</a>
-            {' · '}
-            <a href="/terms" className="hover:text-foreground">Terms</a>
-          </p>
+          {/* Site identity footer */}
+          <div className="mt-8 text-center text-xs text-muted-foreground/60">
+            <p>© {new Date().getFullYear()} Alphify by Alphadominity</p>
+            <p className="mt-1">
+              <a href="https://alphify.site" className="hover:text-foreground transition-colors">alphify.site</a>
+              {' · '}
+              <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

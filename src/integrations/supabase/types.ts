@@ -1103,6 +1103,10 @@ export type Database = {
         Args: { _referral_code: string; _referred_user_id: string }
         Returns: boolean
       }
+      reward_referral_on_purchase: {
+        Args: { _referred_user_id: string }
+        Returns: undefined
+      }
       user_matches_shared_file: {
         Args: {
           _department: string
