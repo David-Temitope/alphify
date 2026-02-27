@@ -17,8 +17,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'Stop wasting hours re-reading textbooks. Discover proven study techniques like active recall, spaced repetition, and the Feynman method that top students use worldwide.',
     tag: 'Study Hacks',
     emoji: '🧠',
-    metaDescription: 'Learn how to study effectively with proven methods like active recall, spaced repetition, and the Feynman technique. Best study tips for students in 2025.',
-    keywords: ['how to study effectively', 'best way to study', 'study tips', 'study methods', 'how to study for exams', 'study techniques', 'best way to study in 2026'],
+    metaDescription: 'Learn how to study effectively with human-like AI help and proven methods like active recall and the Feynman technique. Best university study tips for 2025.',
+    keywords: ['how to study effectively', 'best way to study', 'study tips', 'university study methods', 'how to study for university exams', 'study techniques', 'human-like AI tutor', 'best way to study in 2026'],
     publishedDate: '2025-12-15',
     content: `
 ## Why Most Students Study the Wrong Way
@@ -168,8 +168,8 @@ The best way to prepare for CBT exams is to **take as many practice tests as pos
     excerpt: 'Past questions are gold. Learn how to analyze question patterns, predict what\'s coming, and use them to structure your revision effectively.',
     tag: 'Past Questions',
     emoji: '📝',
-    metaDescription: 'Learn how to use past questions effectively to predict exam questions and pass your university exams in Nigeria. Proven strategies for all departments.',
-    keywords: ['past questions Nigeria', 'how to use past questions', 'university past questions', 'how to pass exams', 'Nigerian university exam tips'],
+    metaDescription: 'Learn how to use past questions effectively to predict exam questions and pass your university exams. Use Alphify Global Library for shared materials.',
+    keywords: ['past questions Nigeria', 'how to use past questions', 'university past questions', 'how to pass exams', 'Nigerian university exam tips', 'global library for students'],
     publishedDate: '2026-01-05',
     content: `
 ## Why Past Questions Are Your Secret Weapon
@@ -416,8 +416,8 @@ Academic stress is normal, but it shouldn't control your life. Build a support s
     excerpt: 'From personalized tutoring to instant explanations, AI tools like Ezra are helping African students understand topics their lecturers couldn\'t explain clearly.',
     tag: 'EdTech',
     emoji: '🤖',
-    metaDescription: 'Discover how artificial intelligence is transforming education in Africa. AI tutoring, personalized learning, and EdTech innovations for African students in 2025.',
-    keywords: ['AI in education', 'AI tutor', 'EdTech Africa', 'AI study app', 'artificial intelligence education', 'future of learning', 'AI for students'],
+    metaDescription: 'Discover how human-like AI is transforming education in Africa. AI tutoring, personalized learning, and PDF understanding for university students in 2025.',
+    keywords: ['AI in education', 'human-like AI tutor', 'EdTech Africa', 'AI study app', 'understand complex PDFs', 'future of learning', 'AI for university students'],
     publishedDate: '2026-02-01',
     content: `
 ## The Education Gap in Africa
