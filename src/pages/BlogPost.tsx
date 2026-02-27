@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ArrowRight, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getBlogPostBySlug, blogPosts } from '@/data/blogPosts';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -171,10 +171,15 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('og:title', post.title);
     setMeta('og:description', post.metaDescription);
     setMeta('og:type', 'article');
-    setMeta('og:url', `https://alphify.lovable.app/blog/${post.slug}`);
+    setMeta('og:url', `https://alphify.site/blog/${post.slug}`);
+    setMeta('og:image', `https://alphify.site/alphify-icon-512.png`);
+    setMeta('og:site_name', 'Alphify');
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', post.title);
     setMeta('twitter:description', post.metaDescription);
+    setMeta('twitter:image', `https://alphify.site/alphify-icon-512.png`);
+    setMeta('twitter:site', '@alphadominity');
+    setMeta('twitter:creator', '@alphadominity');
 
     // JSON-LD Article structured data for Google rich results
     const jsonLd = {
@@ -182,11 +187,11 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
       '@type': 'Article',
       headline: post.title,
       description: post.metaDescription,
-      author: { '@type': 'Organization', name: 'Alphify by Alphadominity', url: 'https://alphify.lovable.app' },
-      publisher: { '@type': 'Organization', name: 'Alphify', url: 'https://alphify.lovable.app' },
+      author: { '@type': 'Organization', name: 'Alphify by Alphadominity', url: 'https://alphify.site' },
+      publisher: { '@type': 'Organization', name: 'Alphify', url: 'https://alphify.site' },
       datePublished: post.publishedDate,
       dateModified: post.publishedDate,
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://alphify.lovable.app/blog/${post.slug}` },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://alphify.site/blog/${post.slug}` },
       keywords: post.keywords.join(', '),
       inLanguage: 'en',
       isAccessibleForFree: true,

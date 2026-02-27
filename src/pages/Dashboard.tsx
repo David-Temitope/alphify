@@ -21,7 +21,7 @@ import {
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import { format } from 'date-fns';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -162,6 +162,25 @@ export default function Dashboard() {
               </div>
               <p className="font-medium text-sm text-foreground">Library</p>
               <p className="text-xs text-muted-foreground mt-0.5">{files?.length ?? 0} docs</p>
+            </button>
+
+            <button
+              onClick={async () => {
+                if (balance < 2) {
+                  toast({ title: 'Not enough KU', description: 'Assignment Assist costs 2 KU per prompt.', variant: 'destructive' });
+                  navigate('/settings?tab=wallet');
+                  return;
+                }
+                const { data, error } = await supabase.from('conversations').insert({ user_id: user!.id, title: 'Assignment Assist' }).select().single();
+                if (!error && data) navigate(`/chat/${data.id}?mode=assignment`);
+              }}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 p-4 text-left hover:border-emerald-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3">
+                <FileText className="h-5 w-5 text-emerald-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Assignment</p>
+              <p className="text-xs text-muted-foreground mt-0.5">2 KU/prompt</p>
             </button>
 
             <button

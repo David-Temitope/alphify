@@ -10,6 +10,7 @@ import {
   Search,
   Users,
   UserPlus,
+  UserMinus,
   Check,
   X,
   Clock,
@@ -23,6 +24,7 @@ import CreateGroupModal from '@/components/CreateGroupModal';
 import BottomNav from '@/components/BottomNav';
 import StarRating from '@/components/StarRating';
 import { cn } from '@/lib/utils';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface UserProfile {
   id: string;
@@ -64,6 +66,7 @@ export default function Community() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'discover' | 'requests' | 'mates' | 'groups'>('discover');
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const { unreadCount, markAsRead } = useUnreadMessages();
 
   const { data: myGroups, isLoading: groupsLoading } = useQuery({
     queryKey: ['my-study-groups', user?.id],
@@ -156,6 +159,25 @@ export default function Community() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Declined' }); },
   });
 
+  const cancelRequest = useMutation({
+    mutationFn: async (requestId: string) => {
+      const { error } = await supabase.from('study_requests').delete().eq('id', requestId);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['study-requests'] }); toast({ title: 'Request cancelled' }); },
+  });
+
+  const unfriendMate = useMutation({
+    mutationFn: async (mateUserId: string) => {
+      await supabase.from('study_mates').delete().or(`and(user_id.eq.${user!.id},mate_id.eq.${mateUserId}),and(user_id.eq.${mateUserId},mate_id.eq.${user!.id})`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['study-mates'] });
+      queryClient.invalidateQueries({ queryKey: ['community-users'] });
+      toast({ title: 'Study mate removed' });
+    },
+  });
+
   const incomingRequests = requests?.filter(r => r.to_user_id === user!.id && r.status === 'pending') || [];
   const outgoingRequests = requests?.filter(r => r.from_user_id === user!.id && r.status === 'pending') || [];
   const mateIds = studyMates?.map(m => m.user_id === user!.id ? m.mate_id : m.user_id) || [];
@@ -165,7 +187,7 @@ export default function Community() {
   const tabs = [
     { id: 'discover' as const, label: 'People', icon: Search },
     { id: 'requests' as const, label: 'Requests', icon: Clock, badge: incomingRequests.length },
-    { id: 'mates' as const, label: 'Mates', icon: Users, count: mateIds.length },
+    { id: 'mates' as const, label: 'Mates', icon: Users, count: mateIds.length, unread: unreadCount },
     { id: 'groups' as const, label: 'Groups', icon: GraduationCap },
   ];
 
@@ -196,9 +218,12 @@ export default function Community() {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === 'mates') markAsRead();
+              }}
               className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                'relative flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all',
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -211,6 +236,9 @@ export default function Community() {
                 </span>
               )}
               {tab.count !== undefined && tab.count > 0 && <span className="text-xs opacity-70">({tab.count})</span>}
+              {'unread' in tab && (tab as any).unread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
+              )}
             </button>
           ))}
         </div>
@@ -301,6 +329,9 @@ export default function Community() {
                           <h4 className="font-medium text-sm text-foreground">{receiver ? getName(receiver) : 'Unknown'}</h4>
                           <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Pending</p>
                         </div>
+                        <Button size="sm" variant="outline" className="rounded-full h-8 px-3 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => cancelRequest.mutate(req.id)} disabled={cancelRequest.isPending}>
+                          <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        </Button>
                       </div>
                     );
                   })}
@@ -325,9 +356,16 @@ export default function Community() {
               <div className="space-y-2">
                 {users?.filter(u => mateIds.includes(u.user_id)).map((profile) =>
                   renderUserCard(profile, (
-                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground">
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-primary" onClick={() => navigate(`/mate-chat/${profile.user_id}`)}>
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive" onClick={() => {
+                        if (confirm('Remove this study mate?')) unfriendMate.mutate(profile.user_id);
+                      }}>
+                        <UserMinus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))
                 )}
               </div>

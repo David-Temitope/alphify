@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 interface Message {
   id: string;
@@ -52,6 +52,7 @@ export default function Chat() {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
   const fileIdFromLibrary = searchParams.get('file');
+  const chatMode = searchParams.get('mode'); // 'assignment' or null
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -323,10 +324,11 @@ export default function Chat() {
     if (!activeConversationId) return;
 
     // Check KU balance
-    if (!canChat) {
+    const requiredKU = chatMode === 'assignment' ? 2 : 1;
+    if (balance < requiredKU) {
       toast({
-        title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
+        title: 'Not enough Knowledge Units',
+        description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
         variant: 'destructive',
       });
       return;
@@ -396,6 +398,7 @@ Student Profile:
           messages: messageHistory,
           fileContent: fileContent,
           personalization: personalizationContext,
+          mode: chatMode || undefined,
         }),
       });
 
@@ -451,13 +454,30 @@ Student Profile:
       }
 
       // Save assistant message
-      const isQuiz = fullContent.includes('[QUIZ]') || fullContent.includes('quiz') && fullContent.includes('?');
+      const isQuiz = fullContent.includes('[QUIZ]') || (fullContent.includes('quiz') && fullContent.includes('?'));
+      
+      // Detect correct quiz answer and increment star rating
+      const correctIndicators = ['correct', '✅', 'well done', 'great job', 'that\'s right', 'you got it', 'right answer', 'correct answer'];
+      const lowerContent = fullContent.toLowerCase();
+      const wasCorrectAnswer = correctIndicators.some(indicator => lowerContent.includes(indicator)) && 
+        messages.length > 0 && messages[messages.length - 1]?.role === 'assistant' && 
+        (messages[messages.length - 1]?.is_quiz || messages[messages.length - 1]?.content?.includes('[QUIZ]'));
+      
+      if (wasCorrectAnswer) {
+        try {
+          await supabase.rpc('increment_star_rating' as any, { _user_id: user!.id, _amount: 0.1 });
+        } catch {
+          // Silent fail - star increment is non-critical
+        }
+      }
+      
       await supabase.from('messages').insert({
         conversation_id: activeConversationId,
         user_id: user!.id,
         role: 'assistant',
         content: fullContent,
         is_quiz: isQuiz,
+        quiz_passed: wasCorrectAnswer || undefined,
       });
 
       // Update conversation title if first exchange
@@ -635,7 +655,7 @@ Student Profile:
               {conversation?.title || 'New Conversation'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+              {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
             </p>
           </div>
         </header>

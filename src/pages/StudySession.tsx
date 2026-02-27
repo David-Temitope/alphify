@@ -10,7 +10,7 @@ import {
   ArrowLeft, Send, Users, Clock, Loader2, 
   BookOpen, AlertTriangle, CheckCircle, UserPlus
 } from 'lucide-react';
-import xplaneLogo from '@/assets/xplane-logo.png';
+import xplaneLogo from '@/assets/xplane-logo.webp';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,9 @@ export default function StudySession() {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showAddMembersModal, setShowAddMembersModal] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  // Quiz collective tracking
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({}); // userId -> answer
+  const [isQuizActive, setIsQuizActive] = useState(false);
 
   // Fetch session details
   const { data: session, isLoading: loadingSession } = useQuery({
@@ -308,12 +311,42 @@ export default function StudySession() {
     }
   });
 
+  // Detect if the last AI message is a quiz
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.is_ai_message && (lastMsg.content.includes('[QUIZ]') || lastMsg.content.includes('Quick Check'))) {
+      setIsQuizActive(true);
+      setQuizAnswers({});
+    }
+  }, [messages]);
+
+  const activeParticipantCount = participants?.length || 0;
+  const allAnswered = isQuizActive && Object.keys(quizAnswers).length >= activeParticipantCount;
+
   // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
       if (!user || !sessionId) throw new Error('Not ready');
 
-      // Save user message
+      // If quiz is active, record answer instead of sending to AI
+      if (isQuizActive) {
+        // Save user message visibly
+        const { error: msgError } = await supabase
+          .from('session_messages')
+          .insert({
+            session_id: sessionId,
+            user_id: user.id,
+            content,
+            is_ai_message: false
+          });
+        if (msgError) throw msgError;
+        
+        setQuizAnswers(prev => ({ ...prev, [user.id]: content }));
+        return { quizAnswer: true };
+      }
+
+      // Normal message flow
       const { error: msgError } = await supabase
         .from('session_messages')
         .insert({
@@ -339,15 +372,16 @@ export default function StudySession() {
       });
 
       if (response.error) throw response.error;
-
-      // The AI response is now securely saved by the Edge Function
-      // to prevent client-side spoofing of AI messages.
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setMessage('');
-      setIsStreaming(false);
-      setStreamingContent('');
+      if (data?.quizAnswer) {
+        toast({ title: 'Answer submitted!', description: 'Waiting for other participants...' });
+      } else {
+        setIsStreaming(false);
+        setStreamingContent('');
+      }
       refetchMessages();
     },
     onError: (error) => {
@@ -357,6 +391,50 @@ export default function StudySession() {
         description: error instanceof Error ? error.message : "Failed to send message",
         variant: "destructive"
       });
+    }
+  });
+
+  // Admin submits all quiz answers
+  const submitAllAnswers = useMutation({
+    mutationFn: async () => {
+      if (!sessionId || !user) throw new Error('Not ready');
+
+      // Build a summary of all answers with names
+      const answerSummary = Object.entries(quizAnswers)
+        .map(([userId, answer]) => {
+          const name = profiles?.[userId] || 'Student';
+          return `${name}: ${answer}`;
+        })
+        .join('\n');
+
+      const submitMessage = `[QUIZ ANSWERS FROM ALL PARTICIPANTS]\n${answerSummary}\n\nPlease evaluate each student's answer, tell them who was correct and who was wrong, explain the right answer, then continue the lecture.`;
+
+      setIsStreaming(true);
+      setStreamingContent('');
+
+      const response = await supabase.functions.invoke('session-chat', {
+        body: {
+          sessionId,
+          message: submitMessage,
+          topic: session?.topic,
+          course: session?.course
+        }
+      });
+
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: () => {
+      setIsQuizActive(false);
+      setQuizAnswers({});
+      setIsStreaming(false);
+      setStreamingContent('');
+      refetchMessages();
+      toast({ title: 'Answers submitted to Ezra!' });
+    },
+    onError: (error) => {
+      setIsStreaming(false);
+      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed', variant: 'destructive' });
     }
   });
 
@@ -511,17 +589,40 @@ export default function StudySession() {
           {/* Input */}
           {isSessionActive && hasJoined ? (
             <div className="border-t border-border p-4">
+              {/* Quiz collective status */}
+              {isQuizActive && (
+                <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                  <p className="text-sm font-medium text-primary mb-1">📝 Quiz Active — {Object.keys(quizAnswers).length}/{activeParticipantCount} answered</p>
+                  {quizAnswers[user?.id || ''] ? (
+                    <p className="text-xs text-muted-foreground">Your answer is submitted. Waiting for others...</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Type your answer below!</p>
+                  )}
+                  {isAdmin && allAnswered && (
+                    <Button
+                      size="sm"
+                      className="mt-2 bg-primary text-primary-foreground rounded-full"
+                      onClick={() => submitAllAnswers.mutate()}
+                      disabled={submitAllAnswers.isPending}
+                    >
+                      {submitAllAnswers.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+                      Submit All Answers to Ezra
+                    </Button>
+                  )}
+                </div>
+              )}
               <div className="flex gap-3">
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask a question or discuss the topic..."
+                  placeholder={isQuizActive && quizAnswers[user?.id || ''] ? "Answer already submitted" : isQuizActive ? "Type your quiz answer..." : "Ask a question or discuss the topic..."}
                   className="min-h-[60px] resize-none bg-secondary border-0"
+                  disabled={isQuizActive && !!quizAnswers[user?.id || '']}
                 />
                 <Button
                   onClick={handleSend}
-                  disabled={!message.trim() || sendMessage.isPending}
+                  disabled={!message.trim() || sendMessage.isPending || (isQuizActive && !!quizAnswers[user?.id || ''])}
                   className="bg-primary text-primary-foreground self-end"
                 >
                   {sendMessage.isPending ? (

@@ -16,11 +16,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   User, GraduationCap, Globe, Sparkles, BookOpen, Save, Loader2, Brain, X,
-  CreditCard, AlertTriangle, Upload, Settings as SettingsIcon
+  CreditCard, AlertTriangle, Upload, Settings as SettingsIcon, Gift, Copy, Check
 } from 'lucide-react';
 import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
+import { useReferralCode } from '@/hooks/useReferralCode';
 import { format } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
 
@@ -93,6 +94,8 @@ export default function Settings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { balance, isLoading: kuLoading, refetch: refetchKU } = useKnowledgeUnits();
+  const { referralCode, referralCount } = useReferralCode();
+  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
 
   const [settings, setSettings] = useState<UserSettings>({
@@ -251,6 +254,60 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground mt-1 text-right">{(settings.bio || '').length}/500</p>
                 </div>
               </div>
+            </section>
+
+            {/* Referral Code */}
+            <section className="p-4 rounded-2xl bg-card border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Gift className="h-4 w-4 text-primary" />
+                <h2 className="font-display text-base font-semibold">Referral Code</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">Share your code with friends. When they sign up and make their first KU purchase, you earn <strong>5 free KU!</strong></p>
+              {referralCode ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-secondary rounded-xl px-4 py-3 font-mono font-bold text-lg text-foreground tracking-wider text-center">
+                      {referralCode}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-12 w-12 rounded-xl"
+                      onClick={() => {
+                        navigator.clipboard.writeText(referralCode);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                    >
+                      {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Friends referred</span>
+                    <span className="font-medium text-foreground">{referralCount}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-xl"
+                    onClick={() => {
+                      const text = `Join me on Alphify — the AI study app for university students! Use my referral code: ${referralCode}\n\nhttps://alphify.site/auth`;
+                      if (navigator.share) {
+                        navigator.share({ title: 'Join Alphify', text });
+                      } else {
+                        navigator.clipboard.writeText(text);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }
+                    }}
+                  >
+                    Share Invite Link
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                </div>
+              )}
             </section>
 
             {/* Explanation Style */}

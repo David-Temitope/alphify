@@ -286,7 +286,7 @@ export default function Library() {
       {/* Upload Modal */}
       {showUpload && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-lg bg-card rounded-t-2xl sm:rounded-2xl p-6 border border-border animate-slide-up">
+          <div className="w-full sm:max-w-lg bg-card rounded-t-2xl sm:rounded-2xl p-6 border border-border animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-semibold text-foreground">
                 {isAdmin ? 'Upload Shared File' : 'Upload Personal File'}
@@ -348,7 +348,7 @@ export default function Library() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-6 pb-4">
               <Button variant="outline" className="flex-1" onClick={() => { setShowUpload(false); setUploadFile(null); setUploadCourseCode(''); }}>Cancel</Button>
               <Button onClick={handleUpload} disabled={!uploadFile || !uploadCourseCode.trim() || isUploading} className="flex-1 bg-primary text-primary-foreground">
                 {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

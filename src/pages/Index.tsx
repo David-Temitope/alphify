@@ -2,9 +2,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle, Sparkles } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 import { blogPosts } from '@/data/blogPosts';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 function FloatingParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -64,6 +64,88 @@ export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Structured Data for SEO
+  useEffect(() => {
+    const scriptId = 'alphify-structured-data-jsonld';
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Alphify",
+          "operatingSystem": "Web, Android, iOS",
+          "applicationCategory": "EducationApplication",
+          "description": "AI study companion for university students providing human-like answers, PDF understanding, and departmental libraries.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "NGN"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "1240"
+          }
+        },
+        {
+          "@type": "Organization",
+          "name": "Alphify by Alphadominity",
+          "url": "https://alphify.site",
+          "logo": "https://alphify.site/alphify-icon-512.webp",
+          "sameAs": [
+            "https://twitter.com/alphadominity",
+            "https://facebook.com/alphify"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How does Alphify help with university exams?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Alphify provides human-like AI tutoring, access to departmental libraries with shared materials, and CBT exam simulations tailored for university students."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can Alphify explain complex PDFs?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Ezra (Alphify's AI) can break down large and complex PDFs into simple, human-like explanations to help you truly understand the material."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the Global Library feature?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The Global Library allows students to upload and share study materials within their specific university, department, and level for easy access by course mates."
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    script.textContent = JSON.stringify(structuredData);
+
+    return () => {
+      const existingScript = document.getElementById(scriptId);
+      if (existingScript) existingScript.remove();
+    };
+  }, []);
+
   const features = [
     { icon: Brain, title: 'Smart Explanations', description: 'Complex topics broken down using examples from your daily life' },
     { icon: FileText, title: 'Upload Documents', description: 'Upload PDFs and images - Ezra explains them in simple terms' },
@@ -82,62 +164,63 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* ======= HERO SECTION ======= */}
-      <section className="relative min-h-screen flex flex-col">
-        {/* Animated particles */}
-        <FloatingParticles />
+      {/* Header */}
+      <header className="relative z-20 flex items-center justify-between px-6 py-5 md:px-12">
+        <Link to="/" className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-lg transition-all">
+          <img src={alphifyLogo} alt="Alphify - AI Study Companion Logo" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform" />
+          <span className="font-display font-semibold text-xl text-foreground">Alphify</span>
+        </Link>
+        <nav className="flex items-center gap-3" aria-label="Main Navigation">
+          {user ? (
+            <Button onClick={() => navigate('/dashboard')} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25">
+              Dashboard <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={() => navigate('/auth')} className="text-muted-foreground hover:text-foreground text-sm">Sign In</Button>
+              <Button onClick={() => navigate('/auth')} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 text-sm">Get Started</Button>
+            </>
+          )}
+        </nav>
+      </header>
 
-        {/* Radial glow */}
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
-        </div>
+      <main>
+        {/* ======= HERO SECTION ======= */}
+        <section className="relative min-h-[calc(100vh-80px)] flex flex-col -mt-20 pt-20">
+          {/* Animated particles */}
+          <FloatingParticles />
 
-        {/* Header */}
-        <header className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
-          <div className="flex items-center gap-3">
-            <img src={alphifyLogo} alt="Alphify" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/30" />
-            <span className="font-display font-semibold text-xl text-foreground">Alphify</span>
+          {/* Radial glow */}
+          <div className="absolute inset-0 pointer-events-none z-0">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
           </div>
-          <nav className="flex items-center gap-3">
-            {user ? (
-              <Button onClick={() => navigate('/dashboard')} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25">
-                Dashboard <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" onClick={() => navigate('/auth')} className="text-muted-foreground hover:text-foreground text-sm">Sign In</Button>
-                <Button onClick={() => navigate('/auth')} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 text-sm">Get Started</Button>
-              </>
-            )}
-          </nav>
-        </header>
 
-        {/* Hero content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-20 pt-8 text-center">
+          {/* Hero content */}
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-20 pt-8 text-center">
           {/* Logo glow */}
           <div className="relative mb-8 animate-fade-in">
             <div className="absolute inset-0 w-24 h-24 mx-auto bg-primary/30 rounded-full blur-2xl" />
-            <img src={alphifyLogo} alt="Alphify Logo" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
+            <img src={alphifyLogo} alt="Alphify - Human-Like AI Tutor" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs text-primary font-medium">AI-Powered Learning</span>
+            <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            <span className="text-xs text-primary font-medium uppercase tracking-wider">AI-Powered University Learning</span>
           </div>
 
           <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-5 animate-fade-in-up max-w-4xl leading-tight">
             Study Smarter{' '}
-            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">with Ezra</span>
+            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">with Ezra AI</span>
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.15s' }}>
-            Your AI study companion that breaks down complex topics, generates practice exams, and helps you ace university courses.
+            The AI study companion that provides human-like answers, breaks down complex PDFs, and helps you excel in your university courses.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground px-10 py-6 text-lg shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all rounded-full">
-              Start Learning Free <ArrowRight className="ml-2 h-5 w-5" />
+              Start Learning Free <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
             </Button>
           </div>
 
@@ -190,7 +273,7 @@ export default function Index() {
             <div className="order-2 lg:order-1">
               <div className="relative">
                 <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-                <img alt="AI Features" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png" />
+                <img alt="Alphify AI Interface showing human-like tutor explanations" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
               </div>
             </div>
             <div className="order-1 lg:order-2">
@@ -262,7 +345,35 @@ export default function Index() {
           </div>
           <div className="relative">
             <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-            <img src="/lovable-uploads/aad7da7c-566e-4e11-b90d-652616e8bc3b.png" alt="Community Learning" className="relative rounded-3xl shadow-xl border border-border/30 w-full max-w-md mx-auto lg:ml-auto" />
+            <div className="relative rounded-3xl border border-border/30 bg-card/50 backdrop-blur-sm p-8 w-full max-w-md mx-auto lg:ml-auto space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">A</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-primary/20 rounded w-24 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-16" />
+                </div>
+                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Online</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 font-bold">B</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-amber-500/20 rounded w-28 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-20" />
+                </div>
+                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Online</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/30">
+                <div className="w-10 h-10 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-500 font-bold">C</div>
+                <div className="flex-1">
+                  <div className="h-2 bg-violet-500/20 rounded w-20 mb-1" />
+                  <div className="h-1.5 bg-muted rounded w-14" />
+                </div>
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">Studying</span>
+              </div>
+              <div className="text-center pt-2">
+                <p className="text-xs text-muted-foreground">Real-time collaboration preview</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -306,21 +417,22 @@ export default function Index() {
             <div className="absolute inset-0 bg-primary/5 rounded-3xl blur-3xl" />
             <div className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-3xl p-12 md:p-16">
               <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-5">
-                Ready to Transform Your Learning?
+                Ready to Transform Your University Experience?
               </h2>
               <p className="text-muted-foreground mb-10 max-w-lg mx-auto">
-                Join thousands of students learning smarter with Ezra. Start for free today.
+                Join thousands of students learning smarter with Ezra. Access departmental materials and get human-like AI help today.
               </p>
               <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground px-10 py-6 text-lg shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all rounded-full">
-                Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                Get Started Free <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
               </Button>
             </div>
           </div>
         </div>
       </section>
+      </main>
 
       {/* ======= FOOTER ======= */}
-      <footer className="relative z-10 border-t border-border/50 px-6 py-8">
+      <footer className="relative z-10 border-t border-border/50 px-6 py-8 bg-background">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src={alphifyLogo} alt="Alphify" className="w-8 h-8 rounded-lg shadow-md" />
