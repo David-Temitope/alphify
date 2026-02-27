@@ -21,7 +21,7 @@ import {
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import { format } from 'date-fns';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 export default function Dashboard() {
   const { user } = useAuth();

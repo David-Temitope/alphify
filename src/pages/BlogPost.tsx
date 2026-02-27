@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ArrowRight, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getBlogPostBySlug, blogPosts } from '@/data/blogPosts';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
