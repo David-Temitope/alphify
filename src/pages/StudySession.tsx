@@ -10,7 +10,7 @@ import {
   ArrowLeft, Send, Users, Clock, Loader2, 
   BookOpen, AlertTriangle, CheckCircle, UserPlus
 } from 'lucide-react';
-import xplaneLogo from '@/assets/xplane-logo.png';
+import xplaneLogo from '@/assets/xplane-logo.webp';
 import {
   Dialog,
   DialogContent,

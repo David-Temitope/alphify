@@ -2,7 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle, Sparkles } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 import { blogPosts } from '@/data/blogPosts';
 import { useEffect, useRef, useMemo } from 'react';
 
@@ -100,7 +100,7 @@ export default function Index() {
           "@type": "Organization",
           "name": "Alphify by Alphadominity",
           "url": "https://alphify.site",
-          "logo": "https://alphify.site/alphify-icon-512.png",
+          "logo": "https://alphify.site/alphify-icon-512.webp",
           "sameAs": [
             "https://twitter.com/alphadominity",
             "https://facebook.com/alphify"
@@ -273,7 +273,7 @@ export default function Index() {
             <div className="order-2 lg:order-1">
               <div className="relative">
                 <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-                <img alt="Alphify AI Interface showing human-like tutor explanations" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.png" />
+                <img alt="Alphify AI Interface showing human-like tutor explanations" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
               </div>
             </div>
             <div className="order-1 lg:order-2">

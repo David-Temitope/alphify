@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, ArrowLeft, Loader2, BookOpen, Brain, Zap } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 function HexGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

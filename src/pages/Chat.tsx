@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import alphifyLogo from '@/assets/alphify-logo.png';
+import alphifyLogo from '@/assets/alphify-logo.webp';
 
 interface Message {
   id: string;
