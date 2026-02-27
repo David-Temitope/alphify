@@ -172,9 +172,14 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('og:description', post.metaDescription);
     setMeta('og:type', 'article');
     setMeta('og:url', `https://alphify.site/blog/${post.slug}`);
+    setMeta('og:image', `https://alphify.site/alphify-icon-512.png`);
+    setMeta('og:site_name', 'Alphify');
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', post.title);
     setMeta('twitter:description', post.metaDescription);
+    setMeta('twitter:image', `https://alphify.site/alphify-icon-512.png`);
+    setMeta('twitter:site', '@alphadominity');
+    setMeta('twitter:creator', '@alphadominity');
 
     // JSON-LD Article structured data for Google rich results
     const jsonLd = {
