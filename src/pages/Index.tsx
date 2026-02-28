@@ -81,7 +81,6 @@ export default function Index() {
       "@graph": [
         {
           "@type": "SoftwareApplication",
-          "@type": "SoftwareApplication",
           "name": "Alphify",
           "operatingSystem": "Web, Android, iOS",
           "applicationCategory": "EducationApplication",
@@ -112,18 +111,18 @@ export default function Index() {
           "mainEntity": [
             {
               "@type": "Question",
-          "name": "How does Alphify help with university courses?",
+              "name": "How does Alphify help with university courses?",
               "acceptedAnswer": {
                 "@type": "Answer",
-            "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for any course, from Engineering to Nursing."
+                "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for any course, from Engineering to Nursing."
               }
             },
             {
               "@type": "Question",
-          "name": "Can Ezra AI explain complex university PDFs?",
+              "name": "Can Ezra AI explain complex university PDFs?",
               "acceptedAnswer": {
                 "@type": "Answer",
-            "text": "Yes, Ezra AI breaks down large and complex university PDFs into simple, human-like explanations, helping students move from confusion to topic mastery across all departments."
+                "text": "Yes, Ezra AI breaks down large and complex university PDFs into simple, human-like explanations, helping students move from confusion to topic mastery across all departments."
               }
             },
             {
@@ -164,9 +163,9 @@ export default function Index() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground relative">
       {/* Header */}
-      <header className="relative z-20 flex items-center justify-between px-6 py-5 md:px-12">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-5 md:px-12 bg-background/80 backdrop-blur-xl border-b border-border/10">
         <Link to="/" className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary rounded-lg transition-all">
           <img src={alphifyLogo} alt="Alphify - AI Study Companion Logo" className="w-10 h-10 rounded-xl shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform" />
           <span className="font-display font-semibold text-xl text-foreground">Alphify</span>

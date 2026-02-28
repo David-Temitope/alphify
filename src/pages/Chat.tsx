@@ -22,7 +22,10 @@ import {
   MicOff,
   Settings,
   Trash2,
-  BookOpen
+  BookOpen,
+  Search as SearchIcon,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -66,6 +69,9 @@ export default function Chat() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showScrollDown, setShowScrollDown] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
   
   // Knowledge Units
@@ -274,9 +280,20 @@ export default function Chat() {
   });
 
   // Scroll to bottom
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, streamingContent]);
+
+  // Handle scroll to show/hide scroll down arrow
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 100;
+    setShowScrollDown(!isAtBottom);
+  };
 
   // Auto-resize textarea
   useEffect(() => {
@@ -547,6 +564,10 @@ Student Profile:
     }
   };
 
+  const filteredMessages = searchQuery.trim()
+    ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -643,25 +664,70 @@ Student Profile:
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Chat Header */}
-        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex items-center gap-3 flex-shrink-0">
-          <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display font-semibold text-foreground truncate">
-              {conversation?.title || 'New Conversation'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
-            </p>
+        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex flex-col gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </button>
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display font-semibold text-foreground truncate">
+                {conversation?.title || 'New Conversation'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsSearching(!isSearching);
+                if (isSearching) setSearchQuery('');
+              }}
+              className={cn("rounded-full", isSearching && "bg-primary/10 text-primary")}
+            >
+              <SearchIcon className="h-5 w-5" />
+            </Button>
           </div>
+
+          {isSearching && (
+            <div className="relative animate-fade-in">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search in chat..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-secondary border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          )}
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 py-4 space-y-6">
+        <div
+          className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 py-4 space-y-6 relative"
+          onScroll={handleScroll}
+        >
+          {searchQuery && filteredMessages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <SearchIcon className="h-10 w-10 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">No messages found matching "{searchQuery}"</p>
+            </div>
+          )}
+
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
@@ -689,7 +755,7 @@ Student Profile:
             </div>
           )}
 
-          {messages.map((message) => (
+          {(searchQuery ? filteredMessages : messages).map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
 
@@ -723,6 +789,18 @@ Student Profile:
           )}
 
           <div ref={messagesEndRef} />
+
+          {/* Scroll Down Arrow */}
+          {showScrollDown && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={scrollToBottom}
+              className="fixed bottom-24 right-6 lg:right-10 rounded-full shadow-lg border border-border animate-bounce z-20"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </Button>
+          )}
         </div>
 
         {/* File Content Indicator */}

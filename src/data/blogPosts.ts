@@ -92,17 +92,17 @@ The best students aren't necessarily the smartest — they just use better metho
   },
   {
     slug: 'how-to-prepare-for-cbt-exams',
-    title: 'How to Prepare for CBT Exams: Master JAMB, Post-UTME & University Tests',
+    title: 'How to Prepare for CBT Exams: Master University Tests and Entrance Exams',
     excerpt: 'Computer-based tests require a different strategy. Learn how to maintain clarity under pressure and use AI to simulate real CBT conditions.',
     tag: 'Exam Prep',
     emoji: '💻',
-    metaDescription: 'Master CBT exams with proven strategies for JAMB and Post-UTME. Use Ezra AI to simulate exam conditions and achieve academic dominance.',
-    keywords: ['CBT exam tips', 'how to pass JAMB', 'JAMB preparation', 'Post-UTME tips', 'computer based test tips', 'how to pass CBT exams', 'academic dominance'],
+    metaDescription: 'Master CBT exams with proven strategies for university tests. Use Ezra AI to simulate exam conditions and achieve academic dominance.',
+    keywords: ['CBT exam tips', 'how to pass entrance exams', 'computer based test tips', 'how to pass CBT exams', 'academic dominance'],
     publishedDate: '2025-12-20',
     content: `
 ## CBT Exams Are a Different Game
 
-Computer-Based Tests (CBT) are now the standard for JAMB, Post-UTME, and many university exams across Nigeria. But studying for a CBT exam requires a different approach than traditional pen-and-paper tests.
+Computer-Based Tests (CBT) are now the standard for many university exams worldwide. But studying for a CBT exam requires a different approach than traditional pen-and-paper tests.
 
 Here's your complete guide to acing CBT exams in 2025.
 
@@ -110,27 +110,27 @@ Here's your complete guide to acing CBT exams in 2025.
 
 ## 1. Practice on a Computer Before Exam Day
 
-Many students fail CBT exams not because they don't know the answers, but because they're **not comfortable using a computer**. Before your exam:
+Many students fail CBT exams not because they don't know the answers, but because they're **not comfortable using a computer interface**. Before your exam:
 
 - Practice using a mouse and keyboard regularly
 - Take online mock tests to simulate the experience
 - Use Alphify's Exam Mode which mimics real CBT conditions
-- Get familiar with the "Next", "Previous", and "Submit" buttons
+- Get familiar with typical "Next", "Previous", and "Submit" buttons
 
 ## 2. Time Management is Everything
 
-In JAMB, you get **2 hours for 180 questions** — that's roughly 40 seconds per question. Here's how to manage your time:
+In many entrance exams, you have very limited time per question. Here's how to manage your time:
 
-- **Don't spend more than 1 minute on any question**
+- **Don't spend too long on any single question**
 - Skip difficult questions and come back to them
 - Answer the easy ones first to build confidence
 - Keep track of time — most CBT software shows a timer
 
 ## 3. The Elimination Strategy
 
-When you're unsure of an answer, **eliminate the obviously wrong options** first. In a 4-option MCQ:
+When you're unsure of an answer, **eliminate the obviously wrong options** first. In a multiple-choice question:
 
-- Eliminate 2 wrong answers → you now have a 50% chance
+- Eliminate 2 wrong answers → you now have a much higher chance of being right
 - Look for answers that are too extreme or too specific
 - "All of the above" and "None of the above" are often correct when present
 
@@ -169,12 +169,12 @@ The best way to prepare for CBT exams is to **take as many practice tests as pos
     tag: 'Past Questions',
     emoji: '📝',
     metaDescription: 'Learn how to use past questions to achieve topic mastery. Use Ezra AI to explain the "why" behind every answer for academic dominance.',
-    keywords: ['past questions Nigeria', 'how to use past questions', 'university past questions', 'how to pass exams', 'topic mastery', 'academic dominance'],
+    keywords: ['past questions', 'how to use past questions', 'university past questions', 'how to pass exams', 'topic mastery', 'academic dominance'],
     publishedDate: '2026-01-05',
     content: `
 ## Why Past Questions Are Your Secret Weapon
 
-In Nigerian universities, lecturers often **repeat 40-60% of their questions** from previous years. This isn't a secret — it's a well-known pattern. The students who use past questions strategically have a massive advantage.
+In many universities, lecturers often **repeat a significant percentage of their questions** or themes from previous years. This isn't a secret — it's a well-known pattern. The students who use past questions strategically have a massive advantage.
 
 Here's exactly how to use them.
 
@@ -252,7 +252,7 @@ Past questions aren't just about memorizing answers — they're about understand
     content: `
 ## Why Most Group Study Sessions Fail
 
-Let's be honest — most "group study" sessions in Nigerian universities go like this: you meet up, chat for 2 hours, maybe open a textbook, take selfies, and go home feeling like you studied. Sound familiar?
+Let's be honest — most "group study" sessions go like this: you meet up, chat for 2 hours, maybe open a textbook, take selfies, and go home feeling like you studied. Sound familiar?
 
 Group study CAN be incredibly effective, but only if you do it right.
 
@@ -322,23 +322,23 @@ With Alphify's Study Sessions, your group can study together even when you can't
   },
   {
     slug: 'how-to-manage-stress-as-a-university-student',
-    title: 'How to Manage Stress as a University Student in Nigeria',
-    excerpt: 'Between carry-overs, ASUU strikes, and tough lecturers — stress is real. Learn practical mental health tips that actually work for students.',
+    title: 'How to Manage Stress as a University Student',
+    excerpt: 'Between heavy workloads and tough exams — stress is real. Learn practical mental health tips that actually work for students.',
     tag: 'Wellness',
     emoji: '🧘',
-    metaDescription: 'Practical stress management tips for Nigerian university students dealing with academic pressure, strikes, and financial stress. Take care of your mental health.',
-    keywords: ['student stress management', 'mental health tips for students', 'how to manage stress in university', 'Nigerian student stress', 'academic stress tips'],
+    metaDescription: 'Practical stress management tips for university students dealing with academic pressure and financial stress. Take care of your mental health.',
+    keywords: ['student stress management', 'mental health tips for students', 'how to manage stress in university', 'academic stress tips'],
     publishedDate: '2026-01-25',
     content: `
-## The Reality of Student Stress in Nigeria
+## The Reality of Student Stress
 
-Nigerian university students face a unique combination of stressors that students in other countries don't deal with:
+University students face a unique combination of stressors:
 
-- **ASUU strikes** disrupting your academic calendar
-- **Carry-over courses** from lecturers who fail 70% of the class
-- **Financial pressure** from school fees, accommodation, and feeding
-- **Unstable power supply** making nighttime study difficult
-- **Overcrowded lecture halls** where you can barely hear the lecturer
+- **Tight schedules** disrupting your personal life
+- **Difficult courses** and tough grading criteria
+- **Financial pressure** from tuition, accommodation, and living expenses
+- **Performance anxiety** during peak exam seasons
+- **Large lecture halls** where it's hard to get individual attention
 
 It's okay to feel overwhelmed. But it's important to have strategies to manage that stress.
 
@@ -674,64 +674,64 @@ The key is not to use every tool available, but to choose a few that complement 
 `,
   },
   {
-    slug: 'how-to-simplify-gst-101-with-ai',
-    title: 'How to Simplify GST 101 with Ezra AI: A Guide to Topic Mastery',
-    excerpt: 'GST 101 doesn\'t have to be a struggle. Learn how to use Ezra AI to break down dense GST materials and achieve academic dominance effortlessly.',
+    slug: 'how-to-simplify-general-studies-with-ai',
+    title: 'How to Simplify General Studies with Ezra AI: A Guide to Topic Mastery',
+    excerpt: 'General Studies courses don\'t have to be a struggle. Learn how to use Ezra AI to break down dense materials and achieve academic dominance effortlessly.',
     tag: 'Academic Dominance',
-    emoji: '🇳🇬',
-    metaDescription: 'Master GST 101 with Ezra AI. Learn how to use AI to simplify complex General Studies materials for Nigerian university students.',
-    keywords: ['simplify GST 101', 'master GST 101', 'Ezra AI GST', 'Nigerian university GST', 'topic mastery', 'academic dominance'],
+    emoji: '📚',
+    metaDescription: 'Master General Studies with Ezra AI. Learn how to use AI to simplify complex course materials for university students.',
+    keywords: ['simplify general studies', 'master general studies', 'Ezra AI study', 'university study tips', 'topic mastery', 'academic dominance'],
     publishedDate: '2026-02-20',
     content: `
-## The Struggle with GST 101
+## The Struggle with General Studies
 
-General Studies (GST) 101 is a compulsory course for almost every 100L student in Nigeria. Whether you're in Science, Art, or Social Sciences, you have to face it. The challenge? The materials are often dense, theoretical, and feel like a lot to cram.
+General Studies (GST or GNS) courses are often compulsory for first-year students. Whether you're in Science, Art, or Social Sciences, you likely have to face them. The challenge? The materials are often dense, theoretical, and feel like a lot to cram.
 
-But what if you didn't have to cram? What if you could achieve **Topic Mastery** in GST 101?
+But what if you didn't have to cram? What if you could achieve **Topic Mastery** in General Studies?
 
 ---
 
-## 1. Upload Your GST PDF to Ezra
+## 1. Upload Your Course PDF to Ezra
 
-Stop trying to read that 50-page GST PDF page by page without understanding. Upload it to Ezra. Ezra's AI is built to handle large documents and extract the most important concepts.
+Stop trying to read that 50-page PDF page by page without understanding. Upload it to Ezra. Ezra's AI is built to handle large documents and extract the most important concepts.
 
 ## 2. Use "Lecture Mode" for Clarity
 
-Instead of just asking random questions, tell Ezra: **"Ezra, please lecture me through this GST material."**
+Instead of just asking random questions, tell Ezra: **"Ezra, please lecture me through this material."**
 
 Ezra will:
 - Break down the history and philosophy into simple stories
-- Explain the "Use of English" rules with relatable examples
-- Highlight the core points your lecturer is likely to test
+- Explain the core rules with relatable examples
+- Highlight the points your lecturer is likely to test
 
 ## 3. Focus on "Clarity Over Cramming"
 
-GST 101 exams are often tricky because they test your understanding of subtle definitions. By using Ezra to get clarity on the *meaning* behind the text, you'll find that you don't need to cram. You'll simply *know* the material.
+General exams are often tricky because they test your understanding of subtle definitions. By using Ezra to get clarity on the *meaning* behind the text, you'll find that you don't need to cram. You'll simply *know* the material.
 
-## 4. Generate GST-Specific Quizzes
+## 4. Generate Specific Quizzes
 
-After each section Ezra explains, ask for a quiz. Ezra will generate questions that match the style of Nigerian university GST exams, helping you practice under real conditions.
+After each section Ezra explains, ask for a quiz. Ezra will generate questions that match the style of university exams, helping you practice under real conditions.
 
 ---
 
-**Don't let GST 101 hold you back.** Achieve academic dominance today.
+**Don't let General Studies hold you back.** Achieve academic dominance today.
 
-**[Try Ezra's Lecture Mode for GST 101 now](/)**
+**[Try Ezra's Lecture Mode now](/)**
 `,
   },
   {
-    slug: 'mastering-100l-physics-ezra-ai',
-    title: 'Mastering 100L Physics with Ezra AI: Moving from Confusion to Dominance',
-    excerpt: '100L Physics can be intimidating. Learn how to use Ezra AI to solve complex calculations and understand the laws of physics with human-like explanations.',
+    slug: 'mastering-first-year-physics-ezra-ai',
+    title: 'Mastering First-Year Physics with Ezra AI: Moving from Confusion to Dominance',
+    excerpt: 'First-year Physics can be intimidating. Learn how to use Ezra AI to solve complex calculations and understand the laws of physics with human-like explanations.',
     tag: 'Topic Mastery',
     emoji: '🧪',
-    metaDescription: 'Achieve mastery in 100L Physics using Ezra AI. Simple explanations for complex formulas, laws, and calculations for Nigerian university students.',
-    keywords: ['mastering 100L physics', '100L physics help', 'physics AI tutor', 'Ezra AI physics', 'Nigerian university physics', 'topic mastery'],
+    metaDescription: 'Achieve mastery in first-year Physics using Ezra AI. Simple explanations for complex formulas, laws, and calculations.',
+    keywords: ['mastering physics', 'first year physics help', 'physics AI tutor', 'Ezra AI physics', 'university physics', 'topic mastery'],
     publishedDate: '2026-02-25',
     content: `
-## Why 100L Physics Feels Hard
+## Why First-Year Physics Feels Hard
 
-For many Nigerian students, 100L Physics (PHY 101/102) is a "bottleneck" course. The jump from secondary school physics to university level is steep. The formulas are more complex, and the logic requires a deeper level of thinking.
+For many students, first-year Physics is a "bottleneck" course. The jump from secondary school to university level is steep. The formulas are more complex, and the logic requires a deeper level of thinking.
 
 If you find yourself cramming formulas without knowing when to use them, you're not yet in **Academic Dominance**.
 
@@ -755,7 +755,7 @@ Physics is all about how the world works. Ezra helps you connect different topic
 
 **Stop being intimidated by Physics.** Master the topics and achieve the grades you deserve.
 
-**[Start Mastering 100L Physics with Ezra](/)**
+**[Start Mastering Physics with Ezra](/)**
 `,
   },
   {
@@ -765,12 +765,12 @@ Physics is all about how the world works. Ezra helps you connect different topic
     tag: 'Nursing',
     emoji: '🩺',
     metaDescription: 'Simplify Nursing school materials with Ezra AI. Understand complex anatomy, physiology, and pharmacology PDFs with human-like AI explanations.',
-    keywords: ['nursing PDFs', 'complex nursing topics', 'nursing school AI', 'Ezra AI nursing', 'Nigerian nursing students', 'understand complex PDFs'],
+    keywords: ['nursing PDFs', 'complex nursing topics', 'nursing school AI', 'Ezra AI nursing', 'nursing students', 'understand complex PDFs'],
     publishedDate: '2026-03-01',
     content: `
 ## The Nursing School Information Overload
 
-Nursing school in Nigeria is famous for its massive volume of study material. Anatomy, Physiology, Pharmacology—each course comes with hundreds of pages of complex PDFs that can be overwhelming to read on your own.
+Nursing school is famous for its massive volume of study material. Anatomy, Physiology, Pharmacology—each course comes with hundreds of pages of complex PDFs that can be overwhelming to read on your own.
 
 If you're feeling like you're drowning in information, it's time to switch to **Topic Mastery**.
 
