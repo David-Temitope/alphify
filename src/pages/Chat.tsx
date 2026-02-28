@@ -24,8 +24,7 @@ import {
   Trash2,
   BookOpen,
   Search as SearchIcon,
-  ChevronDown,
-  ChevronUp
+  ChevronDown
 } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -72,6 +71,7 @@ export default function Chat() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScrollDown, setShowScrollDown] = useState(false);
+  const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
   
   // Knowledge Units
@@ -292,6 +292,11 @@ export default function Chat() {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 100;
+
+    if (!isAtBottom && !showScrollDown) {
+      setHasPlayedBounce(false);
+    }
+
     setShowScrollDown(!isAtBottom);
   };
 
@@ -525,7 +530,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, canChat]);
+  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, canChat, balance, chatMode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -728,7 +733,7 @@ Student Profile:
             </div>
           )}
 
-          {messages.length === 0 && !streamingContent && (
+          {messages.length === 0 && !streamingContent && !searchQuery && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
                 E
@@ -796,7 +801,11 @@ Student Profile:
               variant="secondary"
               size="icon"
               onClick={scrollToBottom}
-              className="fixed bottom-24 right-6 lg:right-10 rounded-full shadow-lg border border-border animate-bounce z-20"
+              onAnimationEnd={() => setHasPlayedBounce(true)}
+              className={cn(
+                "fixed bottom-24 right-6 lg:right-10 rounded-full shadow-lg border border-border z-20 transition-all",
+                !hasPlayedBounce && "animate-bounce"
+              )}
             >
               <ChevronDown className="h-5 w-5" />
             </Button>
