@@ -81,10 +81,11 @@ export default function Index() {
       "@graph": [
         {
           "@type": "SoftwareApplication",
+          "@type": "SoftwareApplication",
           "name": "Alphify",
           "operatingSystem": "Web, Android, iOS",
           "applicationCategory": "EducationApplication",
-          "description": "Achieve Academic Dominance with Ezra AI. Master 100L Physics, Nursing PDFs, and GST 101 with human-like explanations and topic mastery tools.",
+          "description": "Achieve Academic Dominance in any university course with Ezra AI. Master complex topics and large PDFs with human-like explanations.",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -111,18 +112,18 @@ export default function Index() {
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "How does Alphify help with university exams?",
+          "name": "How does Alphify help with university courses?",
               "acceptedAnswer": {
                 "@type": "Answer",
-            "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for complex subjects like 100L Physics and Nursing."
+            "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for any course, from Engineering to Nursing."
               }
             },
             {
               "@type": "Question",
-          "name": "How does Ezra AI help with complex Nursing PDFs?",
+          "name": "Can Ezra AI explain complex university PDFs?",
               "acceptedAnswer": {
                 "@type": "Answer",
-            "text": "Ezra AI breaks down large and complex Nursing PDFs into simple, human-like explanations, helping students move from confusion to topic mastery without cramming."
+            "text": "Yes, Ezra AI breaks down large and complex university PDFs into simple, human-like explanations, helping students move from confusion to topic mastery across all departments."
               }
             },
             {
@@ -253,7 +254,7 @@ export default function Index() {
               From Confusion to <span className="text-primary">Topic Mastery</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Stop struggling with dense textbooks and complex PDFs. Ezra is built for students who want to deeply understand their material and dominate their field.
+              Stop struggling with dense textbooks and complex PDFs in any department. Ezra is built for students who want to deeply understand their material and dominate their field.
             </p>
           </div>
 
