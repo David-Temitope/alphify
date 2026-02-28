@@ -99,7 +99,7 @@ export default function Auth() {
     }
     link.href = 'https://alphify.site/auth';
     document.title = isLogin ? 'Sign In — Alphify' : 'Create Account — Alphify';
-    return () => { document.title = 'Alphify — AI Study Companion for Nigerian University Students'; };
+    return () => { document.title = 'Alphify — Academic Dominance for Nigerian Students'; };
   }, [isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -176,7 +176,7 @@ export default function Auth() {
           </div>
 
           <div className="mt-14 pt-6 border-t border-border/30">
-            <p className="text-xs text-muted-foreground">Trusted by thousands of Nigerian university students</p>
+            <p className="text-xs text-muted-foreground italic">"From confusion to topic mastery. Clarity over cramming."</p>
           </div>
         </div>
       </div>

@@ -84,7 +84,7 @@ export default function Index() {
           "name": "Alphify",
           "operatingSystem": "Web, Android, iOS",
           "applicationCategory": "EducationApplication",
-          "description": "AI study companion for university students providing human-like answers, PDF understanding, and departmental libraries.",
+          "description": "Achieve Academic Dominance with Ezra AI. Master 100L Physics, Nursing PDFs, and GST 101 with human-like explanations and topic mastery tools.",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -114,15 +114,15 @@ export default function Index() {
               "name": "How does Alphify help with university exams?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Alphify provides human-like AI tutoring, access to departmental libraries with shared materials, and CBT exam simulations tailored for university students."
+            "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for complex subjects like 100L Physics and Nursing."
               }
             },
             {
               "@type": "Question",
-              "name": "Can Alphify explain complex PDFs?",
+          "name": "How does Ezra AI help with complex Nursing PDFs?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes, Ezra (Alphify's AI) can break down large and complex PDFs into simple, human-like explanations to help you truly understand the material."
+            "text": "Ezra AI breaks down large and complex Nursing PDFs into simple, human-like explanations, helping students move from confusion to topic mastery without cramming."
               }
             },
             {
@@ -210,18 +210,23 @@ export default function Index() {
           </div>
 
           <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-5 animate-fade-in-up max-w-4xl leading-tight">
-            Study Smarter{' '}
-            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">with Ezra AI</span>
+            Clarity Over{' '}
+            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">Cramming</span>
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.15s' }}>
-            The AI study companion that provides human-like answers, breaks down complex PDFs, and helps you excel in your university courses.
+            Achieve <span className="text-foreground font-semibold">Academic Dominance</span>. Ezra AI breaks down complex topics and large PDFs into simple, human-like explanations so you can truly master your courses.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground px-10 py-6 text-lg shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all rounded-full">
-              Start Learning Free <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+            <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/auth')} className="bg-gradient-to-r from-primary via-cyan-500 to-blue-500 text-primary-foreground px-10 py-6 text-lg shadow-xl shadow-primary/30 hover:shadow-primary/50 transition-all rounded-full group">
+              Start Your Journey to Mastery <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
             </Button>
+            {!user && (
+              <Button variant="ghost" size="lg" onClick={() => navigate('/auth')} className="text-foreground hover:bg-primary/10 rounded-full px-8 py-6 border border-border/50 backdrop-blur-sm">
+                Sign In
+              </Button>
+            )}
           </div>
 
           {/* Live stats pill */}
@@ -245,10 +250,10 @@ export default function Index() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything You Need to <span className="text-primary">Excel</span>
+              From Confusion to <span className="text-primary">Topic Mastery</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Ezra combines AI explanations, document analysis, adaptive testing, and collaborative learning.
+              Stop struggling with dense textbooks and complex PDFs. Ezra is built for students who want to deeply understand their material and dominate their field.
             </p>
           </div>
 
@@ -383,7 +388,7 @@ export default function Index() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Study Tips for <span className="text-primary">Nigerian Students</span>
+              Academic Dominance: <span className="text-primary">Study Tips</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Practical advice to help you excel in your university exams
