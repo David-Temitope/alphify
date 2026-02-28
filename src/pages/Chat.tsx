@@ -339,15 +339,12 @@ export default function Chat() {
     return data.id;
   }, [conversationId, user, queryClient, navigate, toast]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!input.trim() || isStreaming) return;
+  const handleSendMessage = useCallback(async (text?: string) => {
+    const messageToSend = text || input.trim();
+    if (!messageToSend || isStreaming || balance < (chatMode === 'assignment' ? 2 : 1)) {
+      if (!messageToSend || isStreaming) return;
 
-    const activeConversationId = await resolveConversationId();
-    if (!activeConversationId) return;
-
-    // Check KU balance
-    const requiredKU = chatMode === 'assignment' ? 2 : 1;
-    if (balance < requiredKU) {
+      const requiredKU = chatMode === 'assignment' ? 2 : 1;
       toast({
         title: 'Not enough Knowledge Units',
         description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
@@ -356,8 +353,11 @@ export default function Chat() {
       return;
     }
 
-    const userMessage = input.trim();
-    setInput('');
+    const activeConversationId = await resolveConversationId();
+    if (!activeConversationId) return;
+
+    const userMessage = messageToSend;
+    if (!text) setInput('');
     setIsStreaming(true);
     setStreamingContent('');
 
@@ -516,10 +516,12 @@ Student Profile:
           .eq('id', activeConversationId);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] });
       setFileContent(null);
-      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['ku-wallet'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] }),
+        queryClient.invalidateQueries({ queryKey: ['all-conversations'] }),
+        queryClient.invalidateQueries({ queryKey: ['ku-wallet'] }),
+      ]);
     } catch (error) {
       toast({
         title: 'Error',
@@ -530,7 +532,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, canChat, balance, chatMode]);
+  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, balance, chatMode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -569,9 +571,11 @@ Student Profile:
     }
   };
 
-  const filteredMessages = searchQuery.trim()
-    ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
-    : messages;
+  const filteredMessages = useMemo(() => {
+    return searchQuery.trim()
+      ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+      : messages;
+  }, [messages, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -760,7 +764,7 @@ Student Profile:
             </div>
           )}
 
-          {(searchQuery ? filteredMessages : messages).map((message) => (
+          {filteredMessages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
 
@@ -824,8 +828,7 @@ Student Profile:
                 size="sm" 
                 className="text-primary border-primary/30 hover:bg-primary/10"
                 onClick={() => {
-                  setInput('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
-                  setTimeout(() => handleSendMessage(), 100);
+                  handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
                 }}
               >
                 <BookOpen className="h-4 w-4 mr-1" />

@@ -47,7 +47,15 @@ const COUNTRIES = [
   'United Kingdom', 'Canada', 'India', 'Australia', 'Other'
 ];
 
-const UNIVERSITY_LEVELS = ['100L', '200L', '300L', '400L', '500L', '600L', 'Postgraduate'];
+const UNIVERSITY_LEVELS = [
+  'Year 1 / 100L',
+  'Year 2 / 200L',
+  'Year 3 / 300L',
+  'Year 4 / 400L',
+  'Year 5 / 500L',
+  'Year 6 / 600L',
+  'Postgraduate'
+];
 
 const AI_PERSONALITIES = [
   { id: 'close_friend', label: 'Close Friend', description: 'Casual, uses slang, very supportive' },
@@ -68,9 +76,9 @@ const EXPLANATION_STYLES = [
 ];
 
 const COMMON_COURSES = [
-  'MTH', 'CHM', 'PHY', 'BIO', 'GST', 'GNS', 'MCB', 'BCH', 'CSC', 'COS',
-  'ENG', 'LIN', 'ECO', 'ACC', 'BUS', 'POL', 'SOC', 'PSY', 'LAW', 'MED',
-  'PHA', 'NUR', 'ARC', 'AGR', 'EDU', 'HIS', 'PHI', 'FRE', 'ART', 'MUS'
+  'MTH', 'CHM', 'PHY', 'BIO', 'ENG', 'MAT', 'CSC', 'ECO', 'ACC', 'BUS',
+  'POL', 'SOC', 'PSY', 'LAW', 'MED', 'NUR', 'BCH', 'MCB', 'CHM', 'ARC',
+  'EDU', 'HIS', 'PHI', 'LIN', 'FRE', 'ART', 'MUS', 'GST/General Studies'
 ];
 
 interface UserSettings {
