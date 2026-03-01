@@ -84,7 +84,7 @@ export default function Index() {
           "name": "Alphify",
           "operatingSystem": "Web, Android, iOS",
           "applicationCategory": "EducationApplication",
-          "description": "Achieve Academic Dominance in any university course with Ezra AI. Master complex topics and large PDFs with human-like explanations.",
+          "description": "Master any university course and achieve academic dominance with Ezra AI. Get human-like explanations for complex topics and large study PDFs.",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -214,8 +214,8 @@ export default function Index() {
             <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">Cramming</span>
           </h1>
 
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.15s' }}>
-            Achieve <span className="text-foreground font-semibold">Academic Dominance</span>. Ezra AI breaks down complex topics and large PDFs into simple, human-like explanations so you can truly master your courses.
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.15s' }}>
+            Stop memorizing and start mastering. Achieve <span className="text-foreground font-semibold">Academic Dominance</span> with Ezra AI—the human-like tutor built for university students to simplify complex topics and large study PDFs.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -240,7 +240,7 @@ export default function Index() {
             </div>
             <div className="w-px h-5 bg-border" />
             <span className="text-sm font-semibold text-foreground">10,000+</span>
-            <span className="text-xs text-muted-foreground">Students learning right now</span>
+            <span className="text-xs text-muted-foreground">Students dominating their courses</span>
           </div>
         </div>
       </section>
