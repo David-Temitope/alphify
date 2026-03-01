@@ -77,7 +77,7 @@ const EXPLANATION_STYLES = [
 
 const COMMON_COURSES = [
   'MTH', 'CHM', 'PHY', 'BIO', 'ENG', 'MAT', 'CSC', 'ECO', 'ACC', 'BUS',
-  'POL', 'SOC', 'PSY', 'LAW', 'MED', 'NUR', 'BCH', 'MCB', 'CHM', 'ARC',
+  'POL', 'SOC', 'PSY', 'LAW', 'MED', 'NUR', 'BCH', 'MCB', 'ARC',
   'EDU', 'HIS', 'PHI', 'LIN', 'FRE', 'ART', 'MUS', 'GST/General Studies'
 ];
 
