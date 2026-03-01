@@ -103,15 +103,16 @@ export default function BlogPost() {
           </div>
 
           {/* CTA */}
-          <div className="mt-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center">
-            <h3 className="font-display text-xl font-bold text-foreground mb-3">
-              Ready to Study Smarter?
+          <div className="mt-12 bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <h3 className="font-display text-xl font-bold text-foreground mb-3 relative z-10">
+              Dominate Your Toughest Courses
             </h3>
-            <p className="text-muted-foreground mb-6">
-              Join thousands of students using Alphify's AI tutor Ezra to understand complex topics and ace their exams.
+            <p className="text-muted-foreground mb-6 relative z-10 max-w-md mx-auto">
+              Stop struggling with dense study materials. Use Ezra's <span className="text-primary font-semibold">Lecture Mode</span> to break down your complex PDFs into human-like explanations today.
             </p>
-            <Button onClick={() => navigate('/auth')} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Start Learning Free <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={() => navigate('/auth')} className="bg-primary text-primary-foreground hover:bg-primary/90 relative z-10 px-8 py-6 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+              Try Lecture Mode Free <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </article>

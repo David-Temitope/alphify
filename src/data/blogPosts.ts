@@ -674,18 +674,18 @@ The key is not to use every tool available, but to choose a few that complement 
 `,
   },
   {
-    slug: 'how-to-simplify-general-studies-with-ai',
-    title: 'How to Simplify General Studies with Ezra AI: A Guide to Topic Mastery',
-    excerpt: 'General Studies courses don\'t have to be a struggle. Learn how to use Ezra AI to break down dense materials and achieve academic dominance effortlessly.',
+    slug: 'mastering-general-studies-gst-for-university-students',
+    title: 'Mastering General Studies (GST): How to Achieve Academic Dominance in University-Wide Courses',
+    excerpt: 'General Studies courses like GST 101 or GNS don\'t have to be a struggle. Learn how to use Ezra AI to achieve topic mastery and clarity over cramming.',
     tag: 'Academic Dominance',
     emoji: '📚',
-    metaDescription: 'Master General Studies with Ezra AI. Learn how to use AI to simplify complex course materials for university students.',
-    keywords: ['simplify general studies', 'master general studies', 'Ezra AI study', 'university study tips', 'topic mastery', 'academic dominance'],
+    metaDescription: 'Master GST 101 and other General Studies courses with Ezra AI. Learn how to use AI to achieve academic dominance in any university course.',
+    keywords: ['master GST 101', 'how to pass GST', 'general studies university help', 'academic dominance', 'topic mastery', 'Nigerian university GST'],
     publishedDate: '2026-02-20',
     content: `
 ## The Struggle with General Studies
 
-General Studies (GST or GNS) courses are often compulsory for first-year students. Whether you're in Science, Art, or Social Sciences, you likely have to face them. The challenge? The materials are often dense, theoretical, and feel like a lot to cram.
+General Studies (GST or GNS) courses are often compulsory for every student. Whether you're in Science, Art, or Engineering, you likely have to face them. The challenge? The materials are often dense, theoretical, and feel like a lot to cram.
 
 But what if you didn't have to cram? What if you could achieve **Topic Mastery** in General Studies?
 
@@ -693,7 +693,7 @@ But what if you didn't have to cram? What if you could achieve **Topic Mastery**
 
 ## 1. Upload Your Course PDF to Ezra
 
-Stop trying to read that 50-page PDF page by page without understanding. Upload it to Ezra. Ezra's AI is built to handle large documents and extract the most important concepts.
+Stop trying to read that 50-page PDF page by page without understanding. Upload it to Ezra. Ezra's AI is built to handle large university documents and extract the most important concepts.
 
 ## 2. Use "Lecture Mode" for Clarity
 
@@ -715,23 +715,21 @@ After each section Ezra explains, ask for a quiz. Ezra will generate questions t
 ---
 
 **Don't let General Studies hold you back.** Achieve academic dominance today.
-
-**[Try Ezra's Lecture Mode now](/)**
 `,
   },
   {
-    slug: 'mastering-first-year-physics-ezra-ai',
-    title: 'Mastering First-Year Physics with Ezra AI: Moving from Confusion to Dominance',
-    excerpt: 'First-year Physics can be intimidating. Learn how to use Ezra AI to solve complex calculations and understand the laws of physics with human-like explanations.',
+    slug: 'dominating-complex-science-and-engineering-courses',
+    title: 'Dominating Complex Science Courses: A Guide to Mastering Physics and Engineering Topics',
+    excerpt: 'Science and Engineering courses like Physics 101 can be intimidating. Learn how to use Ezra AI to move from confusion to absolute dominance.',
     tag: 'Topic Mastery',
     emoji: '🧪',
-    metaDescription: 'Achieve mastery in first-year Physics using Ezra AI. Simple explanations for complex formulas, laws, and calculations.',
-    keywords: ['mastering physics', 'first year physics help', 'physics AI tutor', 'Ezra AI physics', 'university physics', 'topic mastery'],
+    metaDescription: 'Master complex science and engineering courses with Ezra AI. Simple explanations for formulas, laws, and calculations to achieve academic dominance.',
+    keywords: ['mastering physics', 'engineering course help', 'science student tips', 'Ezra AI tutor', 'academic dominance', 'topic mastery'],
     publishedDate: '2026-02-25',
     content: `
-## Why First-Year Physics Feels Hard
+## Why Complex Science Courses Feel Hard
 
-For many students, first-year Physics is a "bottleneck" course. The jump from secondary school to university level is steep. The formulas are more complex, and the logic requires a deeper level of thinking.
+For many students, first-year Physics or Engineering courses are "bottleneck" courses. The formulas are complex, and the logic requires a deeper level of thinking.
 
 If you find yourself cramming formulas without knowing when to use them, you're not yet in **Academic Dominance**.
 
@@ -745,60 +743,56 @@ Ezra will break down the variables and the relationship between them using real-
 
 ## 2. Step-by-Step Calculation Guide
 
-Got a tough physics problem? Upload a photo of it or type it out. Ezra doesn't just give you the answer; Ezra provides a **step-by-step breakdown**. This ensures you understand the process, which is critical for your exams.
+Got a tough problem? Upload a photo of it or type it out. Ezra doesn't just give you the answer; Ezra provides a **step-by-step breakdown**. This ensures you understand the process, which is critical for your exams.
 
 ## 3. Understanding the "Big Picture"
 
-Physics is all about how the world works. Ezra helps you connect different topics—like Mechanics and Thermodynamics—so you see the big picture. This is the difference between passing and **dominating** the course.
+Mastering science is about how the world works. Ezra helps you connect different topics so you see the big picture. This is the difference between passing and **dominating** the course.
 
 ---
 
-**Stop being intimidated by Physics.** Master the topics and achieve the grades you deserve.
-
-**[Start Mastering Physics with Ezra](/)**
+**Stop being intimidated by your courses.** Master the topics and achieve the grades you deserve.
 `,
   },
   {
-    slug: 'understand-complex-nursing-pdfs-ezra-ai',
-    title: 'How to Understand Complex Nursing PDFs with Ezra AI',
-    excerpt: 'Nursing school is intense with massive PDFs to study. Learn how Ezra AI helps you simplify complex medical concepts and achieve academic dominance.',
-    tag: 'Nursing',
+    slug: 'understand-large-pdfs-in-nursing-law-and-professional-courses',
+    title: 'Clarity Over Cramming: How to Understand Large PDFs in Nursing, Law, and Professional Courses',
+    excerpt: 'Professional schools are intense with massive PDFs to study. Learn how Ezra AI helps you simplify complex topics and achieve academic dominance.',
+    tag: 'Professional Study',
     emoji: '🩺',
-    metaDescription: 'Simplify Nursing school materials with Ezra AI. Understand complex anatomy, physiology, and pharmacology PDFs with human-like AI explanations.',
-    keywords: ['nursing PDFs', 'complex nursing topics', 'nursing school AI', 'Ezra AI nursing', 'nursing students', 'understand complex PDFs'],
+    metaDescription: 'Simplify complex professional course materials with Ezra AI. Understand large PDFs in Nursing, Law, and Medicine with human-like explanations.',
+    keywords: ['nursing school help', 'law student tips', 'understand complex PDFs', 'Ezra AI professional courses', 'academic dominance', 'clarity over cramming'],
     publishedDate: '2026-03-01',
     content: `
-## The Nursing School Information Overload
+## The Professional School Information Overload
 
-Nursing school is famous for its massive volume of study material. Anatomy, Physiology, Pharmacology—each course comes with hundreds of pages of complex PDFs that can be overwhelming to read on your own.
+Nursing, Law, and Medical schools are famous for their massive volume of study material. Each course comes with hundreds of pages of complex PDFs that can be overwhelming to read on your own.
 
 If you're feeling like you're drowning in information, it's time to switch to **Topic Mastery**.
 
 ---
 
-## 1. Summarize Large Nursing Modules
+## 1. Summarize Large Course Modules
 
 Upload your 100-page module to Ezra. Ask Ezra to: **"Give me a high-level summary of the core concepts in this document."**
 
 This gives you a mental map of what you're about to study, making the details easier to digest.
 
-## 2. Simplify Medical Jargon
+## 2. Simplify Technical Jargon
 
-Medical terminology can feel like a foreign language. When you encounter a complex term or process in your Nursing PDF, ask Ezra to explain it using simple, human-like language. Ezra excels at taking "doctor-speak" and turning it into something you can explain to anyone.
+Whether it's legal terms or medical terminology, jargon can feel like a foreign language. When you encounter a complex process, ask Ezra to explain it using simple, human-like language. Ezra excels at taking technical speak and turning it into something clear.
 
-## 3. Ezra's "Lecture Mode" for Anatomy
+## 3. Ezra's "Lecture Mode" for Deep Understanding
 
-Anatomy requires deep understanding, not just memorization. Use Ezra's **Lecture Mode** to have a conversation about the systems of the body. Ask questions like "What happens if this organ fails?" to test your understanding of the function, not just the name.
+Professional courses require deep understanding, not just memorization. Use Ezra's **Lecture Mode** to have a conversation about your course materials. Ask "What if..." questions to test your understanding of the logic, not just the names.
 
 ## 4. Prepare for Professional Exams
 
-Nursing isn't just about university exams; it's about the professional boards. Ezra helps you prepare by focusing on the logic and application of Nursing concepts, ensuring you're ready for any challenge.
+University is just the start; professional boards are the goal. Ezra helps you prepare by focusing on the logic and application of concepts, ensuring you're ready for any challenge.
 
 ---
 
-**Clarity is your best friend in Nursing school.** Don't just study—dominate.
-
-**[Simplify Your Nursing PDFs with Ezra](/)**
+**Clarity is your best friend in professional school.** Don't just study—dominate.
 `,
   },
 ];
