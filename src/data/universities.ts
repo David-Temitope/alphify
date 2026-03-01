@@ -1,5 +1,20 @@
-// Comprehensive list of Nigerian universities (Federal, State, Private)
-export const NIGERIAN_UNIVERSITIES = [
+// Suggested list of universities (Global, starting with popular ones)
+export const SUGGESTED_UNIVERSITIES = [
+  // Global
+  'Harvard University',
+  'Stanford University',
+  'Massachusetts Institute of Technology (MIT)',
+  'University of Oxford',
+  'University of Cambridge',
+  'University of Toronto',
+  'McGill University',
+  'University of British Columbia',
+  'University of Sydney',
+  'University of Melbourne',
+  'National University of Singapore',
+  'University of Cape Town',
+  'University of Ghana',
+  'University of Nairobi',
   // Federal Universities
   'Abubakar Tafawa Balewa University, Bauchi',
   'Ahmadu Bello University, Zaria',

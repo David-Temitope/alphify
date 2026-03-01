@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,9 @@ import {
   MicOff,
   Settings,
   Trash2,
-  BookOpen
+  BookOpen,
+  Search as SearchIcon,
+  ChevronDown
 } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -66,6 +68,10 @@ export default function Chat() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
   
   // Knowledge Units
@@ -274,9 +280,25 @@ export default function Chat() {
   });
 
   // Scroll to bottom
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, streamingContent]);
+
+  // Handle scroll to show/hide scroll down arrow
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 100;
+
+    if (!isAtBottom && !showScrollDown) {
+      setHasPlayedBounce(false);
+    }
+
+    setShowScrollDown(!isAtBottom);
+  };
 
   // Auto-resize textarea
   useEffect(() => {
@@ -317,15 +339,12 @@ export default function Chat() {
     return data.id;
   }, [conversationId, user, queryClient, navigate, toast]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!input.trim() || isStreaming) return;
+  const handleSendMessage = useCallback(async (text?: string) => {
+    const messageToSend = text || input.trim();
+    if (!messageToSend || isStreaming || balance < (chatMode === 'assignment' ? 2 : 1)) {
+      if (!messageToSend || isStreaming) return;
 
-    const activeConversationId = await resolveConversationId();
-    if (!activeConversationId) return;
-
-    // Check KU balance
-    const requiredKU = chatMode === 'assignment' ? 2 : 1;
-    if (balance < requiredKU) {
+      const requiredKU = chatMode === 'assignment' ? 2 : 1;
       toast({
         title: 'Not enough Knowledge Units',
         description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
@@ -334,8 +353,11 @@ export default function Chat() {
       return;
     }
 
-    const userMessage = input.trim();
-    setInput('');
+    const activeConversationId = await resolveConversationId();
+    if (!activeConversationId) return;
+
+    const userMessage = messageToSend;
+    if (!text) setInput('');
     setIsStreaming(true);
     setStreamingContent('');
 
@@ -494,10 +516,12 @@ Student Profile:
           .eq('id', activeConversationId);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] });
       setFileContent(null);
-      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['ku-wallet'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] }),
+        queryClient.invalidateQueries({ queryKey: ['all-conversations'] }),
+        queryClient.invalidateQueries({ queryKey: ['ku-wallet'] }),
+      ]);
     } catch (error) {
       toast({
         title: 'Error',
@@ -508,7 +532,7 @@ Student Profile:
       setIsStreaming(false);
       setStreamingContent('');
     }
-  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, canChat]);
+  }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, balance, chatMode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -546,6 +570,12 @@ Student Profile:
       startListening();
     }
   };
+
+  const filteredMessages = useMemo(() => {
+    return searchQuery.trim()
+      ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+      : messages;
+  }, [messages, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -643,26 +673,71 @@ Student Profile:
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Chat Header */}
-        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex items-center gap-3 flex-shrink-0">
-          <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display font-semibold text-foreground truncate">
-              {conversation?.title || 'New Conversation'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
-            </p>
+        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex flex-col gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </button>
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="lg:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display font-semibold text-foreground truncate">
+                {conversation?.title || 'New Conversation'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsSearching(!isSearching);
+                if (isSearching) setSearchQuery('');
+              }}
+              className={cn("rounded-full", isSearching && "bg-primary/10 text-primary")}
+            >
+              <SearchIcon className="h-5 w-5" />
+            </Button>
           </div>
+
+          {isSearching && (
+            <div className="relative animate-fade-in">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search in chat..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-secondary border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          )}
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 py-4 space-y-6">
-          {messages.length === 0 && !streamingContent && (
+        <div
+          className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 py-4 space-y-6 relative"
+          onScroll={handleScroll}
+        >
+          {searchQuery && filteredMessages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <SearchIcon className="h-10 w-10 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">No messages found matching "{searchQuery}"</p>
+            </div>
+          )}
+
+          {messages.length === 0 && !streamingContent && !searchQuery && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
               <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
                 E
@@ -689,7 +764,7 @@ Student Profile:
             </div>
           )}
 
-          {messages.map((message) => (
+          {filteredMessages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
 
@@ -723,6 +798,22 @@ Student Profile:
           )}
 
           <div ref={messagesEndRef} />
+
+          {/* Scroll Down Arrow */}
+          {showScrollDown && (
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={scrollToBottom}
+              onAnimationEnd={() => setHasPlayedBounce(true)}
+              className={cn(
+                "fixed bottom-24 right-6 lg:right-10 rounded-full shadow-lg border border-border z-20 transition-all",
+                !hasPlayedBounce && "animate-bounce"
+              )}
+            >
+              <ChevronDown className="h-5 w-5" />
+            </Button>
+          )}
         </div>
 
         {/* File Content Indicator */}
@@ -737,8 +828,7 @@ Student Profile:
                 size="sm" 
                 className="text-primary border-primary/30 hover:bg-primary/10"
                 onClick={() => {
-                  setInput('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
-                  setTimeout(() => handleSendMessage(), 100);
+                  handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
                 }}
               >
                 <BookOpen className="h-4 w-4 mr-1" />

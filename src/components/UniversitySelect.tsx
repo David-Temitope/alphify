@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { NIGERIAN_UNIVERSITIES } from '@/data/nigerianUniversities';
+import { SUGGESTED_UNIVERSITIES } from '@/data/universities';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Search, X } from 'lucide-react';
+import { Check, Search, X, Plus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 
@@ -17,9 +17,9 @@ export default function UniversitySelect({ value, onChange, className }: Univers
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return NIGERIAN_UNIVERSITIES;
+    if (!search.trim()) return SUGGESTED_UNIVERSITIES;
     const q = search.toLowerCase();
-    return NIGERIAN_UNIVERSITIES.filter(u => u.toLowerCase().includes(q));
+    return SUGGESTED_UNIVERSITIES.filter(u => u.toLowerCase().includes(q));
   }, [search]);
 
   return (
@@ -57,8 +57,23 @@ export default function UniversitySelect({ value, onChange, className }: Univers
         </div>
         <ScrollArea className="h-[250px]">
           <div className="p-1">
-            {filtered.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No university found</p>
+            {search.trim() && !SUGGESTED_UNIVERSITIES.some(u => u.toLowerCase() === search.trim().toLowerCase()) && (
+              <button
+                onClick={() => {
+                  onChange(search.trim());
+                  setOpen(false);
+                  setSearch('');
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left text-primary border-b border-border/50 mb-1"
+              >
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className="truncate">Use "{search.trim()}"</span>
+              </button>
+            )}
+            {filtered.length === 0 && !search.trim() ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Search for your university</p>
+            ) : filtered.length === 0 && search.trim() ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No matching universities found</p>
             ) : (
               filtered.map((uni) => (
                 <button

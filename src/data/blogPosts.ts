@@ -12,13 +12,13 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
-    slug: 'how-to-study-effectively-best-study-methods-2025',
-    title: 'How to Study Effectively: Best Study Methods That Actually Work in 2025',
-    excerpt: 'Stop wasting hours re-reading textbooks. Discover proven study techniques like active recall, spaced repetition, and the Feynman method that top students use worldwide.',
-    tag: 'Study Hacks',
+    slug: 'how-to-study-effectively-study-methods-2025',
+    title: 'How to Study Effectively: Achieve Academic Dominance in 2025',
+    excerpt: 'Stop wasting hours re-reading textbooks. Discover proven study techniques like active recall, spaced repetition, and the Feynman method to achieve true topic mastery.',
+    tag: 'Academic Dominance',
     emoji: '🧠',
-    metaDescription: 'Learn how to study effectively with human-like AI help and proven methods like active recall and the Feynman technique. Best university study tips for 2025.',
-    keywords: ['how to study effectively', 'best way to study', 'study tips', 'university study methods', 'how to study for university exams', 'study techniques', 'human-like AI tutor', 'best way to study in 2026'],
+    metaDescription: 'Learn how to study effectively and achieve academic dominance with Ezra AI. Master complex topics using active recall and the Feynman technique.',
+    keywords: ['how to study effectively', 'academic dominance', 'topic mastery', 'study tips', 'university study methods', 'how to study for university exams', 'study techniques', 'human-like AI tutor'],
     publishedDate: '2025-12-15',
     content: `
 ## Why Most Students Study the Wrong Way
@@ -87,22 +87,22 @@ Study for 25 minutes, take a 5-minute break. After 4 rounds, take a longer 15-30
 
 The best students aren't necessarily the smartest — they just use better methods. With AI tools like Alphify, you can combine all these techniques: Ezra uses active recall through quizzes, explains concepts using the Feynman method, and adapts to your learning pace.
 
-**Ready to transform your study sessions?** [Sign up for Alphify](/) — it's free to start.
+**Ready to achieve academic dominance?** Use Ezra's **Lecture Mode** to break down your most complex PDFs today. [Sign up for Alphify](/) — it's free to start.
 `,
   },
   {
-    slug: 'how-to-prepare-for-cbt-exams-jamb-post-utme',
-    title: 'How to Prepare for CBT Exams: JAMB, Post-UTME & University CBT Tips',
-    excerpt: 'Computer-based tests are different from pen-and-paper. Learn time management tricks, elimination strategies, and how to handle JAMB-style questions like a pro.',
+    slug: 'how-to-prepare-for-cbt-exams',
+    title: 'How to Prepare for CBT Exams: Master University Tests and Entrance Exams',
+    excerpt: 'Computer-based tests require a different strategy. Learn how to maintain clarity under pressure and use AI to simulate real CBT conditions.',
     tag: 'Exam Prep',
     emoji: '💻',
-    metaDescription: 'Master CBT exams with proven strategies for JAMB, Post-UTME and university computer-based tests. Time management, elimination techniques and more.',
-    keywords: ['CBT exam tips', 'how to pass JAMB', 'JAMB preparation', 'Post-UTME tips', 'computer based test tips', 'how to pass CBT exams'],
+    metaDescription: 'Master CBT exams with proven strategies for university tests. Use Ezra AI to simulate exam conditions and achieve academic dominance.',
+    keywords: ['CBT exam tips', 'how to pass entrance exams', 'computer based test tips', 'how to pass CBT exams', 'academic dominance'],
     publishedDate: '2025-12-20',
     content: `
 ## CBT Exams Are a Different Game
 
-Computer-Based Tests (CBT) are now the standard for JAMB, Post-UTME, and many university exams across Nigeria. But studying for a CBT exam requires a different approach than traditional pen-and-paper tests.
+Computer-Based Tests (CBT) are now the standard for many university exams worldwide. But studying for a CBT exam requires a different approach than traditional pen-and-paper tests.
 
 Here's your complete guide to acing CBT exams in 2025.
 
@@ -110,27 +110,27 @@ Here's your complete guide to acing CBT exams in 2025.
 
 ## 1. Practice on a Computer Before Exam Day
 
-Many students fail CBT exams not because they don't know the answers, but because they're **not comfortable using a computer**. Before your exam:
+Many students fail CBT exams not because they don't know the answers, but because they're **not comfortable using a computer interface**. Before your exam:
 
 - Practice using a mouse and keyboard regularly
 - Take online mock tests to simulate the experience
 - Use Alphify's Exam Mode which mimics real CBT conditions
-- Get familiar with the "Next", "Previous", and "Submit" buttons
+- Get familiar with typical "Next", "Previous", and "Submit" buttons
 
 ## 2. Time Management is Everything
 
-In JAMB, you get **2 hours for 180 questions** — that's roughly 40 seconds per question. Here's how to manage your time:
+In many entrance exams, you have very limited time per question. Here's how to manage your time:
 
-- **Don't spend more than 1 minute on any question**
+- **Don't spend too long on any single question**
 - Skip difficult questions and come back to them
 - Answer the easy ones first to build confidence
 - Keep track of time — most CBT software shows a timer
 
 ## 3. The Elimination Strategy
 
-When you're unsure of an answer, **eliminate the obviously wrong options** first. In a 4-option MCQ:
+When you're unsure of an answer, **eliminate the obviously wrong options** first. In a multiple-choice question:
 
-- Eliminate 2 wrong answers → you now have a 50% chance
+- Eliminate 2 wrong answers → you now have a much higher chance of being right
 - Look for answers that are too extreme or too specific
 - "All of the above" and "None of the above" are often correct when present
 
@@ -159,22 +159,22 @@ Research shows that your **first instinct is usually correct**. Only change an a
 
 The best way to prepare for CBT exams is to **take as many practice tests as possible**. Alphify's Exam Mode lets you practice with timed, CBT-style questions tailored to your specific courses and university.
 
-**Start practicing today** — [Try Alphify's Exam Mode](/) for free.
+**Ready to dominate your next CBT?** Upload your past questions and let Ezra guide you through them in **Lecture Mode**. [Try Alphify for free](/).
 `,
   },
   {
-    slug: 'how-to-use-past-questions-to-pass-exams',
-    title: 'How to Use Past Questions to Pass University Exams in Nigeria',
-    excerpt: 'Past questions are gold. Learn how to analyze question patterns, predict what\'s coming, and use them to structure your revision effectively.',
+    slug: 'how-to-use-past-questions-for-mastery',
+    title: 'How to Use Past Questions for Topic Mastery',
+    excerpt: 'Past questions are gold for achieving academic dominance. Learn how to analyze question patterns and use Ezra AI to understand the logic behind every answer.',
     tag: 'Past Questions',
     emoji: '📝',
-    metaDescription: 'Learn how to use past questions effectively to predict exam questions and pass your university exams. Use Alphify Global Library for shared materials.',
-    keywords: ['past questions Nigeria', 'how to use past questions', 'university past questions', 'how to pass exams', 'Nigerian university exam tips', 'global library for students'],
+    metaDescription: 'Learn how to use past questions to achieve topic mastery. Use Ezra AI to explain the "why" behind every answer for academic dominance.',
+    keywords: ['past questions', 'how to use past questions', 'university past questions', 'how to pass exams', 'topic mastery', 'academic dominance'],
     publishedDate: '2026-01-05',
     content: `
 ## Why Past Questions Are Your Secret Weapon
 
-In Nigerian universities, lecturers often **repeat 40-60% of their questions** from previous years. This isn't a secret — it's a well-known pattern. The students who use past questions strategically have a massive advantage.
+In many universities, lecturers often **repeat a significant percentage of their questions** or themes from previous years. This isn't a secret — it's a well-known pattern. The students who use past questions strategically have a massive advantage.
 
 Here's exactly how to use them.
 
@@ -237,7 +237,7 @@ Upload your past questions to Alphify and ask Ezra to:
 
 Past questions aren't just about memorizing answers — they're about understanding **what your lecturer values** and preparing accordingly. Combined with AI-powered explanations from Alphify, you'll walk into your exam room with confidence.
 
-**Upload your past questions to Alphify** and let Ezra help you prepare — [Get started free](/).
+**Don't just memorize past questions.** Upload them to Ezra and use **Lecture Mode** to understand the core concepts. [Get started free](/).
 `,
   },
   {
@@ -252,7 +252,7 @@ Past questions aren't just about memorizing answers — they're about understand
     content: `
 ## Why Most Group Study Sessions Fail
 
-Let's be honest — most "group study" sessions in Nigerian universities go like this: you meet up, chat for 2 hours, maybe open a textbook, take selfies, and go home feeling like you studied. Sound familiar?
+Let's be honest — most "group study" sessions go like this: you meet up, chat for 2 hours, maybe open a textbook, take selfies, and go home feeling like you studied. Sound familiar?
 
 Group study CAN be incredibly effective, but only if you do it right.
 
@@ -322,23 +322,23 @@ With Alphify's Study Sessions, your group can study together even when you can't
   },
   {
     slug: 'how-to-manage-stress-as-a-university-student',
-    title: 'How to Manage Stress as a University Student in Nigeria',
-    excerpt: 'Between carry-overs, ASUU strikes, and tough lecturers — stress is real. Learn practical mental health tips that actually work for students.',
+    title: 'How to Manage Stress as a University Student',
+    excerpt: 'Between heavy workloads and tough exams — stress is real. Learn practical mental health tips that actually work for students.',
     tag: 'Wellness',
     emoji: '🧘',
-    metaDescription: 'Practical stress management tips for Nigerian university students dealing with academic pressure, strikes, and financial stress. Take care of your mental health.',
-    keywords: ['student stress management', 'mental health tips for students', 'how to manage stress in university', 'Nigerian student stress', 'academic stress tips'],
+    metaDescription: 'Practical stress management tips for university students dealing with academic pressure and financial stress. Take care of your mental health.',
+    keywords: ['student stress management', 'mental health tips for students', 'how to manage stress in university', 'academic stress tips'],
     publishedDate: '2026-01-25',
     content: `
-## The Reality of Student Stress in Nigeria
+## The Reality of Student Stress
 
-Nigerian university students face a unique combination of stressors that students in other countries don't deal with:
+University students face a unique combination of stressors:
 
-- **ASUU strikes** disrupting your academic calendar
-- **Carry-over courses** from lecturers who fail 70% of the class
-- **Financial pressure** from school fees, accommodation, and feeding
-- **Unstable power supply** making nighttime study difficult
-- **Overcrowded lecture halls** where you can barely hear the lecturer
+- **Tight schedules** disrupting your personal life
+- **Difficult courses** and tough grading criteria
+- **Financial pressure** from tuition, accommodation, and living expenses
+- **Performance anxiety** during peak exam seasons
+- **Large lecture halls** where it's hard to get individual attention
 
 It's okay to feel overwhelmed. But it's important to have strategies to manage that stress.
 
@@ -583,13 +583,13 @@ Combine these strategies with AI-powered learning on Alphify, and you'll walk in
 `,
   },
   {
-    slug: 'best-study-apps-for-students-2025',
-    title: 'Best Study Apps for Students in 2025: AI Tools That Actually Help You Learn',
-    excerpt: 'From AI tutors to flashcard apps, discover the best study tools that Nigerian and African students are using to ace their exams in 2025.',
+    slug: 'best-study-apps-for-academic-dominance',
+    title: 'Best Study Apps for Academic Dominance in 2025',
+    excerpt: 'Discover the best tools to help you move from confusion to topic mastery. We compare the top AI study assistants for 2025.',
     tag: 'Tools',
     emoji: '📱',
-    metaDescription: 'Discover the best study apps and AI tools for students in 2025. Compare features, pricing, and find the perfect app to boost your academic performance.',
-    keywords: ['best study apps', 'study apps for students', 'AI study tools', 'best apps for studying', 'learning apps 2025', 'student apps', 'free study apps'],
+    metaDescription: 'Discover the best study apps for academic dominance. Compare Ezra AI with other tools for understanding complex PDFs and mastering topics.',
+    keywords: ['best study apps', 'academic dominance', 'topic mastery', 'AI study tools', 'best apps for studying', 'learning apps 2025', 'student apps'],
     publishedDate: '2026-02-15',
     content: `
 ## The Right Tools Make All the Difference
@@ -670,7 +670,135 @@ For the ultimate study setup, combine:
 
 The key is not to use every tool available, but to choose a few that complement each other and use them consistently.
 
-**Start with Alphify** — [Sign up free](/) and experience AI-powered learning today.
+**Ready to dominate?** Join thousands of students using Ezra's **Lecture Mode** to master their courses. [Sign up for Alphify free](/) today.
+`,
+  },
+  {
+    slug: 'how-to-simplify-general-studies-with-ai',
+    title: 'How to Simplify General Studies with Ezra AI: A Guide to Topic Mastery',
+    excerpt: 'General Studies courses don\'t have to be a struggle. Learn how to use Ezra AI to break down dense materials and achieve academic dominance effortlessly.',
+    tag: 'Academic Dominance',
+    emoji: '📚',
+    metaDescription: 'Master General Studies with Ezra AI. Learn how to use AI to simplify complex course materials for university students.',
+    keywords: ['simplify general studies', 'master general studies', 'Ezra AI study', 'university study tips', 'topic mastery', 'academic dominance'],
+    publishedDate: '2026-02-20',
+    content: `
+## The Struggle with General Studies
+
+General Studies (GST or GNS) courses are often compulsory for first-year students. Whether you're in Science, Art, or Social Sciences, you likely have to face them. The challenge? The materials are often dense, theoretical, and feel like a lot to cram.
+
+But what if you didn't have to cram? What if you could achieve **Topic Mastery** in General Studies?
+
+---
+
+## 1. Upload Your Course PDF to Ezra
+
+Stop trying to read that 50-page PDF page by page without understanding. Upload it to Ezra. Ezra's AI is built to handle large documents and extract the most important concepts.
+
+## 2. Use "Lecture Mode" for Clarity
+
+Instead of just asking random questions, tell Ezra: **"Ezra, please lecture me through this material."**
+
+Ezra will:
+- Break down the history and philosophy into simple stories
+- Explain the core rules with relatable examples
+- Highlight the points your lecturer is likely to test
+
+## 3. Focus on "Clarity Over Cramming"
+
+General exams are often tricky because they test your understanding of subtle definitions. By using Ezra to get clarity on the *meaning* behind the text, you'll find that you don't need to cram. You'll simply *know* the material.
+
+## 4. Generate Specific Quizzes
+
+After each section Ezra explains, ask for a quiz. Ezra will generate questions that match the style of university exams, helping you practice under real conditions.
+
+---
+
+**Don't let General Studies hold you back.** Achieve academic dominance today.
+
+**[Try Ezra's Lecture Mode now](/)**
+`,
+  },
+  {
+    slug: 'mastering-first-year-physics-ezra-ai',
+    title: 'Mastering First-Year Physics with Ezra AI: Moving from Confusion to Dominance',
+    excerpt: 'First-year Physics can be intimidating. Learn how to use Ezra AI to solve complex calculations and understand the laws of physics with human-like explanations.',
+    tag: 'Topic Mastery',
+    emoji: '🧪',
+    metaDescription: 'Achieve mastery in first-year Physics using Ezra AI. Simple explanations for complex formulas, laws, and calculations.',
+    keywords: ['mastering physics', 'first year physics help', 'physics AI tutor', 'Ezra AI physics', 'university physics', 'topic mastery'],
+    publishedDate: '2026-02-25',
+    content: `
+## Why First-Year Physics Feels Hard
+
+For many students, first-year Physics is a "bottleneck" course. The jump from secondary school to university level is steep. The formulas are more complex, and the logic requires a deeper level of thinking.
+
+If you find yourself cramming formulas without knowing when to use them, you're not yet in **Academic Dominance**.
+
+---
+
+## 1. Breaking Down Complex Formulas
+
+Don't just look at a formula. Ask Ezra: **"Explain the logic behind this formula as if I'm a beginner."**
+
+Ezra will break down the variables and the relationship between them using real-world analogies. Once you understand the *why*, the *how* becomes easy.
+
+## 2. Step-by-Step Calculation Guide
+
+Got a tough physics problem? Upload a photo of it or type it out. Ezra doesn't just give you the answer; Ezra provides a **step-by-step breakdown**. This ensures you understand the process, which is critical for your exams.
+
+## 3. Understanding the "Big Picture"
+
+Physics is all about how the world works. Ezra helps you connect different topics—like Mechanics and Thermodynamics—so you see the big picture. This is the difference between passing and **dominating** the course.
+
+---
+
+**Stop being intimidated by Physics.** Master the topics and achieve the grades you deserve.
+
+**[Start Mastering Physics with Ezra](/)**
+`,
+  },
+  {
+    slug: 'understand-complex-nursing-pdfs-ezra-ai',
+    title: 'How to Understand Complex Nursing PDFs with Ezra AI',
+    excerpt: 'Nursing school is intense with massive PDFs to study. Learn how Ezra AI helps you simplify complex medical concepts and achieve academic dominance.',
+    tag: 'Nursing',
+    emoji: '🩺',
+    metaDescription: 'Simplify Nursing school materials with Ezra AI. Understand complex anatomy, physiology, and pharmacology PDFs with human-like AI explanations.',
+    keywords: ['nursing PDFs', 'complex nursing topics', 'nursing school AI', 'Ezra AI nursing', 'nursing students', 'understand complex PDFs'],
+    publishedDate: '2026-03-01',
+    content: `
+## The Nursing School Information Overload
+
+Nursing school is famous for its massive volume of study material. Anatomy, Physiology, Pharmacology—each course comes with hundreds of pages of complex PDFs that can be overwhelming to read on your own.
+
+If you're feeling like you're drowning in information, it's time to switch to **Topic Mastery**.
+
+---
+
+## 1. Summarize Large Nursing Modules
+
+Upload your 100-page module to Ezra. Ask Ezra to: **"Give me a high-level summary of the core concepts in this document."**
+
+This gives you a mental map of what you're about to study, making the details easier to digest.
+
+## 2. Simplify Medical Jargon
+
+Medical terminology can feel like a foreign language. When you encounter a complex term or process in your Nursing PDF, ask Ezra to explain it using simple, human-like language. Ezra excels at taking "doctor-speak" and turning it into something you can explain to anyone.
+
+## 3. Ezra's "Lecture Mode" for Anatomy
+
+Anatomy requires deep understanding, not just memorization. Use Ezra's **Lecture Mode** to have a conversation about the systems of the body. Ask questions like "What happens if this organ fails?" to test your understanding of the function, not just the name.
+
+## 4. Prepare for Professional Exams
+
+Nursing isn't just about university exams; it's about the professional boards. Ezra helps you prepare by focusing on the logic and application of Nursing concepts, ensuring you're ready for any challenge.
+
+---
+
+**Clarity is your best friend in Nursing school.** Don't just study—dominate.
+
+**[Simplify Your Nursing PDFs with Ezra](/)**
 `,
   },
 ];
