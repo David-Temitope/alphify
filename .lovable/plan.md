@@ -1,149 +1,88 @@
 
+# Plan: Voice Upgrade, Countries, Wallet Redesign, Onboarding & Help Desk
 
-# Global University Files and Department Admins
+## 1. Upgrade Voice to ElevenLabs TTS (Natural Human Voice)
 
-## Overview
-Replace the personal library with a shared university file system. Department admins (assigned by you) upload course files and exam samples that all students in the same university, department, and level can access. This reduces storage usage dramatically since one file serves hundreds of students.
+The current "Read Aloud" feature uses the browser's built-in `SpeechSynthesis` API, which always sounds robotic. We'll replace it with ElevenLabs Text-to-Speech for natural, human-like voice output.
 
-## How It Works
+**Backend:**
+- Create edge function `supabase/functions/elevenlabs-tts/index.ts` that:
+  - Receives text from the client
+  - Calls ElevenLabs TTS API with a warm, friendly voice (e.g. "Sarah" or "Jessica")
+  - Uses `eleven_turbo_v2_5` model for fast generation
+  - Streams audio back as binary MP3
+  - Configures voice settings for warmth (stability ~0.4, style ~0.3) to match the "close friend" personality
 
-```text
-+-----------------------------------------------------+
-|  You (App Owner)                                     |
-|  Assign admin role:                                  |
-|  "University of Abuja / Microbiology / 100L"         |
-+-----------------------------------------------------+
-                    |
-                    v
-+-----------------------------------------------------+
-|  Department Admin                                    |
-|  Uploads MCB101.pdf and exam samples                 |
-|  for University of Abuja / Microbiology / 100L       |
-+-----------------------------------------------------+
-                    |
-                    v
-+-----------------------------------------------------+
-|  All Students                                        |
-|  with university = "University of Abuja"             |
-|  field_of_study = "Microbiology"                     |
-|  university_level = "100L"                           |
-|  can see and use those files                         |
-+-----------------------------------------------------+
-```
+**Frontend:**
+- Update `src/hooks/useVoice.ts`:
+  - Replace the `speak()` function to call the ElevenLabs edge function via `fetch()` with `.blob()`
+  - Play audio using `new Audio(URL.createObjectURL(blob))`
+  - Keep browser SpeechSynthesis as a fallback if the edge function fails
+  - Track playing state with the Audio element's `onplay`/`onended` events
 
-## Database Changes
+**Config:**
+- Add `elevenlabs-tts` function entry to `supabase/config.toml` with `verify_jwt = false`
 
-### 1. Add `university` field to `user_settings`
-Add a new text column `university` so students can specify their university name (e.g., "University of Abuja").
+---
 
-### 2. Create `department_admins` table
-Stores which users are admins for which university/department/level combination. Only you can insert rows here (via a backend function or direct database access).
+## 2. Add More African Countries to Settings
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | The admin user |
-| university | text | e.g., "University of Abuja" |
-| department | text | e.g., "Microbiology" |
-| level | text | e.g., "100L" |
-| created_at | timestamp | When assigned |
+Update the `COUNTRIES` array in `src/pages/Settings.tsx` to include all major African nations plus more global options. Expand from the current ~11 entries to ~60+ countries, organized by region (Africa first, then other continents).
 
-RLS: Users can only SELECT their own rows. No INSERT/UPDATE/DELETE from client side (admin assignment is done by you via the database directly).
+Countries to add include: Tanzania, Uganda, Ethiopia, Rwanda, Cameroon, Senegal, Ivory Coast, Zimbabwe, Mozambique, DR Congo, Angola, Zambia, Malawi, Botswana, Namibia, Sierra Leone, Liberia, Somalia, Sudan, Tunisia, Morocco, Algeria, Libya, Madagascar, Mali, Niger, Burkina Faso, Benin, Togo, Guinea, Gambia, Mauritius, and more.
 
-### 3. Create `shared_files` table
-Stores files uploaded by department admins that are accessible to all matching students.
+---
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| uploaded_by | uuid | Admin who uploaded |
-| university | text | Target university |
-| department | text | Target department |
-| level | text | Target level |
-| course_code | text | e.g., "MCB101" |
-| file_name | text | Original filename |
-| file_path | text | Path in storage bucket |
-| file_type | text | MIME type |
-| file_size | bigint | Size in bytes |
-| extracted_text | text | Extracted PDF/document text (cached) |
-| file_category | text | 'course_material' or 'exam_sample' |
-| created_at | timestamp | Upload time |
+## 3. Redesign Wallet/KU Purchase Tab (Fintech Style)
 
-RLS:
-- SELECT: Any authenticated user whose `user_settings` matches the file's university + department + level can read
-- INSERT: Only department admins for the matching university/department/level
-- DELETE: Only the uploader
+Redesign `src/components/KUPurchase.tsx` and the wallet section of `src/pages/Settings.tsx` to look like a professional fintech app:
 
-### 4. Create security definer functions
-To avoid RLS recursion when checking if a user matches a shared file's target audience or is a department admin:
+- **Balance Card**: Large gradient card at top showing balance prominently, with a subtle wallet icon and "Available Balance" label (similar to Opay/Kuda/Palmpay style)
+- **Quick-Buy Grid**: Redesign package cards with colored accent borders, popular tag on "Standard", cleaner typography with unit price breakdown
+- **Transaction-like Layout**: Add section headers like "Top Up", "Custom Amount" with clean dividers
+- **Pending Payments**: Styled as transaction list items with status indicators (yellow dot for pending)
+- **Professional touches**: Subtle shadows, rounded corners, proper spacing, currency formatting
 
-- `is_department_admin(user_id, university, department, level)` - checks the `department_admins` table
-- `user_matches_shared_file(user_id, university, department, level)` - checks if user's settings match
+---
 
-## Frontend Changes
+## 4. New User Onboarding Prompt
 
-### 1. Settings Page - Add University Field
-Add a text input field for "University Name" in the Academic Information section (alongside field of study and level). This is critical because it determines which shared files a student can access.
+Add a banner/card on the Dashboard (`src/pages/Dashboard.tsx`) that shows only when a user hasn't set up their preferences yet (no `user_settings` record or key fields are null).
 
-### 2. Replace Library Page
-Transform the Library page from personal files to shared university files:
+- Display a friendly card: "Set up your preferences to get the best from Ezra" with a "Set Up Now" button that navigates to Settings
+- Auto-dismiss once preferences are saved
+- Check if `preferred_name`, `field_of_study`, and `ai_personality` are configured
+- Styled as a highlighted info card with a sparkle/wand icon
 
-- Show files filtered by the student's university + department + level
-- If the user is a department admin, show an "Upload" button and a file category selector (course material vs exam sample)
-- If the user is NOT an admin, the library is read-only (browse and "Ask Gideon about this" only)
-- Remove the personal slot system (no more slot purchases)
-- Group files by course code for easy navigation
+---
 
-### 3. Admin Upload Flow
-When a department admin uploads a file:
-- Upload to storage at path: `shared/{university}/{department}/{level}/{course_code}/{filename}`
-- If it's a PDF, automatically call `extract-pdf-text` and cache the extracted text in `shared_files.extracted_text`
-- If it's an exam sample, also extract text so Gideon can reference it
-- Save the record to `shared_files` table
+## 5. Help Desk / "How To" Section in Settings
 
-### 4. Chat Page - Use Shared Files
-When a student opens a shared file from the library:
-- If `extracted_text` is already cached in the database, use it directly (no need to re-extract -- saves AI credits)
-- If not cached, download and extract, then cache for future students
-- Pass the text to Gideon as `fileContent` just like personal files work today
+Add a new tab called "Help" to the Settings page with an accordion-based FAQ/guide:
 
-### 5. Exam Samples Integration
-When Gideon generates quizzes/exams for a student:
-- The `xplane-chat` edge function will query `shared_files` for exam samples matching the student's university + department + level + course
-- Include those exam sample texts in the system prompt so Gideon mimics the professor's style
-- This replaces the current per-user exam sample upload in Settings (though the general text field can remain as a fallback)
+- **Tab**: Add a 4th tab "Help" with a `HelpCircle` icon
+- **Content**: Accordion sections covering:
+  - "How to set up your preferences" - step-by-step guide
+  - "How to chat with Ezra effectively" - tips for better prompts
+  - "How to use Exam Mode" - walkthrough
+  - "How to use the Library" - upload and manage files
+  - "How to buy Knowledge Units" - payment guide
+  - "How to use Study Groups" - creating and joining
+  - "How to refer friends" - referral program explanation
+  - "How to use Assignment Assist" - 2 KU per prompt feature
+- Uses the existing `Accordion` component from the UI library
+- Clean, readable formatting with step numbers and tips
 
-## Backend Changes
+---
 
-### 1. Update `xplane-chat` Edge Function
-- Before building the system prompt, query `shared_files` for exam samples matching the student's profile
-- Append exam sample text to the system prompt: "Here are past exam questions from this student's university for reference..."
+## Technical Details
 
-### 2. Storage Organization
-- Keep the `user-files` bucket
-- Add a `shared/` prefix for shared university files
-- Storage RLS: Allow department admins to upload to `shared/` paths, allow matching students to download
+### Files to Create:
+- `supabase/functions/elevenlabs-tts/index.ts` - ElevenLabs TTS edge function
 
-### 3. Text Extraction Caching
-- When an admin uploads a PDF, extract text immediately and store in `shared_files.extracted_text`
-- When any student accesses the file, serve the cached text instead of re-extracting
-- This saves significant AI processing since extraction happens once, not per-student
-
-## Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| Migration SQL | Create | Add `university` column, create `department_admins`, `shared_files` tables, security definer functions, RLS policies |
-| `src/pages/Settings.tsx` | Modify | Add university name input field |
-| `src/pages/Library.tsx` | Rewrite | Show shared files, admin upload, remove personal slot system |
-| `src/pages/Chat.tsx` | Modify | Load shared file content (prefer cached text), pass to Gideon |
-| `src/components/FileUpload.tsx` | Modify | Support shared file uploads with category selection (course material vs exam sample) |
-| `supabase/functions/xplane-chat/index.ts` | Modify | Query shared exam samples for the student's profile and include in system prompt |
-
-## Security Considerations
-- Department admin assignment is done by you directly in the database -- no client-side admin creation
-- RLS ensures students can only see files matching their university/department/level
-- Admins can only upload to their assigned university/department/level
-- The `extracted_text` column is readable only by matching students (protected by RLS)
-- No privilege escalation: admin status is checked via a security definer function, not stored on profiles
-
+### Files to Modify:
+- `src/hooks/useVoice.ts` - Replace browser TTS with ElevenLabs
+- `src/pages/Settings.tsx` - Add countries, Help tab, wallet redesign
+- `src/components/KUPurchase.tsx` - Fintech-style redesign
+- `src/pages/Dashboard.tsx` - Add onboarding prompt for new users
+- `supabase/config.toml` - Add elevenlabs-tts function config
