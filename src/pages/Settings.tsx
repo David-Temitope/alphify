@@ -62,13 +62,13 @@ const COUNTRIES = [
 ];
 
 const UNIVERSITY_LEVELS = [
-  'Year 1 / 100L',
-  'Year 2 / 200L',
-  'Year 3 / 300L',
-  'Year 4 / 400L',
-  'Year 5 / 500L',
-  'Year 6 / 600L',
-  'Postgraduate'
+  'Year 1',
+  'Year 2',
+  'Year 3',
+  'Year 4',
+  'Year 5',
+  'Year 6',
+  'PGD'
 ];
 
 const AI_PERSONALITIES = [
