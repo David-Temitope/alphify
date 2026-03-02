@@ -157,8 +157,8 @@ export default function Auth() {
           </div>
 
           <h1 className="font-display text-4xl font-bold text-foreground leading-tight mb-6">
-            Study smarter,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-400 to-blue-400">not harder.</span>
+            Achieve Academic Dominance<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-cyan-400 to-blue-400">with Ezra AI.</span>
           </h1>
 
           <div className="space-y-5 mt-10">

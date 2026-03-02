@@ -209,9 +209,9 @@ export default function Index() {
             <span className="text-xs text-primary font-medium uppercase tracking-wider">AI-Powered University Learning</span>
           </div>
 
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-5 animate-fade-in-up max-w-4xl leading-tight">
-            Clarity Over{' '}
-            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent">Cramming</span>
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-5 animate-fade-in-up max-w-5xl leading-tight">
+            Achieve Academic Dominance with{' '}
+            <span className="bg-gradient-to-r from-primary via-cyan-400 to-blue-500 bg-clip-text text-transparent whitespace-nowrap">Ezra AI</span>
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.15s' }}>
