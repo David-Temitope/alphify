@@ -17,6 +17,7 @@ import {
   Search,
   Clock,
   LogOut,
+  Wand2,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
@@ -50,11 +51,13 @@ export default function Dashboard() {
   const { data: userSettings } = useQuery({
     queryKey: ['user-settings', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('user_settings').select('courses').eq('user_id', user!.id).single();
+      const { data } = await supabase.from('user_settings').select('courses, preferred_name, field_of_study, ai_personality').eq('user_id', user!.id).maybeSingle();
       return data;
     },
     enabled: !!user,
   });
+
+  const needsOnboarding = !userSettings || !userSettings.preferred_name || !userSettings.field_of_study || !userSettings.ai_personality?.length;
 
   const handleNewChat = async () => {
     if (!canChat) {
@@ -113,6 +116,24 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 space-y-6">
+        {/* Onboarding Prompt */}
+        {needsOnboarding && (
+          <button
+            onClick={() => navigate('/settings?tab=profile')}
+            className="w-full rounded-2xl bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/25 p-4 text-left transition-all hover:border-primary/40"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <Wand2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm text-foreground">Set up your preferences ✨</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Tell Ezra about yourself to get personalized explanations, study tips, and more.</p>
+                <span className="inline-block mt-2 text-xs font-medium text-primary">Set Up Now →</span>
+              </div>
+            </div>
+          </button>
+        )}
         {/* Low balance warning */}
         {balance <= 5 && balance > 0 && (
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-sm text-primary">

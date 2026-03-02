@@ -16,8 +16,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   User, GraduationCap, Globe, Sparkles, BookOpen, Save, Loader2, Brain, X,
-  CreditCard, AlertTriangle, Upload, Settings as SettingsIcon, Gift, Copy, Check
+  CreditCard, AlertTriangle, Upload, Settings as SettingsIcon, Gift, Copy, Check,
+  HelpCircle
 } from 'lucide-react';
+import HelpDesk from '@/components/HelpDesk';
 import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
@@ -43,8 +45,20 @@ const FIELDS_OF_STUDY = [
 ];
 
 const COUNTRIES = [
-  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'United States',
-  'United Kingdom', 'Canada', 'India', 'Australia', 'Other'
+  // Africa
+  'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Egypt', 'Tanzania', 'Uganda',
+  'Ethiopia', 'Rwanda', 'Cameroon', 'Senegal', 'Ivory Coast', 'Zimbabwe',
+  'Mozambique', 'DR Congo', 'Angola', 'Zambia', 'Malawi', 'Botswana',
+  'Namibia', 'Sierra Leone', 'Liberia', 'Somalia', 'Sudan', 'South Sudan',
+  'Tunisia', 'Morocco', 'Algeria', 'Libya', 'Madagascar', 'Mali', 'Niger',
+  'Burkina Faso', 'Benin', 'Togo', 'Guinea', 'Gambia', 'Mauritius',
+  'Cape Verde', 'Gabon', 'Congo', 'Chad', 'Eritrea', 'Djibouti',
+  'Equatorial Guinea', 'Eswatini', 'Lesotho', 'Comoros', 'Seychelles',
+  // Rest of world
+  'United States', 'United Kingdom', 'Canada', 'India', 'Australia',
+  'Germany', 'France', 'Brazil', 'China', 'Japan', 'UAE',
+  'Saudi Arabia', 'Pakistan', 'Bangladesh', 'Indonesia', 'Malaysia',
+  'Philippines', 'Turkey', 'Italy', 'Spain', 'Netherlands', 'Other'
 ];
 
 const UNIVERSITY_LEVELS = [
@@ -208,39 +222,20 @@ export default function Settings() {
       <main className="px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-secondary w-full">
-            <TabsTrigger value="profile" className="flex-1">Profile</TabsTrigger>
-            <TabsTrigger value="wallet" className="flex-1 flex items-center gap-1">
+            <TabsTrigger value="profile" className="flex-1 text-xs sm:text-sm">Profile</TabsTrigger>
+            <TabsTrigger value="wallet" className="flex-1 flex items-center gap-1 text-xs sm:text-sm">
               <CreditCard className="h-3.5 w-3.5" /> Wallet
             </TabsTrigger>
-            <TabsTrigger value="account" className="flex-1 flex items-center gap-1">
+            <TabsTrigger value="account" className="flex-1 flex items-center gap-1 text-xs sm:text-sm">
               <User className="h-3.5 w-3.5" /> Account
+            </TabsTrigger>
+            <TabsTrigger value="help" className="flex-1 flex items-center gap-1 text-xs sm:text-sm">
+              <HelpCircle className="h-3.5 w-3.5" /> Help
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="wallet" className="space-y-4">
-            {/* KU Balance */}
-            <section className="p-4 rounded-2xl bg-card border border-border">
-              <h2 className="font-display text-base font-semibold mb-3">Knowledge Units Balance</h2>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-3xl font-bold text-foreground">{balance}</p>
-                  <p className="text-sm text-muted-foreground">Knowledge Units available</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">₦35 per unit</p>
-                </div>
-              </div>
-              {balance <= 5 && (
-                <p className="text-sm text-primary mt-3">
-                  {balance === 0 ? '🔴 No units left — top up to continue learning!' : '⚡ Running low — top up soon!'}
-                </p>
-              )}
-            </section>
-
-            <section>
-              <h2 className="font-display text-base font-semibold mb-3">Buy Knowledge Units</h2>
-              <KUPurchase onSuccess={() => refetchKU()} />
-            </section>
+            <KUPurchase onSuccess={() => refetchKU()} />
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-4">
@@ -506,6 +501,10 @@ export default function Settings() {
               </p>
               <AccountDeletion />
             </section>
+          </TabsContent>
+
+          <TabsContent value="help" className="space-y-4">
+            <HelpDesk />
           </TabsContent>
         </Tabs>
       </main>
