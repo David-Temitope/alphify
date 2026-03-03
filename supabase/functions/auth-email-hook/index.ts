@@ -16,12 +16,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Welcome to Alphify — verify your email 🎓',
+  invite: "You've been invited to Alphify! 🎉",
+  magiclink: 'Your Alphify login link ✨',
+  recovery: 'Reset your Alphify password 🔑',
+  email_change: 'Confirm your new email ✉️',
+  reauthentication: 'Your Alphify verification code 🔐',
 }
 
 // Template mapping

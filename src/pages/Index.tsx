@@ -447,9 +447,9 @@ export default function Index() {
             <button onClick={() => navigate('/terms')} className="text-muted-foreground text-sm hover:text-foreground transition-colors">Terms of Service</button>
           </div>
           <p className="text-muted-foreground text-sm">
-            Built with ❤️ by <span className="text-primary font-medium">Alphadominity</span>
+            Founded &amp; built by <span className="text-primary font-medium">Obasa David Temitope</span> under <span className="text-primary font-medium">Alphadominity</span>
           </p>
-          <p className="text-muted-foreground text-sm">© 2026 Alphadominity. All rights reserved.</p>
+          <p className="text-muted-foreground text-sm">© 2024–{new Date().getFullYear()} Alphadominity. All rights reserved.</p>
         </div>
       </footer>
     </div>

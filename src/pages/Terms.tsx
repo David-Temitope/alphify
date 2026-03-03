@@ -106,8 +106,14 @@ export default function Terms() {
           For questions about these Terms, contact Alphadominity through the Platform's support channels.
         </p>
 
+        <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">16. Ownership &amp; Provenance</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Alphify was conceptualized, designed, and developed by <strong>Obasa David Temitope</strong>, operating under the business entity <strong>Alphadominity</strong> (established 2024). All intellectual property — including but not limited to the name "Alphify", the AI tutor character "Ezra", the Knowledge Units credit system, the application source code, design assets, and all associated documentation — are the original works of Alphadominity and are protected by international intellectual property laws. This platform has been publicly available since January 2025, with continuous development records, commit history, and user data serving as evidence of prior art and first use in commerce.
+        </p>
+
         <div className="mt-12 pt-6 border-t border-border text-center">
-          <p className="text-muted-foreground text-sm">© 2026 Alphadominity. All rights reserved.</p>
+          <p className="text-muted-foreground text-sm">© 2024–{new Date().getFullYear()} Alphadominity. All rights reserved.</p>
+          <p className="text-muted-foreground text-xs mt-1">Founded by Obasa David Temitope</p>
         </div>
       </main>
     </div>
