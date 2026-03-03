@@ -8,10 +8,11 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Img,
-  Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -29,37 +30,50 @@ export const SignupEmail = ({
   confirmationUrl,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Welcome to Alphify — verify your email to get started</Preview>
+    <Head>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+      `}</style>
+    </Head>
+    <Preview>Welcome to Alphify — let's get you started! 🎓</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://alphify.lovable.app/alphify-icon-192.png"
-          width="48"
-          height="48"
-          alt="Alphify"
-          style={logo}
-        />
+        <Section style={headerSection}>
+          <Img
+            src="https://alphify.lovable.app/alphify-icon-192.png"
+            width="56"
+            height="56"
+            alt="Alphify"
+            style={logo}
+          />
+        </Section>
+
         <Heading style={h1}>Welcome aboard! 🎓</Heading>
         <Text style={text}>
-          Hey there! Thanks for joining{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>Alphify</strong>
-          </Link>
-          . Ezra, your AI study companion, is ready to help you learn smarter.
+          Hey there! You're one step away from meeting <strong style={highlight}>Ezra</strong> — your personal AI study companion who adapts to your learning style.
         </Text>
         <Text style={text}>
-          Just confirm your email (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) to get started:
+          Tap the button below to verify your email and unlock your account:
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Verify My Email
-        </Button>
+
+        <Section style={buttonContainer}>
+          <Button style={button} href={confirmationUrl}>
+            Verify My Email
+          </Button>
+        </Section>
+
+        <Text style={smallText}>
+          If the button doesn't work, copy and paste this link into your browser:
+        </Text>
+        <Text style={linkText}>{confirmationUrl}</Text>
+
+        <Hr style={divider} />
+
         <Text style={footer}>
-          If you didn't sign up for Alphify, you can safely ignore this email.
+          You're receiving this because someone signed up at Alphify with this email. If it wasn't you, just ignore this.
+        </Text>
+        <Text style={footerBrand}>
+          Alphify by Alphadominity · © {new Date().getFullYear()}
         </Text>
       </Container>
     </Body>
@@ -68,30 +82,65 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', 'Space Grotesk', Arial, sans-serif" }
-const container = { padding: '32px 28px' }
-const logo = { marginBottom: '24px', borderRadius: '12px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: "'Inter', 'Space Grotesk', Arial, sans-serif",
+}
+const container = {
+  maxWidth: '480px',
+  margin: '0 auto',
+  padding: '40px 28px 32px',
+}
+const headerSection = { marginBottom: '28px' }
+const logo = { borderRadius: '14px' }
 const h1 = {
-  fontSize: '24px',
+  fontSize: '26px',
   fontWeight: 'bold' as const,
   color: '#0f172a',
-  margin: '0 0 20px',
+  margin: '0 0 16px',
   fontFamily: "'Space Grotesk', Arial, sans-serif",
 }
 const text = {
   fontSize: '15px',
-  color: '#6b7280',
-  lineHeight: '1.6',
-  margin: '0 0 24px',
+  color: '#475569',
+  lineHeight: '1.7',
+  margin: '0 0 16px',
 }
-const link = { color: '#0CBDCF', textDecoration: 'underline' }
+const highlight = { color: '#0CBDCF' }
+const buttonContainer = { textAlign: 'center' as const, margin: '28px 0' }
 const button = {
   backgroundColor: '#0CBDCF',
   color: '#ffffff',
   fontSize: '15px',
   fontWeight: '600' as const,
   borderRadius: '12px',
-  padding: '14px 24px',
+  padding: '14px 32px',
   textDecoration: 'none',
+  display: 'inline-block',
 }
-const footer = { fontSize: '12px', color: '#9ca3af', margin: '32px 0 0' }
+const smallText = {
+  fontSize: '12px',
+  color: '#94a3b8',
+  lineHeight: '1.5',
+  margin: '0 0 4px',
+}
+const linkText = {
+  fontSize: '12px',
+  color: '#0CBDCF',
+  lineHeight: '1.5',
+  wordBreak: 'break-all' as const,
+  margin: '0 0 24px',
+}
+const divider = { borderColor: '#e2e8f0', margin: '28px 0' }
+const footer = {
+  fontSize: '12px',
+  color: '#94a3b8',
+  lineHeight: '1.5',
+  margin: '0 0 8px',
+}
+const footerBrand = {
+  fontSize: '11px',
+  color: '#cbd5e1',
+  margin: '0',
+  fontFamily: "'Space Grotesk', Arial, sans-serif",
+}
