@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ import BottomNav from '@/components/BottomNav';
 
 export default function LectureMode() {
   const { user } = useAuth();
+  const { balance, canChat } = useKnowledgeUnits();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -76,6 +78,17 @@ export default function LectureMode() {
 
   const handleStartLecture = async () => {
     if (!user) return;
+
+    if (!canChat) {
+      toast({
+        title: 'No Knowledge Units',
+        description: 'You need at least 1 KU to start a lecture. Top up your wallet!',
+        variant: 'destructive',
+      });
+      navigate('/settings?tab=wallet');
+      return;
+    }
+
     if (!topic && !uploadedFile) {
       toast({
         title: 'Missing information',
@@ -106,6 +119,7 @@ export default function LectureMode() {
             reader.onload = () => resolve((reader.result as string).split(',')[1]);
             reader.onerror = reject;
           });
+          reader.readAsDataURL(uploadedFile);
           const pdfBase64 = await base64Promise;
 
           const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
@@ -121,6 +135,7 @@ export default function LectureMode() {
             reader.onload = () => resolve((reader.result as string).split(',')[1]);
             reader.onerror = reject;
           });
+          reader.readAsDataURL(uploadedFile);
           const imageBase64 = await base64Promise;
 
           const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-image', {
@@ -282,6 +297,14 @@ export default function LectureMode() {
             {isProcessing ? 'Preparing your lecture...' : 'Start Lecture'}
           </Button>
         </div>
+
+        {balance <= 3 && balance > 0 && (
+          <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 text-center">
+            <p className="text-xs text-muted-foreground">
+              You have {balance} KU remaining. A lecture consumes 1 KU per prompt.
+            </p>
+          </div>
+        )}
 
         <section className="bg-primary/5 rounded-2xl p-5 border border-primary/10">
           <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">

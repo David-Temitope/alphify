@@ -23,6 +23,7 @@ import {
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import ReturningUserNudge from '@/components/ReturningUserNudge';
+import { requestNotificationPermission } from '@/lib/firebase';
 import { format } from 'date-fns';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -85,12 +86,12 @@ export default function Dashboard() {
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
   const courses = userSettings?.courses || [];
 
-  // Request notification permission
+  // Request notification permission and get FCM token
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    if (user) {
+      requestNotificationPermission(user.id);
     }
-  }, []);
+  }, [user]);
 
   return (
     <div className="min-h-[100dvh] bg-background pb-20">
