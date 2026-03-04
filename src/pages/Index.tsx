@@ -97,13 +97,19 @@ export default function Index() {
           }
         },
         {
+          "@type": "WebSite",
+          "name": "Alphify",
+          "url": "https://alphify.site"
+        },
+        {
           "@type": "Organization",
-          "name": "Alphify by Alphadominity",
+          "name": "Alphify",
           "url": "https://alphify.site",
           "logo": "https://alphify.site/alphify-icon-512.webp",
           "sameAs": [
             "https://twitter.com/alphadominity",
-            "https://facebook.com/alphify"
+            "https://facebook.com/alphify",
+            "https://alphadominity.com"
           ]
         },
         {
