@@ -106,6 +106,7 @@ export default function LectureMode() {
             reader.onload = () => resolve((reader.result as string).split(',')[1]);
             reader.onerror = reject;
           });
+          reader.readAsDataURL(uploadedFile);
           const pdfBase64 = await base64Promise;
 
           const { data: extractionData, error: extractionError } = await supabase.functions.invoke('extract-pdf-text', {
@@ -121,6 +122,7 @@ export default function LectureMode() {
             reader.onload = () => resolve((reader.result as string).split(',')[1]);
             reader.onerror = reject;
           });
+          reader.readAsDataURL(uploadedFile);
           const imageBase64 = await base64Promise;
 
           const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-image', {
