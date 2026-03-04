@@ -6,7 +6,7 @@ import {
   Sparkles,
   ChevronRight,
   BookOpen,
-  BrainCircle,
+  Brain,
   Zap,
   Target
 } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function ReturningUserNudge() {
     queryFn: async () => {
       const { data } = await supabase
         .from('user_settings')
-        .select('last_studied_at, last_studied_topic, last_studied_file_id')
+        .select('courses, field_of_study')
         .eq('user_id', user!.id)
         .maybeSingle();
       return data;
@@ -36,15 +36,8 @@ export default function ReturningUserNudge() {
     setNudgeType(types[Math.floor(Math.random() * types.length)]);
   }, []);
 
-  if (!userSettings?.last_studied_topic) return null;
-
-  // Only show if they haven't been seen today or just logged back in
-  const lastStudied = new Date(userSettings.last_studied_at);
-  const now = new Date();
-  const diffInHours = (now.getTime() - lastStudied.getTime()) / (1000 * 60 * 60);
-
-  // If they studied less than 2 hours ago, don't nudge them yet
-  if (diffInHours < 2) return null;
+  const studyTopic = userSettings?.field_of_study || (userSettings?.courses as string[] | null)?.[0];
+  if (!studyTopic) return null;
 
   const handleContinue = () => {
     navigate('/lecture'); // Or deep link to the specific file/topic
@@ -56,21 +49,21 @@ export default function ReturningUserNudge() {
         return {
           icon: <BookOpen className="h-5 w-5 text-primary" />,
           title: "Next-Chapter Preview",
-          description: `Ready to see what's next in ${userSettings.last_studied_topic}? Let's keep the momentum!`,
+          description: `Ready to see what's next in ${studyTopic}? Let's keep the momentum!`,
           action: "See Next Topic"
         };
       case 'challenge':
         return {
           icon: <Target className="h-5 w-5 text-amber-500" />,
           title: "Mastery Challenge",
-          description: `You mastered ${userSettings.last_studied_topic} recently. Quick 3-min quiz to lock it in?`,
+          description: `You mastered ${studyTopic} recently. Quick 3-min quiz to lock it in?`,
           action: "Start Quiz"
         };
       case 'hook':
         return {
           icon: <Zap className="h-5 w-5 text-violet-500" />,
           title: "Did you know?",
-          description: `There's a crazy real-world analogy for ${userSettings.last_studied_topic} I haven't told you yet...`,
+          description: `There's a crazy real-world analogy for ${studyTopic} I haven't told you yet...`,
           action: "Show Me"
         };
     }

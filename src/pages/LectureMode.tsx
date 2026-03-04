@@ -162,12 +162,7 @@ export default function LectureMode() {
 
       if (convError) throw convError;
 
-      // Update user study history
-      await supabase.from('user_settings').update({
-        last_studied_at: new Date().toISOString(),
-        last_studied_file_id: fileId,
-        last_studied_topic: topic || (uploadedFile ? uploadedFile.name : null)
-      }).eq('user_id', user.id);
+      // Study history tracked via conversations
 
       // Start the lecture in chat
       const prompt = textContent
