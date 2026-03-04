@@ -155,6 +155,39 @@ Deno.serve(async (req) => {
       type: 'group_prompt',
       description: `Group session: ${topic || 'Study session'}`
     });
+
+    // Send Firebase Notification to participants for Ezra's reply
+    try {
+      const { data: participants } = await groupServiceClient
+        .from("session_participants")
+        .select("user_id")
+        .eq("session_id", sessionId)
+        .eq("is_active", true);
+
+      if (participants) {
+        for (const participant of participants) {
+          // Skip the person who sent the current message? Maybe not, Ezra is replying to the whole group
+          await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${groupServiceKey}`,
+            },
+            body: JSON.stringify({
+              userId: participant.user_id,
+              title: "Ezra is replying in group... 🧠",
+              body: `Study session: ${topic || 'New message'}`,
+              data: {
+                link: `https://alphify.site/session/${sessionId}`,
+                type: 'group_chat_reply'
+              }
+            }),
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Firebase group chat notification failed:", e);
+    }
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

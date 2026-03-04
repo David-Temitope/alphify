@@ -17,15 +17,29 @@ export default function ReturningUserNudge() {
   const navigate = useNavigate();
   const [nudgeType, setNudgeType] = useState<'preview' | 'challenge' | 'hook'>('preview');
 
-  const { data: userSettings } = useQuery({
-    queryKey: ['user-settings-nudge', user?.id],
+  const { data: userData } = useQuery({
+    queryKey: ['user-nudge-data', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('user_settings')
-        .select('courses, field_of_study')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-      return data;
+      const [settingsRes, lastExamRes] = await Promise.all([
+        supabase
+          .from('user_settings')
+          .select('courses, field_of_study, preferred_name')
+          .eq('user_id', user!.id)
+          .maybeSingle(),
+        supabase
+          .from('exam_attempts')
+          .select('course, score, max_score')
+          .eq('user_id', user!.id)
+          .eq('status', 'completed')
+          .order('completed_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ]);
+
+      return {
+        settings: settingsRes.data,
+        lastExam: lastExamRes.data
+      };
     },
     enabled: !!user,
   });
@@ -36,40 +50,70 @@ export default function ReturningUserNudge() {
     setNudgeType(types[Math.floor(Math.random() * types.length)]);
   }, []);
 
-  const studyTopic = userSettings?.field_of_study || (userSettings?.courses as string[] | null)?.[0];
-  if (!studyTopic) return null;
+  const studyTopic = userData?.settings?.field_of_study || (userData?.settings?.courses as string[] | null)?.[0];
+  const preferredName = userData?.settings?.preferred_name || user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
 
-  const handleContinue = () => {
-    navigate('/lecture'); // Or deep link to the specific file/topic
-  };
+  if (!studyTopic && !userData?.lastExam) return null;
 
   const getNudgeContent = () => {
+    const lastExam = userData?.lastExam;
+
+    // Priority: If they just finished an exam, talk about it
+    if (lastExam && Math.random() > 0.4) {
+      const percentage = Math.round((lastExam.score! / lastExam.max_score) * 100);
+      if (percentage >= 70) {
+        return {
+          icon: <Sparkles className="h-5 w-5 text-primary" />,
+          title: "Outstanding Performance!",
+          description: `Excellent work on that ${lastExam.course} test, ${preferredName}! ${percentage}% is impressive. Ready for the next one?`,
+          action: "Next Challenge",
+          path: "/exam"
+        };
+      } else {
+        return {
+          icon: <Target className="h-5 w-5 text-amber-500" />,
+          title: "Room for Growth",
+          description: `${preferredName}, I saw the ${lastExam.course} score. No worries, even the best lecturers started somewhere! Let's review the tricky parts?`,
+          action: "Review Topic",
+          path: "/lecture"
+        };
+      }
+    }
+
     switch (nudgeType) {
       case 'preview':
         return {
           icon: <BookOpen className="h-5 w-5 text-primary" />,
-          title: "Next-Chapter Preview",
-          description: `Ready to see what's next in ${studyTopic}? Let's keep the momentum!`,
-          action: "See Next Topic"
+          title: "Lecturer's Insight",
+          description: `Hey ${preferredName}, did you know the next part of ${studyTopic} is usually the most failed in exams? Let's master it now.`,
+          action: "Start Lecture",
+          path: "/lecture"
         };
       case 'challenge':
         return {
-          icon: <Target className="h-5 w-5 text-amber-500" />,
-          title: "Mastery Challenge",
-          description: `You mastered ${studyTopic} recently. Quick 3-min quiz to lock it in?`,
-          action: "Start Quiz"
+          icon: <Brain className="h-5 w-5 text-violet-500" />,
+          title: "Pop Quiz!",
+          description: `${preferredName}, let's see if you still remember those key concepts from ${studyTopic}. Quick drill?`,
+          action: "Take Quiz",
+          path: "/exam"
         };
       case 'hook':
+      default:
         return {
-          icon: <Zap className="h-5 w-5 text-violet-500" />,
+          icon: <Zap className="h-5 w-5 text-amber-500" />,
           title: "Did you know?",
-          description: `There's a crazy real-world analogy for ${studyTopic} I haven't told you yet...`,
-          action: "Show Me"
+          description: `There's a real-world hack for ${studyTopic} that'll make your next exam a breeze, ${preferredName}. Want to see?`,
+          action: "Show Me",
+          path: "/lecture"
         };
     }
   };
 
   const content = getNudgeContent();
+
+  const handleContinue = () => {
+    navigate(content.path);
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-top-4 duration-500">

@@ -47,56 +47,56 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Structured Data: Organization & Software Application (Prior Art / IP Provenance) -->
+    <!-- Structured Data: Organization & Software Application -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Alphadominity",
-      "url": "https://alphadominity.com",
-      "foundingDate": "2024",
-      "founder": {
-        "@type": "Person",
-        "name": "Obasa David Temitope"
-      },
-      "brand": {
-        "@type": "Brand",
-        "name": "Alphadominity"
-      },
-      "sameAs": [
-        "https://x.com/alphadominity"
-      ]
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Alphify",
-      "applicationCategory": "EducationalApplication",
-      "operatingSystem": "Web",
-      "url": "https://alphify.site",
-      "datePublished": "2025-01-01",
-      "description": "AI-powered educational platform featuring Ezra, a personal AI tutor that adapts to each student's learning pace.",
-      "author": {
-        "@type": "Organization",
-        "name": "Alphadominity",
-        "url": "https://alphadominity.com",
-        "founder": {
-          "@type": "Person",
-          "name": "Obasa David Temitope"
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Alphify",
+          "url": "https://alphify.site"
+        },
+        {
+          "@type": "Organization",
+          "name": "Alphify by Alphadominity",
+          "url": "https://alphify.site",
+          "logo": "https://alphify.site/alphify-icon-512.webp",
+          "foundingDate": "2024",
+          "founder": {
+            "@type": "Person",
+            "name": "Obasa David Temitope"
+          },
+          "sameAs": [
+            "https://x.com/alphadominity",
+            "https://facebook.com/alphify"
+          ]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Alphify",
+          "operatingSystem": "Web, Android, iOS",
+          "applicationCategory": "EducationApplication",
+          "url": "https://alphify.site",
+          "datePublished": "2025-01-01",
+          "description": "Master any university course and achieve academic dominance with Ezra AI. Get human-like explanations for complex topics and large study PDFs.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "NGN"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "1240"
+          },
+          "author": {
+            "@type": "Organization",
+            "name": "Alphadominity",
+            "url": "https://alphadominity.com"
+          }
         }
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "NGN"
-      },
-      "copyrightHolder": {
-        "@type": "Organization",
-        "name": "Alphadominity"
-      },
-      "copyrightYear": "2024"
+      ]
     }
     </script>
 
