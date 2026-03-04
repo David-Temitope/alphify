@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
+import ReturningUserNudge from '@/components/ReturningUserNudge';
 import { format } from 'date-fns';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -83,6 +84,13 @@ export default function Dashboard() {
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
   const courses = userSettings?.courses || [];
 
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   return (
     <div className="min-h-[100dvh] bg-background pb-20">
       {/* Top Header */}
@@ -116,6 +124,9 @@ export default function Dashboard() {
       </header>
 
       <main className="px-4 space-y-6">
+        {/* Returning User Nudge */}
+        <ReturningUserNudge />
+
         {/* Onboarding Prompt */}
         {needsOnboarding && (
           <button
@@ -160,7 +171,18 @@ export default function Dashboard() {
                 <MessageSquarePlus className="h-5 w-5 text-primary" />
               </div>
               <p className="font-medium text-sm text-foreground">Ask Ezra</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Start chat</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Quick help</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/lecture')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 p-4 text-left hover:border-indigo-500/40 transition-all shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-3">
+                <BookOpen className="h-5 w-5 text-indigo-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Lecture Mode</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Master topics</p>
             </button>
 
             <button
@@ -179,7 +201,7 @@ export default function Dashboard() {
               className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20 p-4 text-left hover:border-blue-500/40 transition-all"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
-                <BookOpen className="h-5 w-5 text-blue-500" />
+                <FileText className="h-5 w-5 text-blue-500" />
               </div>
               <p className="font-medium text-sm text-foreground">Library</p>
               <p className="text-xs text-muted-foreground mt-0.5">{files?.length ?? 0} docs</p>
