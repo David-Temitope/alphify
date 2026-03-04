@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Community from "./pages/Community";
 import StudySession from "./pages/StudySession";
 import ExamMode from "./pages/ExamMode";
+import LectureMode from "./pages/LectureMode";
 import GroupChat from "./pages/GroupChat";
 import MateChat from "./pages/MateChat";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lecture"
+              element={
+                <ProtectedRoute>
+                  <LectureMode />
                 </ProtectedRoute>
               }
             />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,6 +73,8 @@ export default function Chat() {
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
+  const { state } = useLocation();
+  const hasInitializedLecture = useRef(false);
   
   // Knowledge Units
   const { balance, canChat, refetch: refetchKU } = useKnowledgeUnits();
@@ -339,7 +341,7 @@ export default function Chat() {
     return data.id;
   }, [conversationId, user, queryClient, navigate, toast]);
 
-  const handleSendMessage = useCallback(async (text?: string) => {
+  const handleSendMessage = useCallback(async (text?: string, customFileContent?: string) => {
     const messageToSend = text || input.trim();
     if (!messageToSend || isStreaming || balance < (chatMode === 'assignment' ? 2 : 1)) {
       if (!messageToSend || isStreaming) return;
@@ -418,7 +420,7 @@ Student Profile:
         },
         body: JSON.stringify({ 
           messages: messageHistory,
-          fileContent: fileContent,
+          fileContent: customFileContent || fileContent,
           personalization: personalizationContext,
           mode: chatMode || undefined,
         }),
@@ -533,6 +535,14 @@ Student Profile:
       setStreamingContent('');
     }
   }, [input, isStreaming, resolveConversationId, user, messages, fileContent, userSettings, toast, queryClient, balance, chatMode]);
+
+  // Handle initialization from Lecture Mode
+  useEffect(() => {
+    if (state?.initialMessage && !hasInitializedLecture.current && conversationId && messages.length === 0 && !isStreaming) {
+      hasInitializedLecture.current = true;
+      handleSendMessage(state.initialMessage, state.fileContent);
+    }
+  }, [state, conversationId, messages.length, isStreaming, handleSendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

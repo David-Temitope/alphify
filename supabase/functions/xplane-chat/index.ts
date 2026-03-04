@@ -458,9 +458,10 @@ Deno.serve(async (req) => {
 You are in Document Lecture Mode. You MUST follow these rules strictly:
 
 1. You must ONLY teach content that appears in the document text above between "DOCUMENT TEXT START" and "DOCUMENT TEXT END".
-2. Start by identifying the document structure: title page, table of contents, and content pages.
-3. Begin lecturing from where the ACTUAL CONTENT starts, NOT from the title page or author information.
-4. Skip metadata pages (title pages, author names, publisher info, copyright notices) — acknowledge them briefly if relevant, then move to actual topics.
+2. Start the lecture IMMEDIATELY. Do not spend time on long introductions or asking if the student is ready.
+3. Start by identifying the document structure: title page, table of contents, and content pages.
+4. Begin lecturing from where the ACTUAL CONTENT starts, NOT from the title page or author information.
+5. Skip metadata pages (title pages, author names, publisher info, copyright notices) — acknowledge them briefly if relevant, then move to actual topics.
 5. NEVER fabricate, hallucinate, or add information that is NOT in the document. Every fact you teach must come directly from the document text.
 6. If something in the document is unclear or incomplete, say so honestly: "The document doesn't elaborate on this point."
 7. Follow the document's structure and order of topics.
