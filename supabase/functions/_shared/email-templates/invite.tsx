@@ -39,7 +39,7 @@ export const InviteEmail = ({
       <Container style={container}>
         <Section style={headerSection}>
           <Img
-            src="https://alphify.lovable.app/alphify-icon-192.png"
+            src="https://alphify.site/alphify-icon-192.png"
             width="56"
             height="56"
             alt="Alphify"
