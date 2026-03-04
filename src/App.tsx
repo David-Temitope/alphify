@@ -21,6 +21,7 @@ import GroupChat from "./pages/GroupChat";
 import MateChat from "./pages/MateChat";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
+import SEO from "./components/SEO";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SEO />
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />

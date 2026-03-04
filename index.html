@@ -14,6 +14,19 @@
     <meta name="keywords" content="academic dominance, topic mastery, Ezra AI tutor, human-like AI, university study tips, understand complex PDFs, master difficult courses, AI study companion, academic success, Nigerian university students">
     <meta name="author" content="Alphadominity">
     <meta name="msvalidate.01" content="954CC73173E97B20239CB0984798023D" />
+
+    <!-- SEO: Domain-Based Noindex for Lovable Subdomain -->
+    <script>
+      (function() {
+        if (window.location.hostname.endsWith('lovable.app')) {
+          var meta = document.createElement('meta');
+          meta.name = 'robots';
+          meta.content = 'noindex, nofollow';
+          document.head.appendChild(meta);
+        }
+      })();
+    </script>
+
     <link rel="canonical" href="https://alphify.site/" />
 
     <!-- Open Graph / Facebook -->
@@ -47,13 +60,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Structured Data: Organization & Software Application (Prior Art / IP Provenance) -->
+    <!-- Structured Data: Organization, WebSite & Software Application -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Alphify",
+      "url": "https://alphify.site"
+    }
+    </script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Alphadominity",
-      "url": "https://alphadominity.com",
+      "name": "Alphify",
+      "url": "https://alphify.site",
+      "logo": "https://alphify.site/alphify-icon-512.webp",
       "foundingDate": "2024",
       "founder": {
         "@type": "Person",
@@ -61,10 +83,11 @@
       },
       "brand": {
         "@type": "Brand",
-        "name": "Alphadominity"
+        "name": "Alphify"
       },
       "sameAs": [
-        "https://x.com/alphadominity"
+        "https://x.com/alphadominity",
+        "https://alphadominity.com"
       ]
     }
     </script>
