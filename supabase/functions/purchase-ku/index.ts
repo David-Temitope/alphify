@@ -224,100 +224,36 @@ Deno.serve(async (req) => {
       }
     }
 
-    const totalUnits = units + bonusKu;
-
-    // Credit wallet
-    if (target === "personal") {
-      const { data: wallet } = await serviceClient
-        .from("ku_wallets").select("balance").eq("user_id", user.id).maybeSingle();
-
-      if (wallet) {
-        await serviceClient.from("ku_wallets")
-          .update({ balance: wallet.balance + totalUnits })
-          .eq("user_id", user.id);
-      } else {
-        await serviceClient.from("ku_wallets")
-          .insert({ user_id: user.id, balance: totalUnits + 3 });
-      }
-    } else {
-      const { data: groupWallet } = await serviceClient
-        .from("group_wallets").select("balance").eq("group_id", groupIdResolved).maybeSingle();
-
-      if (groupWallet) {
-        await serviceClient.from("group_wallets")
-          .update({ balance: groupWallet.balance + totalUnits })
-          .eq("group_id", groupIdResolved);
-      } else {
-        await serviceClient.from("group_wallets")
-          .insert({ group_id: groupIdResolved, balance: totalUnits });
-      }
-    }
-
     const planLabel = packageTypeResolved ? `ku_${packageTypeResolved}_${target}` : `ku_custom_${units}_${target}`;
+    const amountKobo = paystackData?.data?.amount || expectedAmount;
 
-    // Log transaction
-    const description = bonusKu > 0
-      ? `Purchased ${units} KU + ${bonusKu} bonus KU (promo: ${promoCodeResolved}) for ${target} wallet`
-      : `Purchased ${units} KU for ${target} wallet`;
+    console.log(`Executing atomic handle_ku_purchase for ref ${reference}. Units: ${units}, Bonus: ${bonusKu}, Promo: ${promoCodeResolved}`);
 
-    await serviceClient.from("ku_transactions").insert({
-      user_id: user.id,
-      group_id: target === "group" ? groupIdResolved : null,
-      amount: totalUnits,
-      type: "purchase",
-      description,
+    const { data: resultData, error: purchaseError } = await serviceClient.rpc("handle_ku_purchase", {
+      _user_id: user.id,
+      _reference: reference,
+      _amount_kobo: amountKobo,
+      _units: units,
+      _bonus_ku: bonusKu,
+      _promo_code: promoCodeResolved || null,
+      _target: target,
+      _group_id: groupIdResolved,
+      _package_type: packageTypeResolved,
+      _plan_label: planLabel
     });
 
-    // Record payment
-    await serviceClient.from("payment_history").insert({
-      user_id: user.id, amount: paystackData.data.amount,
-      currency: "NGN", paystack_reference: reference,
-      plan: planLabel, status: "success",
-    });
-
-    // Mark pending checkout as completed
-    await serviceClient.from("pending_checkouts")
-      .update({ status: "completed" })
-      .eq("reference", reference);
-
-    // === PROMO CODE COMMISSION ===
-    if (promoData) {
-      try {
-        const amountKobo = paystackData?.data?.amount || expectedAmount;
-        const commissionKobo = Math.round(amountKobo * (promoData.commission_rate || 0.10));
-        const commissionNaira = commissionKobo / 100;
-
-        console.log(`Recording promo usage: code=${promoCodeResolved}, user=${user.id}, amount=${amountKobo}, commission=${commissionKobo}`);
-
-        // Record usage
-        const { error: usageError } = await serviceClient.from("promo_code_usage").insert({
-          promo_code_id: promoData.id,
-          user_id: user.id,
-          payment_reference: reference,
-          purchase_amount_kobo: amountKobo,
-          commission_amount_kobo: commissionKobo,
-        });
-
-        if (usageError) {
-          console.error(`Error recording promo usage for ${promoCodeResolved}:`, usageError);
-        } else {
-          // Update promo code stats
-          const { error: statsError } = await serviceClient.from("promo_codes").update({
-            total_uses: (promoData.total_uses || 0) + 1,
-            total_commission_naira: Number(promoData.total_commission_naira || 0) + commissionNaira,
-            updated_at: new Date().toISOString(),
-          }).eq("id", promoData.id);
-
-          if (statsError) {
-            console.error(`Error updating promo stats for ${promoCodeResolved}:`, statsError);
-          } else {
-            console.log(`Promo ${promoCodeResolved}: commission ₦${commissionNaira} successfully recorded`);
-          }
-        }
-      } catch (e) {
-        console.error("Promo code processing error:", e);
-      }
+    if (purchaseError) {
+      console.error("Atomic purchase function error:", purchaseError);
+      throw new Error(`Failed to credit wallet: ${purchaseError.message}`);
     }
+
+    if (!resultData?.success) {
+      console.error("Atomic purchase function returned failure:", resultData?.error);
+      throw new Error(resultData?.error || "Failed to credit wallet");
+    }
+
+    const totalUnits = resultData.total_units;
+    const newBalance = resultData.new_balance;
 
     // Send Real-time Firebase Notification
     try {
@@ -371,15 +307,6 @@ Deno.serve(async (req) => {
       console.error("Slack notify failed:", e);
     }
 
-    // Get updated balance
-    let newBalance = 0;
-    if (target === "personal") {
-      const { data } = await serviceClient.from("ku_wallets").select("balance").eq("user_id", user.id).single();
-      newBalance = data?.balance || 0;
-    } else {
-      const { data } = await serviceClient.from("group_wallets").select("balance").eq("group_id", groupIdResolved).single();
-      newBalance = data?.balance || 0;
-    }
 
     return new Response(JSON.stringify({ success: true, balance: newBalance, units: totalUnits }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
