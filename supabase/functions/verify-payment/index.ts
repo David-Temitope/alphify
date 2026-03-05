@@ -260,6 +260,25 @@ Deno.serve(async (req) => {
       status: "success",
     });
 
+    // Send Real-time Firebase Notification
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          title: "Subscription Activated! 🚀",
+          body: `Successfully subscribed to the ${plan} plan.`,
+          data: { link: "https://alphify.site/settings?tab=subscription" }
+        }),
+      });
+    } catch (e) {
+      console.error("Firebase notification failed:", e);
+    }
+
     return new Response(
       JSON.stringify({ success: true, plan, expiresAt: periodEnd.toISOString() }),
       {

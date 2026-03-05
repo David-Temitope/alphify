@@ -34,10 +34,10 @@ declare global {
 }
 
 const KU_PACKAGES = [
-  { id: "starter", name: "Starter", units: 10, price: 350, amount: 35000, icon: Coins, accent: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
-  { id: "standard", name: "Standard", units: 25, price: 875, amount: 87500, icon: Star, accent: "from-primary/20 to-primary/10 border-primary/40", popular: true },
-  { id: "bulk", name: "Bulk", units: 50, price: 1750, amount: 175000, icon: TrendingUp, accent: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30" },
-  { id: "mega", name: "Mega", units: 100, price: 3500, amount: 350000, icon: Zap, accent: "from-amber-500/20 to-amber-600/10 border-amber-500/30" },
+  { id: "starter", name: "Starter", units: 25, price: 875, amount: 87500, icon: Coins, accent: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
+  { id: "standard", name: "Standard", units: 50, price: 1750, amount: 175000, icon: Star, accent: "from-primary/20 to-primary/10 border-primary/40", popular: true },
+  { id: "bulk", name: "Bulk", units: 100, price: 3500, amount: 350000, icon: TrendingUp, accent: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30" },
+  { id: "mega", name: "Mega", units: 150, price: 5250, amount: 525000, icon: Zap, accent: "from-amber-500/20 to-amber-600/10 border-amber-500/30" },
 ];
 
 interface KUPurchaseProps {
@@ -174,7 +174,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
   const handlePackagePurchase = (pkg: (typeof KU_PACKAGES)[0]) => { initiatePurchase(pkg.units, pkg.amount, pkg.id, pkg.id); };
   const handleCustomPurchase = () => {
     const units = parseInt(customAmount, 10);
-    if (!units || units < 1) { toast({ title: "Invalid amount", description: "Enter at least 1 KU.", variant: "destructive" }); return; }
+    if (!units || units < 25) { toast({ title: "Invalid amount", description: "Minimum purchase is 25 KU.", variant: "destructive" }); return; }
     initiatePurchase(units, units * 3500, `custom_${units}`);
   };
 
@@ -286,7 +286,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <Input
-                  type="number" min={1} placeholder="Enter units"
+                  type="number" min={25} placeholder="Min 25 units"
                   value={customAmount} onChange={(e) => setCustomAmount(e.target.value)}
                   className="bg-secondary border-border h-10"
                 />
@@ -295,7 +295,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            {customAmount && parseInt(customAmount, 10) >= 1 ? (
+            {customAmount && parseInt(customAmount, 10) >= 25 ? (
               <p className="text-sm font-medium text-foreground">
                 Total: ₦{(parseInt(customAmount, 10) * 35).toLocaleString()}
               </p>
@@ -304,7 +304,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             )}
             <Button
               onClick={handleCustomPurchase}
-              disabled={processing !== null || !customAmount || parseInt(customAmount, 10) < 1}
+              disabled={processing !== null || !customAmount || parseInt(customAmount, 10) < 25}
               size="sm" className="rounded-full bg-primary text-primary-foreground h-8 text-xs"
             >
               {processing?.startsWith("custom") ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Buy"}

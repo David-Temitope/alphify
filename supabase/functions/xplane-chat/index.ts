@@ -400,6 +400,36 @@ Deno.serve(async (req) => {
       description: mode === 'assignment' ? 'Assignment Assist' : 'Chat with Ezra'
     });
 
+      // Send Firebase Notification for Ezra's reply
+      // Note: In a real-world scenario, you might want to delay this or check if the user is active.
+      // For now, we'll trigger it as soon as we start generating the response.
+      try {
+        const { data: conversation } = await serviceClient
+          .from('conversations')
+          .select('title')
+          .eq('id', messages[0]?.conversation_id) // This might be tricky if not passed, but we have authData.user.id
+          .maybeSingle();
+
+        await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            title: "Ezra is replying... 🧠",
+            body: "Ezra has a new message for you!",
+            data: {
+              link: `https://alphify.site/chat/${messages[0]?.conversation_id || ''}`,
+              type: 'chat_reply'
+            }
+          }),
+        });
+      } catch (e) {
+        console.error("Firebase chat notification failed:", e);
+      }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");

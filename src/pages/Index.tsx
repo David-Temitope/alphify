@@ -80,33 +80,6 @@ export default function Index() {
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": "SoftwareApplication",
-          "name": "Alphify",
-          "operatingSystem": "Web, Android, iOS",
-          "applicationCategory": "EducationApplication",
-          "description": "Master any university course and achieve academic dominance with Ezra AI. Get human-like explanations for complex topics and large study PDFs.",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "NGN"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "ratingCount": "1240"
-          }
-        },
-        {
-          "@type": "Organization",
-          "name": "Alphify by Alphadominity",
-          "url": "https://alphify.site",
-          "logo": "https://alphify.site/alphify-icon-512.webp",
-          "sameAs": [
-            "https://twitter.com/alphadominity",
-            "https://facebook.com/alphify"
-          ]
-        },
-        {
           "@type": "FAQPage",
           "mainEntity": [
             {

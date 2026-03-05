@@ -6,13 +6,13 @@ const corsHeaders = {
 };
 
 const KU_PACKAGES: Record<string, { units: number; amount: number }> = {
-  starter: { units: 10, amount: 50000 },
-  standard: { units: 25, amount: 125000 },
-  bulk: { units: 50, amount: 250000 },
-  mega: { units: 100, amount: 500000 },
+  starter: { units: 25, amount: 87500 },
+  standard: { units: 50, amount: 175000 },
+  bulk: { units: 100, amount: 350000 },
+  mega: { units: 150, amount: 525000 },
 };
 
-const PRICE_PER_UNIT = 5000; // ₦50 in kobo
+const PRICE_PER_UNIT = 3500; // ₦35 in kobo
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       }
 
       // Support both preset packages and custom amounts
-      if (customUnits && typeof customUnits === "number" && customUnits >= 1) {
+      if (customUnits && typeof customUnits === "number" && customUnits >= 25) {
         units = Math.floor(customUnits);
         expectedAmount = units * PRICE_PER_UNIT;
       } else if (packageType && KU_PACKAGES[packageType]) {
@@ -222,6 +222,25 @@ Deno.serve(async (req) => {
     await serviceClient.from("pending_checkouts")
       .update({ status: "completed" })
       .eq("reference", reference);
+
+    // Send Real-time Firebase Notification
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          title: "Wallet Topped Up! 🧠",
+          body: `Successfully added ${units} KU to your ${target} wallet.`,
+          data: { link: "https://alphify.site/settings?tab=wallet" }
+        }),
+      });
+    } catch (e) {
+      console.error("Firebase notification failed:", e);
+    }
 
     // Expire stale pending checkouts
     try { await serviceClient.rpc("expire_stale_checkouts"); } catch { /* ignore */ }
