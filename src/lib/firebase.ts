@@ -28,13 +28,7 @@ export const requestNotificationPermission = async (userId: string) => {
       });
 
       if (token) {
-        // Save the token to the database
-        await supabase
-          .from('user_settings')
-          .update({ fcm_token: token })
-          .eq('user_id', userId);
-
-        console.log('FCM Token saved to database');
+        console.log('FCM Token obtained:', token.substring(0, 20) + '...');
         return token;
       }
     }

@@ -498,6 +498,86 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_usage: {
+        Row: {
+          commission_amount_kobo: number
+          created_at: string
+          id: string
+          payment_reference: string
+          promo_code_id: string
+          purchase_amount_kobo: number
+          user_id: string
+        }
+        Insert: {
+          commission_amount_kobo: number
+          created_at?: string
+          id?: string
+          payment_reference: string
+          promo_code_id: string
+          purchase_amount_kobo: number
+          user_id: string
+        }
+        Update: {
+          commission_amount_kobo?: number
+          created_at?: string
+          id?: string
+          payment_reference?: string
+          promo_code_id?: string
+          purchase_amount_kobo?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_usage_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          commission_rate: number
+          created_at: string
+          id: string
+          influencer_email: string | null
+          influencer_name: string
+          influencer_phone: string | null
+          is_active: boolean
+          total_commission_naira: number
+          total_uses: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          influencer_email?: string | null
+          influencer_name: string
+          influencer_phone?: string | null
+          is_active?: boolean
+          total_commission_naira?: number
+          total_uses?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          influencer_email?: string | null
+          influencer_name?: string
+          influencer_phone?: string | null
+          is_active?: boolean
+          total_commission_naira?: number
+          total_uses?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string

@@ -6,7 +6,7 @@ import { useKnowledgeUnits } from "@/hooks/useKnowledgeUnits";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Coins, Users, RefreshCw, Wallet, TrendingUp, Star, Zap } from "lucide-react";
+import { Loader2, Coins, Users, RefreshCw, Wallet, TrendingUp, Star, Zap, Tag, CheckCircle } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -53,6 +53,9 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
   const [target, setTarget] = useState<"personal" | "group">("personal");
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [customAmount, setCustomAmount] = useState<string>("");
+  const [promoCode, setPromoCode] = useState<string>("");
+  const [promoValid, setPromoValid] = useState<boolean | null>(null);
+  const [promoChecking, setPromoChecking] = useState(false);
 
   const { data: adminGroups } = useQuery({
     queryKey: ["admin-groups", user?.id],
@@ -77,6 +80,21 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     enabled: !!user,
     refetchInterval: 15000,
   });
+
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) { setPromoValid(null); return; }
+    setPromoChecking(true);
+    try {
+      const { data } = await supabase
+        .from("promo_codes")
+        .select("id, code")
+        .eq("code", code.toUpperCase().trim())
+        .eq("is_active", true)
+        .maybeSingle();
+      setPromoValid(!!data);
+    } catch { setPromoValid(false); }
+    finally { setPromoChecking(false); }
+  };
 
   const loadPaystackScript = (): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -128,6 +146,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     try {
       await loadPaystackScript();
       const reference = `ku_${label}_${target}_${user.id}_${Date.now()}`;
+      const validPromo = promoValid ? promoCode.toUpperCase().trim() : null;
       await savePendingCheckout(reference, units, amount, packageType, packageType ? undefined : units);
       const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY, email: user.email, amount, currency: "NGN", ref: reference,
@@ -142,7 +161,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/purchase-ku`, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-              body: JSON.stringify({ reference: response.reference, packageType: packageType || undefined, customUnits: packageType ? undefined : units, target, groupId: target === "group" ? selectedGroup : undefined }),
+              body: JSON.stringify({ reference: response.reference, packageType: packageType || undefined, customUnits: packageType ? undefined : units, target, groupId: target === "group" ? selectedGroup : undefined, promoCode: validPromo }),
             });
             const contentType = res.headers.get("content-type");
             if (!contentType?.includes("application/json")) {
@@ -311,6 +330,36 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Promo Code */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Promo Code</h3>
+        <div className="flex items-center gap-2 p-3 rounded-2xl bg-card border border-border">
+          <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Input
+            placeholder="Enter promo code"
+            value={promoCode}
+            onChange={(e) => { setPromoCode(e.target.value); setPromoValid(null); }}
+            className="bg-secondary border-border h-8 text-xs uppercase"
+          />
+          <Button
+            size="sm" variant="outline"
+            onClick={() => validatePromoCode(promoCode)}
+            disabled={promoChecking || !promoCode.trim()}
+            className="rounded-full h-8 text-xs"
+          >
+            {promoChecking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Apply"}
+          </Button>
+        </div>
+        {promoValid === true && (
+          <div className="flex items-center gap-1.5 text-xs text-primary">
+            <CheckCircle className="h-3.5 w-3.5" /> Promo code applied! Influencer earns 10% commission.
+          </div>
+        )}
+        {promoValid === false && (
+          <p className="text-xs text-destructive">Invalid or expired promo code.</p>
+        )}
       </div>
 
       <p className="text-[11px] text-muted-foreground text-center pt-2">
