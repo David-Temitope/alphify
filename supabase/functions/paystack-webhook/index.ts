@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
       } catch (e) { /* ignore */ }
     }
 
-    let units = checkout.units;
+    const units = checkout.units;
     const userId = checkout.user_id;
     const target = checkout.target;
     const groupId = checkout.group_id;
