@@ -153,104 +153,42 @@ Deno.serve(async (req) => {
       }
     }
 
-    const totalUnits = units + bonusKu;
-
-    // Credit wallet
-    if (target === "personal") {
-      const { data: wallet } = await serviceClient
-        .from("ku_wallets").select("balance").eq("user_id", userId).maybeSingle();
-
-      if (wallet) {
-        await serviceClient.from("ku_wallets")
-          .update({ balance: wallet.balance + totalUnits })
-          .eq("user_id", userId);
-      } else {
-        await serviceClient.from("ku_wallets")
-          .insert({ user_id: userId, balance: totalUnits + 3 });
-      }
-    } else {
-      const { data: groupWallet } = await serviceClient
-        .from("group_wallets").select("balance").eq("group_id", groupId).maybeSingle();
-
-      if (groupWallet) {
-        await serviceClient.from("group_wallets")
-          .update({ balance: groupWallet.balance + totalUnits })
-          .eq("group_id", groupId);
-      } else {
-        await serviceClient.from("group_wallets")
-          .insert({ group_id: groupId, balance: totalUnits });
-      }
-    }
-
     const planLabel = checkout.package_type
       ? `ku_${checkout.package_type}_${target}`
       : `ku_custom_${units}_${target}`;
 
-    // Log transaction
-    const description = bonusKu > 0
-      ? `Purchased ${units} KU + ${bonusKu} bonus KU (promo: ${promoCodeResolved}) for ${target} wallet (webhook)`
-      : `Purchased ${units} KU for ${target} wallet (webhook)`;
+    console.log(`Webhook: Executing atomic handle_ku_purchase for ref ${reference}. Units: ${units}, Bonus: ${bonusKu}, Promo: ${promoCodeResolved}`);
 
-    await serviceClient.from("ku_transactions").insert({
-      user_id: userId,
-      group_id: target === "group" ? groupId : null,
-      amount: totalUnits,
-      type: "purchase",
-      description,
+    const { data: resultData, error: purchaseError } = await serviceClient.rpc("handle_ku_purchase", {
+      _user_id: userId,
+      _reference: reference,
+      _amount_kobo: amount,
+      _units: units,
+      _bonus_ku: bonusKu,
+      _promo_code: promoCodeResolved || null,
+      _target: target,
+      _group_id: groupId,
+      _package_type: checkout.package_type,
+      _plan_label: planLabel
     });
 
-    // Record payment
-    await serviceClient.from("payment_history").insert({
-      user_id: userId,
-      amount,
-      currency: "NGN",
-      paystack_reference: reference,
-      plan: planLabel,
-      status: "success",
-    });
-
-    // Update pending checkout status
-    await serviceClient.from("pending_checkouts")
-      .update({ status: "completed" })
-      .eq("id", checkout.id);
-
-    // === PROMO CODE COMMISSION ===
-    if (promoData) {
-      try {
-        const commissionKobo = Math.round(amount * (promoData.commission_rate || 0.10));
-        const commissionNaira = commissionKobo / 100;
-
-        console.log(`Webhook: Recording promo usage: code=${promoCodeResolved}, user=${userId}, amount=${amount}, commission=${commissionKobo}`);
-
-        // Record usage
-        const { error: usageError } = await serviceClient.from("promo_code_usage").insert({
-          promo_code_id: promoData.id,
-          user_id: userId,
-          payment_reference: reference,
-          purchase_amount_kobo: amount,
-          commission_amount_kobo: commissionKobo,
-        });
-
-        if (usageError) {
-          console.error(`Webhook: Error recording promo usage for ${promoCodeResolved}:`, usageError);
-        } else {
-          // Update promo code stats
-          const { error: statsError } = await serviceClient.from("promo_codes").update({
-            total_uses: (promoData.total_uses || 0) + 1,
-            total_commission_naira: Number(promoData.total_commission_naira || 0) + commissionNaira,
-            updated_at: new Date().toISOString(),
-          }).eq("id", promoData.id);
-
-          if (statsError) {
-            console.error(`Webhook: Error updating promo stats for ${promoCodeResolved}:`, statsError);
-          } else {
-            console.log(`Webhook Promo ${promoCodeResolved}: commission ₦${commissionNaira} successfully recorded`);
-          }
-        }
-      } catch (e) {
-        console.error("Promo code processing error (webhook):", e);
-      }
+    if (purchaseError) {
+      console.error("Webhook: Atomic purchase function error:", purchaseError);
+      return new Response(JSON.stringify({ error: "Failed to credit wallet" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    if (!resultData?.success) {
+      console.error("Webhook: Atomic purchase function returned failure:", resultData?.error);
+      return new Response(JSON.stringify({ error: resultData?.error || "Failed to credit wallet" }), {
+        status: 200, // Still 200 because Paystack should stop retrying if we have a business logic failure we handled
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const totalUnits = resultData.total_units;
 
     // Send Real-time Firebase Notification
     try {

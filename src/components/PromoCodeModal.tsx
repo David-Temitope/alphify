@@ -34,7 +34,7 @@ export default function PromoCodeModal({ open, onClose, onProceed, units, amount
       const { data } = await supabase
         .from("promo_codes")
         .select("id, code, bonus_ku, subaccount_code, expires_at")
-        .eq("code", code.toUpperCase().trim())
+        .ilike("code", code.trim())
         .eq("is_active", true)
         .maybeSingle();
 
@@ -71,7 +71,7 @@ export default function PromoCodeModal({ open, onClose, onProceed, units, amount
         const { data } = await supabase
           .from("promo_codes")
           .select("id, code, bonus_ku, subaccount_code, expires_at")
-          .eq("code", code.toUpperCase().trim())
+          .ilike("code", code.trim())
           .eq("is_active", true)
           .maybeSingle();
 
