@@ -538,40 +538,49 @@ export type Database = {
       }
       promo_codes: {
         Row: {
+          bonus_ku: number
           code: string
           commission_rate: number
           created_at: string
+          expires_at: string | null
           id: string
           influencer_email: string | null
           influencer_name: string
           influencer_phone: string | null
           is_active: boolean
+          subaccount_code: string | null
           total_commission_naira: number
           total_uses: number
           updated_at: string
         }
         Insert: {
+          bonus_ku?: number
           code: string
           commission_rate?: number
           created_at?: string
+          expires_at?: string | null
           id?: string
           influencer_email?: string | null
           influencer_name: string
           influencer_phone?: string | null
           is_active?: boolean
+          subaccount_code?: string | null
           total_commission_naira?: number
           total_uses?: number
           updated_at?: string
         }
         Update: {
+          bonus_ku?: number
           code?: string
           commission_rate?: number
           created_at?: string
+          expires_at?: string | null
           id?: string
           influencer_email?: string | null
           influencer_name?: string
           influencer_phone?: string | null
           is_active?: boolean
+          subaccount_code?: string | null
           total_commission_naira?: number
           total_uses?: number
           updated_at?: string

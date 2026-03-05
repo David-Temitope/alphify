@@ -172,6 +172,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    // === RESOLVE PROMO BONUS KU ===
+    let bonusKu = 0;
+    if (promoCodeResolved) {
+      try {
+        const { data: promo } = await serviceClient
+          .from("promo_codes")
+          .select("id, bonus_ku, expires_at, is_active")
+          .eq("code", promoCodeResolved.toUpperCase())
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (promo) {
+          // Check expiry
+          const expiresAt = (promo as any).expires_at;
+          if (!expiresAt || new Date(expiresAt) > new Date()) {
+            bonusKu = (promo as any).bonus_ku ?? 5;
+          }
+        }
+      } catch (e) {
+        console.error("Promo bonus lookup error:", e);
+      }
+    }
+
+    const totalUnits = units + bonusKu;
+
     // Credit wallet
     if (target === "personal") {
       const { data: wallet } = await serviceClient
@@ -179,11 +204,11 @@ Deno.serve(async (req) => {
 
       if (wallet) {
         await serviceClient.from("ku_wallets")
-          .update({ balance: wallet.balance + units })
+          .update({ balance: wallet.balance + totalUnits })
           .eq("user_id", user.id);
       } else {
         await serviceClient.from("ku_wallets")
-          .insert({ user_id: user.id, balance: units + 3 });
+          .insert({ user_id: user.id, balance: totalUnits + 3 });
       }
     } else {
       const { data: groupWallet } = await serviceClient
@@ -191,23 +216,27 @@ Deno.serve(async (req) => {
 
       if (groupWallet) {
         await serviceClient.from("group_wallets")
-          .update({ balance: groupWallet.balance + units })
+          .update({ balance: groupWallet.balance + totalUnits })
           .eq("group_id", groupIdResolved);
       } else {
         await serviceClient.from("group_wallets")
-          .insert({ group_id: groupIdResolved, balance: units });
+          .insert({ group_id: groupIdResolved, balance: totalUnits });
       }
     }
 
     const planLabel = packageTypeResolved ? `ku_${packageTypeResolved}_${target}` : `ku_custom_${units}_${target}`;
 
     // Log transaction
+    const description = bonusKu > 0
+      ? `Purchased ${units} KU + ${bonusKu} bonus KU (promo: ${promoCodeResolved}) for ${target} wallet`
+      : `Purchased ${units} KU for ${target} wallet`;
+
     await serviceClient.from("ku_transactions").insert({
       user_id: user.id,
       group_id: target === "group" ? groupIdResolved : null,
-      amount: units,
+      amount: totalUnits,
       type: "purchase",
-      description: `Purchased ${units} KU for ${target} wallet`,
+      description,
     });
 
     // Record payment
@@ -270,7 +299,9 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           userId: user.id,
           title: "Wallet Topped Up! 🧠",
-          body: `Successfully added ${units} KU to your ${target} wallet.`,
+          body: bonusKu > 0
+            ? `Added ${units} + ${bonusKu} bonus KU (total ${totalUnits}) to your ${target} wallet!`
+            : `Successfully added ${totalUnits} KU to your ${target} wallet.`,
           data: { link: "https://alphify.site/settings?tab=wallet" }
         }),
       });
@@ -319,7 +350,7 @@ Deno.serve(async (req) => {
       newBalance = data?.balance || 0;
     }
 
-    return new Response(JSON.stringify({ success: true, balance: newBalance, units }), {
+    return new Response(JSON.stringify({ success: true, balance: newBalance, units: totalUnits }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
