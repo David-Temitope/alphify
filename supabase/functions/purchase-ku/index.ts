@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { reference, packageType, target: reqTarget, groupId, customUnits, fromPending } = await req.json();
+    const { reference, packageType, target: reqTarget, groupId, customUnits, fromPending, promoCode } = await req.json();
 
     if (!reference) {
       return new Response(JSON.stringify({ error: "Missing reference" }), {
@@ -53,12 +53,12 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // If fromPending, look up checkout details from pending_checkouts table
     let units: number;
     let expectedAmount: number;
     let target: string;
     let groupIdResolved: string | null = null;
     let packageTypeResolved: string | null = null;
+    let promoCodeResolved: string | null = promoCode || null;
 
     if (fromPending) {
       const { data: checkout } = await serviceClient
@@ -90,7 +90,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Support both preset packages and custom amounts
       if (customUnits && typeof customUnits === "number" && customUnits >= 25) {
         units = Math.floor(customUnits);
         expectedAmount = units * PRICE_PER_UNIT;
@@ -223,6 +222,43 @@ Deno.serve(async (req) => {
       .update({ status: "completed" })
       .eq("reference", reference);
 
+    // === PROMO CODE COMMISSION ===
+    if (promoCodeResolved) {
+      try {
+        const { data: promo } = await serviceClient
+          .from("promo_codes")
+          .select("id, commission_rate, total_uses, total_commission_naira")
+          .eq("code", promoCodeResolved.toUpperCase())
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (promo) {
+          const commissionKobo = Math.round(paystackData.data.amount * promo.commission_rate);
+          const commissionNaira = commissionKobo / 100;
+
+          // Record usage
+          await serviceClient.from("promo_code_usage").insert({
+            promo_code_id: promo.id,
+            user_id: user.id,
+            payment_reference: reference,
+            purchase_amount_kobo: paystackData.data.amount,
+            commission_amount_kobo: commissionKobo,
+          });
+
+          // Update promo code stats
+          await serviceClient.from("promo_codes").update({
+            total_uses: promo.total_uses + 1,
+            total_commission_naira: Number(promo.total_commission_naira) + commissionNaira,
+            updated_at: new Date().toISOString(),
+          }).eq("id", promo.id);
+
+          console.log(`Promo ${promoCodeResolved}: commission ₦${commissionNaira} for influencer`);
+        }
+      } catch (e) {
+        console.error("Promo code processing error:", e);
+      }
+    }
+
     // Send Real-time Firebase Notification
     try {
       await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
@@ -265,6 +301,7 @@ Deno.serve(async (req) => {
             amount: paystackData.data.amount,
             units,
             target,
+            promoCode: promoCodeResolved || undefined,
           },
         }),
       });
