@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
       target = checkout.target;
       groupIdResolved = checkout.group_id;
       packageTypeResolved = checkout.package_type;
+      promoCodeResolved = checkout.promo_code || promoCodeResolved;
     } else {
       target = reqTarget;
       groupIdResolved = groupId || null;
