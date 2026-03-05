@@ -429,6 +429,7 @@ export type Database = {
           group_id: string | null
           id: string
           package_type: string | null
+          promo_code: string | null
           reference: string
           status: string
           target: string
@@ -444,6 +445,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           package_type?: string | null
+          promo_code?: string | null
           reference: string
           status?: string
           target?: string
@@ -459,6 +461,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           package_type?: string | null
+          promo_code?: string | null
           reference?: string
           status?: string
           target?: string

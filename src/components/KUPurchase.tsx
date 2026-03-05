@@ -106,11 +106,12 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     });
   };
 
-  const savePendingCheckout = async (reference: string, units: number, amount: number, packageType?: string, customUnits?: number) => {
+  const savePendingCheckout = async (reference: string, units: number, amount: number, packageType?: string, customUnits?: number, promoCode?: string) => {
     const { error } = await (supabase as any).from("pending_checkouts").insert({
       user_id: user!.id, reference, package_type: packageType || null,
       custom_units: customUnits || null, units, expected_amount: amount,
       target, group_id: target === "group" ? selectedGroup : null,
+      promo_code: promoCode || null,
     });
     if (error) console.error("Failed to save pending checkout:", error);
   };
@@ -134,7 +135,11 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
       }
       refetch(); refetchPending(); onSuccess?.();
     } catch {
-      toast({ title: "Payment still processing", description: "Your bank transfer may still be processing. We'll credit your KU automatically once confirmed.", variant: "destructive" });
+      toast({
+        title: "Payment still processing",
+        description: "Your payment verification is taking longer than expected. Please try the 'Verify' button again in a few moments if your bank has confirmed the transfer.",
+        variant: "destructive"
+      });
     } finally { setVerifying(false); }
   };
 
@@ -156,7 +161,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
     try {
       await loadPaystackScript();
       const reference = `ku_${label}_${target}_${user.id}_${Date.now()}`;
-      await savePendingCheckout(reference, units, amount, packageType, packageType ? undefined : units);
+      await savePendingCheckout(reference, units, amount, packageType, packageType ? undefined : units, promo?.code);
 
       const paystackConfig: any = {
         key: PAYSTACK_PUBLIC_KEY, email: user.email, amount, currency: "NGN", ref: reference,
@@ -192,7 +197,11 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
             toast({ title: "Knowledge Units added! 🧠", description: `${totalUnits} KU added to your ${target === "group" ? "group" : "personal"} wallet.` });
             refetch(); refetchPending(); onSuccess?.();
           })().catch((error) => {
-            toast({ title: "Verification failed", description: error instanceof Error ? error.message : "Please contact support.", variant: "destructive" });
+            toast({
+              title: "Verification failed",
+              description: (error instanceof Error ? error.message : "Please contact support.") + " If you completed your payment, please use the 'Verify' button below.",
+              variant: "destructive"
+            });
           }).finally(() => { setProcessing(null); setPendingPurchase(null); });
         },
         onClose: () => {
@@ -248,22 +257,47 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
 
       {/* Pending Payments */}
       {pendingCheckouts && pendingCheckouts.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending Transactions</h3>
-          {pendingCheckouts.map((checkout: any) => (
-            <div key={checkout.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending Transactions</h3>
+            <span className="text-[10px] bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full font-medium animate-pulse">
+              Action Required
+            </span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600">
+                <RefreshCw className="h-4 w-4" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{checkout.units} KU</p>
-                <p className="text-xs text-muted-foreground">₦{(checkout.expected_amount / 100).toLocaleString()}</p>
+              <div>
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">Verify Your Payment</p>
+                <p className="text-xs text-amber-700/80 dark:text-amber-400/80 leading-relaxed">
+                  If you've completed a transfer or payment, click the <strong>Verify</strong> button to credit your wallet instantly.
+                </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => verifyPendingPayment(checkout.reference)} disabled={verifying} className="rounded-full text-xs h-8">
-                {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><RefreshCw className="h-3.5 w-3.5 mr-1" /> Verify</>}
-              </Button>
             </div>
-          ))}
+
+            <div className="space-y-2">
+              {pendingCheckouts.map((checkout: any) => (
+                <div key={checkout.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/80 dark:bg-background/80 border border-amber-200/50 dark:border-amber-900/30 shadow-sm">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground">{checkout.units} KU</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-medium">Ref: {checkout.reference.split('_').slice(-1)}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => verifyPendingPayment(checkout.reference)}
+                    disabled={verifying}
+                    className="rounded-full text-xs h-8 bg-amber-500 hover:bg-amber-600 text-white border-none shadow-sm"
+                  >
+                    {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><RefreshCw className="h-3.5 w-3.5 mr-1" /> Verify Now</>}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
