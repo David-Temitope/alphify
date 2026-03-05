@@ -107,10 +107,53 @@ Deno.serve(async (req) => {
       });
     }
 
-    const units = checkout.units;
+    const metadata = payload.data.metadata ?? {};
+    const customFields = Array.isArray(metadata.custom_fields) ? metadata.custom_fields : [];
+    let metadataPromoCode = customFields.find((f: any) => f.variable_name === "promo_code")?.value;
+
+    if (!metadataPromoCode && typeof metadata === "string") {
+      try {
+        const parsedMetadata = JSON.parse(metadata);
+        const parsedFields = Array.isArray(parsedMetadata.custom_fields) ? parsedMetadata.custom_fields : [];
+        metadataPromoCode = parsedFields.find((f: any) => f.variable_name === "promo_code")?.value;
+      } catch (e) { /* ignore */ }
+    }
+
+    let units = checkout.units;
     const userId = checkout.user_id;
     const target = checkout.target;
     const groupId = checkout.group_id;
+    let promoCodeResolved = checkout.promo_code || metadataPromoCode || null;
+
+    // === RESOLVE PROMO BONUS KU ===
+    let bonusKu = 0;
+    let promoData: any = null;
+
+    if (promoCodeResolved) {
+      try {
+        const { data: promo } = await serviceClient
+          .from("promo_codes")
+          .select("*")
+          .ilike("code", promoCodeResolved.trim())
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (promo) {
+          // Check expiry
+          const expiresAt = (promo as any).expires_at;
+          if (!expiresAt || new Date(expiresAt) > new Date()) {
+            bonusKu = (promo as any).bonus_ku ?? 5;
+            promoData = promo;
+            // Update the resolved code with the canonical one from DB
+            promoCodeResolved = promo.code;
+          }
+        }
+      } catch (e) {
+        console.error("Promo bonus lookup error (webhook):", e);
+      }
+    }
+
+    const totalUnits = units + bonusKu;
 
     // Credit wallet
     if (target === "personal") {
@@ -119,11 +162,11 @@ Deno.serve(async (req) => {
 
       if (wallet) {
         await serviceClient.from("ku_wallets")
-          .update({ balance: wallet.balance + units })
+          .update({ balance: wallet.balance + totalUnits })
           .eq("user_id", userId);
       } else {
         await serviceClient.from("ku_wallets")
-          .insert({ user_id: userId, balance: units + 3 });
+          .insert({ user_id: userId, balance: totalUnits + 3 });
       }
     } else {
       const { data: groupWallet } = await serviceClient
@@ -131,11 +174,11 @@ Deno.serve(async (req) => {
 
       if (groupWallet) {
         await serviceClient.from("group_wallets")
-          .update({ balance: groupWallet.balance + units })
+          .update({ balance: groupWallet.balance + totalUnits })
           .eq("group_id", groupId);
       } else {
         await serviceClient.from("group_wallets")
-          .insert({ group_id: groupId, balance: units });
+          .insert({ group_id: groupId, balance: totalUnits });
       }
     }
 
@@ -144,12 +187,16 @@ Deno.serve(async (req) => {
       : `ku_custom_${units}_${target}`;
 
     // Log transaction
+    const description = bonusKu > 0
+      ? `Purchased ${units} KU + ${bonusKu} bonus KU (promo: ${promoCodeResolved}) for ${target} wallet (webhook)`
+      : `Purchased ${units} KU for ${target} wallet (webhook)`;
+
     await serviceClient.from("ku_transactions").insert({
       user_id: userId,
       group_id: target === "group" ? groupId : null,
-      amount: units,
+      amount: totalUnits,
       type: "purchase",
-      description: `Purchased ${units} KU for ${target} wallet (webhook)`,
+      description,
     });
 
     // Record payment
@@ -167,9 +214,68 @@ Deno.serve(async (req) => {
       .update({ status: "completed" })
       .eq("id", checkout.id);
 
-    console.log(`Webhook: Credited ${units} KU to ${target} wallet for user ${userId}`);
+    // === PROMO CODE COMMISSION ===
+    if (promoData) {
+      try {
+        const commissionKobo = Math.round(amount * (promoData.commission_rate || 0.10));
+        const commissionNaira = commissionKobo / 100;
 
-    return new Response(JSON.stringify({ received: true, credited: true }), {
+        console.log(`Webhook: Recording promo usage: code=${promoCodeResolved}, user=${userId}, amount=${amount}, commission=${commissionKobo}`);
+
+        // Record usage
+        const { error: usageError } = await serviceClient.from("promo_code_usage").insert({
+          promo_code_id: promoData.id,
+          user_id: userId,
+          payment_reference: reference,
+          purchase_amount_kobo: amount,
+          commission_amount_kobo: commissionKobo,
+        });
+
+        if (usageError) {
+          console.error(`Webhook: Error recording promo usage for ${promoCodeResolved}:`, usageError);
+        } else {
+          // Update promo code stats
+          const { error: statsError } = await serviceClient.from("promo_codes").update({
+            total_uses: (promoData.total_uses || 0) + 1,
+            total_commission_naira: Number(promoData.total_commission_naira || 0) + commissionNaira,
+            updated_at: new Date().toISOString(),
+          }).eq("id", promoData.id);
+
+          if (statsError) {
+            console.error(`Webhook: Error updating promo stats for ${promoCodeResolved}:`, statsError);
+          } else {
+            console.log(`Webhook Promo ${promoCodeResolved}: commission ₦${commissionNaira} successfully recorded`);
+          }
+        }
+      } catch (e) {
+        console.error("Promo code processing error (webhook):", e);
+      }
+    }
+
+    // Send Real-time Firebase Notification
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          title: "Wallet Topped Up! 🧠",
+          body: bonusKu > 0
+            ? `Added ${units} + ${bonusKu} bonus KU (total ${totalUnits}) to your ${target} wallet!`
+            : `Successfully added ${totalUnits} KU to your ${target} wallet.`,
+          data: { link: "https://alphify.site/settings?tab=wallet" }
+        }),
+      });
+    } catch (e) {
+      console.error("Firebase notification failed (webhook):", e);
+    }
+
+    console.log(`Webhook: Credited ${totalUnits} KU to ${target} wallet for user ${userId}`);
+
+    return new Response(JSON.stringify({ received: true, credited: true, units: totalUnits }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
