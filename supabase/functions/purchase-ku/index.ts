@@ -173,23 +173,51 @@ Deno.serve(async (req) => {
       });
     }
 
+    let metadataPromoCode = customFields.find((f: any) => f.variable_name === "promo_code")?.value;
+
+    if (!metadataPromoCode && typeof metadata === "string") {
+      try {
+        const parsedMetadata = JSON.parse(metadata);
+        const parsedFields = Array.isArray(parsedMetadata.custom_fields) ? parsedMetadata.custom_fields : [];
+        metadataPromoCode = parsedFields.find((f: any) => f.variable_name === "promo_code")?.value;
+      } catch (e) { /* ignore */ }
+    }
+
+    console.log(`Resolving promo code for ref ${reference}. Request: ${promoCode}, Pending: ${checkout?.promo_code}, Metadata: ${metadataPromoCode}`);
+
+    // Prioritize pending checkout stored code, then request, then metadata
+    promoCodeResolved = (checkout?.promo_code) || promoCode || metadataPromoCode || null;
+
     // === RESOLVE PROMO BONUS KU ===
     let bonusKu = 0;
-    if (promoCodeResolved) {
+    let promoData: any = null;
+
+    if (promoCodeResolved && promoCodeResolved.trim() !== "") {
       try {
-        const { data: promo } = await serviceClient
+        console.log(`Looking up promo code: "${promoCodeResolved}"`);
+        const { data: promo, error: promoError } = await serviceClient
           .from("promo_codes")
-          .select("id, bonus_ku, expires_at, is_active")
-          .eq("code", promoCodeResolved.toUpperCase())
+          .select("*")
+          .ilike("code", promoCodeResolved.trim())
           .eq("is_active", true)
           .maybeSingle();
+
+        if (promoError) console.error("Database error looking up promo:", promoError);
 
         if (promo) {
           // Check expiry
           const expiresAt = (promo as any).expires_at;
           if (!expiresAt || new Date(expiresAt) > new Date()) {
             bonusKu = (promo as any).bonus_ku ?? 5;
+            promoData = promo;
+            // Update the resolved code with the canonical one from DB
+            promoCodeResolved = promo.code;
+            console.log(`Promo validated: ${promoCodeResolved}. Bonus KU: ${bonusKu}`);
+          } else {
+            console.log(`Promo ${promoCodeResolved} expired at ${expiresAt}`);
           }
+        } else {
+          console.log(`No active promo found for code: ${promoCodeResolved}`);
         }
       } catch (e) {
         console.error("Promo bonus lookup error:", e);
@@ -253,36 +281,38 @@ Deno.serve(async (req) => {
       .eq("reference", reference);
 
     // === PROMO CODE COMMISSION ===
-    if (promoCodeResolved) {
+    if (promoData) {
       try {
-        const { data: promo } = await serviceClient
-          .from("promo_codes")
-          .select("id, commission_rate, total_uses, total_commission_naira")
-          .eq("code", promoCodeResolved.toUpperCase())
-          .eq("is_active", true)
-          .maybeSingle();
+        const amountKobo = paystackData?.data?.amount || expectedAmount;
+        const commissionKobo = Math.round(amountKobo * (promoData.commission_rate || 0.10));
+        const commissionNaira = commissionKobo / 100;
 
-        if (promo) {
-          const commissionKobo = Math.round(paystackData.data.amount * promo.commission_rate);
-          const commissionNaira = commissionKobo / 100;
+        console.log(`Recording promo usage: code=${promoCodeResolved}, user=${user.id}, amount=${amountKobo}, commission=${commissionKobo}`);
 
-          // Record usage
-          await serviceClient.from("promo_code_usage").insert({
-            promo_code_id: promo.id,
-            user_id: user.id,
-            payment_reference: reference,
-            purchase_amount_kobo: paystackData.data.amount,
-            commission_amount_kobo: commissionKobo,
-          });
+        // Record usage
+        const { error: usageError } = await serviceClient.from("promo_code_usage").insert({
+          promo_code_id: promoData.id,
+          user_id: user.id,
+          payment_reference: reference,
+          purchase_amount_kobo: amountKobo,
+          commission_amount_kobo: commissionKobo,
+        });
 
+        if (usageError) {
+          console.error(`Error recording promo usage for ${promoCodeResolved}:`, usageError);
+        } else {
           // Update promo code stats
-          await serviceClient.from("promo_codes").update({
-            total_uses: promo.total_uses + 1,
-            total_commission_naira: Number(promo.total_commission_naira) + commissionNaira,
+          const { error: statsError } = await serviceClient.from("promo_codes").update({
+            total_uses: (promoData.total_uses || 0) + 1,
+            total_commission_naira: Number(promoData.total_commission_naira || 0) + commissionNaira,
             updated_at: new Date().toISOString(),
-          }).eq("id", promo.id);
+          }).eq("id", promoData.id);
 
-          console.log(`Promo ${promoCodeResolved}: commission ₦${commissionNaira} for influencer`);
+          if (statsError) {
+            console.error(`Error updating promo stats for ${promoCodeResolved}:`, statsError);
+          } else {
+            console.log(`Promo ${promoCodeResolved}: commission ₦${commissionNaira} successfully recorded`);
+          }
         }
       } catch (e) {
         console.error("Promo code processing error:", e);

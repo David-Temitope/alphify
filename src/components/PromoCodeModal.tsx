@@ -61,16 +61,41 @@ export default function PromoCodeModal({ open, onClose, onProceed, units, amount
     }
   };
 
-  const handleProceed = () => {
-    if (promoResult?.valid) {
-      onProceed({
+  const handleProceed = async () => {
+    let finalPromo: PromoInfo | null = null;
+
+    // If user has entered a code but hasn't applied it yet, try to validate it now
+    if (code.trim() && !promoResult) {
+      setChecking(true);
+      try {
+        const { data } = await supabase
+          .from("promo_codes")
+          .select("id, code, bonus_ku, subaccount_code, expires_at")
+          .eq("code", code.toUpperCase().trim())
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (data && (!(data as any).expires_at || new Date((data as any).expires_at) > new Date())) {
+          finalPromo = {
+            code: data.code, // Use the exact code from the database
+            bonusKu: (data as any).bonus_ku ?? 5,
+            subaccountCode: (data as any).subaccount_code ?? null,
+          };
+        }
+      } catch (e) {
+        console.error("Auto-validation error:", e);
+      } finally {
+        setChecking(false);
+      }
+    } else if (promoResult?.valid) {
+      finalPromo = {
         code: code.toUpperCase().trim(),
         bonusKu: promoResult.bonusKu,
         subaccountCode: promoResult.subaccountCode,
-      });
-    } else {
-      onProceed(null);
+      };
     }
+
+    onProceed(finalPromo);
     setCode("");
     setPromoResult(null);
   };
