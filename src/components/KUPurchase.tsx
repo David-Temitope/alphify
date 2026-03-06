@@ -168,6 +168,7 @@ export default function KUPurchase({ onSuccess }: KUPurchaseProps) {
         metadata: { custom_fields: [
           { display_name: "Package", variable_name: "package", value: label },
           { display_name: "Target", variable_name: "target", value: target },
+          { display_name: "Group ID", variable_name: "group_id", value: target === "group" ? selectedGroup : "" },
           { display_name: "User ID", variable_name: "user_id", value: user.id },
           { display_name: "Promo Code", variable_name: "promo_code", value: promo?.code || "" },
         ]},

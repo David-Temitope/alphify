@@ -1,9 +1,59 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
+type PaystackCustomField = { variable_name?: string; value?: string };
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-paystack-signature",
+};
+
+const KU_PACKAGES: Record<string, { units: number; amount: number }> = {
+  starter: { units: 25, amount: 87500 },
+  standard: { units: 50, amount: 175000 },
+  bulk: { units: 100, amount: 350000 },
+  mega: { units: 150, amount: 525000 },
+};
+
+const getCustomFieldValue = (metadata: any, variableName: string): string | null => {
+  if (!metadata) return null;
+
+  const readFromFields = (fields: PaystackCustomField[]) =>
+    fields.find((f) => f?.variable_name === variableName)?.value?.toString()?.trim() || null;
+
+  const directFields = Array.isArray(metadata?.custom_fields) ? metadata.custom_fields : null;
+  if (directFields) return readFromFields(directFields);
+
+  if (typeof metadata === "string") {
+    try {
+      const parsed = JSON.parse(metadata);
+      const parsedFields = Array.isArray(parsed?.custom_fields) ? parsed.custom_fields : null;
+      if (parsedFields) return readFromFields(parsedFields);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
+const resolveUnitsFromPackage = (packageValue: string | null, amount: number): number | null => {
+  if (!packageValue) return null;
+
+  const normalized = packageValue.trim().toLowerCase();
+  if (KU_PACKAGES[normalized]) return KU_PACKAGES[normalized].units;
+
+  if (normalized.startsWith("custom_")) {
+    const parsed = Number.parseInt(normalized.replace("custom_", ""), 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+
+  // Last fallback: infer from amount using 35 NGN/KU
+  if (amount > 0 && amount % 3500 === 0) {
+    return Math.floor(amount / 3500);
+  }
+
+  return null;
 };
 
 Deno.serve(async (req) => {
@@ -20,29 +70,20 @@ Deno.serve(async (req) => {
 
     const body = await req.text();
 
-    // Verify Paystack signature
     const signature = req.headers.get("x-paystack-signature");
     if (!signature) {
       console.error("Missing Paystack signature");
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const hash = createHmac("sha512", PAYSTACK_SECRET_KEY)
-      .update(body)
-      .digest("hex");
-
+    const hash = createHmac("sha512", PAYSTACK_SECRET_KEY).update(body).digest("hex");
     if (hash !== signature) {
       console.error("Invalid Paystack signature");
       return new Response("Unauthorized", { status: 401 });
     }
 
     const payload = JSON.parse(body);
-    const event = payload.event;
-
-    console.log("Paystack webhook event:", event);
-
-    if (event !== "charge.success") {
-      // We only care about successful charges
+    if (payload.event !== "charge.success") {
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,12 +91,13 @@ Deno.serve(async (req) => {
     }
 
     const txData = payload.data;
-    const reference = txData.reference;
-    const amount = txData.amount;
+    const reference = txData?.reference;
+    const amount = txData?.amount;
+    const metadata = txData?.metadata ?? {};
 
-    if (!reference) {
-      console.error("No reference in webhook payload");
-      return new Response(JSON.stringify({ error: "No reference" }), {
+    if (!reference || !Number.isFinite(amount)) {
+      console.error("Invalid webhook payload", { reference, amount });
+      return new Response(JSON.stringify({ error: "Invalid payload" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -63,101 +105,81 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check if already processed in payment_history
-    const { data: existingPayment } = await serviceClient
-      .from("payment_history")
-      .select("id")
-      .eq("paystack_reference", reference)
-      .eq("status", "success")
-      .maybeSingle();
-
-    if (existingPayment) {
-      console.log("Payment already processed:", reference);
-      return new Response(JSON.stringify({ received: true, already_processed: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Find the pending checkout
+    // First attempt: use pending checkout (primary source)
     const { data: checkout } = await serviceClient
       .from("pending_checkouts")
-      .select("*")
+      .select("user_id, units, expected_amount, target, group_id, package_type, promo_code")
       .eq("reference", reference)
       .eq("status", "pending")
       .maybeSingle();
 
+    let userId: string | null = checkout?.user_id ?? null;
+    let units: number | null = checkout?.units ?? null;
+    let expectedAmount: number | null = checkout?.expected_amount ?? null;
+    let target: "personal" | "group" = (checkout?.target as "personal" | "group") || "personal";
+    let groupId: string | null = checkout?.group_id ?? null;
+    let packageType = checkout?.package_type ?? null;
+    let promoCodeResolved = checkout?.promo_code ?? null;
+
+    // Fallback: reconstruct from metadata if pending checkout is missing
     if (!checkout) {
-      console.warn("No pending checkout found for reference:", reference);
-      return new Response(JSON.stringify({ received: true, no_checkout: true }), {
+      userId = getCustomFieldValue(metadata, "user_id");
+      target = (getCustomFieldValue(metadata, "target") as "personal" | "group") || "personal";
+      groupId = getCustomFieldValue(metadata, "group_id");
+      packageType = getCustomFieldValue(metadata, "package");
+      promoCodeResolved = getCustomFieldValue(metadata, "promo_code");
+
+      const inferredUnits = resolveUnitsFromPackage(packageType, amount);
+      if (!userId || !inferredUnits) {
+        console.warn("No pending checkout and metadata fallback is incomplete", { reference, userId, packageType });
+        return new Response(JSON.stringify({ received: true, no_checkout: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      units = inferredUnits;
+      expectedAmount = amount;
+    }
+
+    if (!userId || !units || !expectedAmount) {
+      console.error("Unable to resolve checkout details", { reference, userId, units, expectedAmount });
+      return new Response(JSON.stringify({ error: "Unable to resolve checkout" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verify amount matches
-    if (amount !== checkout.expected_amount) {
-      console.error("Amount mismatch:", { webhook: amount, expected: checkout.expected_amount });
-      await serviceClient.from("pending_checkouts")
-        .update({ status: "amount_mismatch" })
-        .eq("id", checkout.id);
+    if (amount !== expectedAmount) {
+      console.error("Amount mismatch", { reference, webhook: amount, expected: expectedAmount });
+      if (checkout) {
+        await serviceClient.from("pending_checkouts").update({ status: "amount_mismatch" }).eq("reference", reference);
+      }
       return new Response(JSON.stringify({ error: "Amount mismatch" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const metadata = payload.data.metadata ?? {};
-    const customFields = Array.isArray(metadata.custom_fields) ? metadata.custom_fields : [];
-    let metadataPromoCode = customFields.find((f: any) => f.variable_name === "promo_code")?.value;
-
-    if (!metadataPromoCode && typeof metadata === "string") {
-      try {
-        const parsedMetadata = JSON.parse(metadata);
-        const parsedFields = Array.isArray(parsedMetadata.custom_fields) ? parsedMetadata.custom_fields : [];
-        metadataPromoCode = parsedFields.find((f: any) => f.variable_name === "promo_code")?.value;
-      } catch (e) { /* ignore */ }
-    }
-
-    const units = checkout.units;
-    const userId = checkout.user_id;
-    const target = checkout.target;
-    const groupId = checkout.group_id;
-    let promoCodeResolved = checkout.promo_code || metadataPromoCode || null;
-
-    // === RESOLVE PROMO BONUS KU ===
+    // Resolve promo bonus from canonical promo table
     let bonusKu = 0;
-    let promoData: any = null;
+    if (promoCodeResolved && promoCodeResolved.trim()) {
+      const { data: promo } = await serviceClient
+        .from("promo_codes")
+        .select("code, bonus_ku, expires_at")
+        .ilike("code", promoCodeResolved.trim())
+        .eq("is_active", true)
+        .maybeSingle();
 
-    if (promoCodeResolved) {
-      try {
-        const { data: promo } = await serviceClient
-          .from("promo_codes")
-          .select("*")
-          .ilike("code", promoCodeResolved.trim())
-          .eq("is_active", true)
-          .maybeSingle();
-
-        if (promo) {
-          // Check expiry
-          const expiresAt = (promo as any).expires_at;
-          if (!expiresAt || new Date(expiresAt) > new Date()) {
-            bonusKu = (promo as any).bonus_ku ?? 5;
-            promoData = promo;
-            // Update the resolved code with the canonical one from DB
-            promoCodeResolved = promo.code;
-          }
-        }
-      } catch (e) {
-        console.error("Promo bonus lookup error (webhook):", e);
+      if (promo && (!promo.expires_at || new Date(promo.expires_at) > new Date())) {
+        bonusKu = promo.bonus_ku ?? 5;
+        promoCodeResolved = promo.code;
+      } else {
+        promoCodeResolved = null;
       }
     }
 
-    const planLabel = checkout.package_type
-      ? `ku_${checkout.package_type}_${target}`
-      : `ku_custom_${units}_${target}`;
-
-    console.log(`Webhook: Executing atomic handle_ku_purchase for ref ${reference}. Units: ${units}, Bonus: ${bonusKu}, Promo: ${promoCodeResolved}`);
+    const planLabel = packageType ? `ku_${packageType}_${target}` : `ku_custom_${units}_${target}`;
 
     const { data: resultData, error: purchaseError } = await serviceClient.rpc("handle_ku_purchase", {
       _user_id: userId,
@@ -165,58 +187,31 @@ Deno.serve(async (req) => {
       _amount_kobo: amount,
       _units: units,
       _bonus_ku: bonusKu,
-      _promo_code: promoCodeResolved || null,
+      _promo_code: promoCodeResolved,
       _target: target,
       _group_id: groupId,
-      _package_type: checkout.package_type,
-      _plan_label: planLabel
+      _package_type: packageType,
+      _plan_label: planLabel,
     });
 
-    if (purchaseError) {
-      console.error("Webhook: Atomic purchase function error:", purchaseError);
+    if (purchaseError || !resultData?.success) {
+      console.error("Webhook purchase processing failed", {
+        reference,
+        error: purchaseError?.message || resultData?.error,
+      });
       return new Response(JSON.stringify({ error: "Failed to credit wallet" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (!resultData?.success) {
-      console.error("Webhook: Atomic purchase function returned failure:", resultData?.error);
-      return new Response(JSON.stringify({ error: resultData?.error || "Failed to credit wallet" }), {
-        status: 200, // Still 200 because Paystack should stop retrying if we have a business logic failure we handled
+    return new Response(
+      JSON.stringify({ received: true, credited: true, units: resultData.total_units, already_processed: resultData.already_processed }),
+      {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const totalUnits = resultData.total_units;
-
-    // Send Real-time Firebase Notification
-    try {
-      await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          userId: userId,
-          title: "Wallet Topped Up! 🧠",
-          body: bonusKu > 0
-            ? `Added ${units} + ${bonusKu} bonus KU (total ${totalUnits}) to your ${target} wallet!`
-            : `Successfully added ${totalUnits} KU to your ${target} wallet.`,
-          data: { link: "https://alphify.site/settings?tab=wallet" }
-        }),
-      });
-    } catch (e) {
-      console.error("Firebase notification failed (webhook):", e);
-    }
-
-    console.log(`Webhook: Credited ${totalUnits} KU to ${target} wallet for user ${userId}`);
-
-    return new Response(JSON.stringify({ received: true, credited: true, units: totalUnits }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      },
+    );
   } catch (error) {
     console.error("Webhook error:", error);
     return new Response(JSON.stringify({ error: "Internal error" }), {
