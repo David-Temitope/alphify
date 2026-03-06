@@ -63,7 +63,7 @@
           "name": "Alphify by Alphadominity",
           "url": "https://alphify.site",
           "logo": "https://alphify.site/alphify-icon-512.webp",
-          "foundingDate": "2024",
+          "foundingDate": "2026",
           "founder": {
             "@type": "Person",
             "name": "Obasa David Temitope"
@@ -79,7 +79,7 @@
           "operatingSystem": "Web, Android, iOS",
           "applicationCategory": "EducationApplication",
           "url": "https://alphify.site",
-          "datePublished": "2025-01-01",
+          "datePublished": "2026-01-23",
           "description": "Master any university course and achieve academic dominance with Ezra AI. Get human-like explanations for complex topics and large study PDFs.",
           "offers": {
             "@type": "Offer",
@@ -101,13 +101,14 @@
     }
     </script>
 
-    <!-- Prevent lovable.app subdomain from being indexed -->
+    <!-- Keep custom domain as the canonical public entrypoint -->
     <script>
       if (window.location.hostname === 'alphify.lovable.app') {
         var meta = document.createElement('meta');
         meta.name = 'robots';
         meta.content = 'noindex, nofollow';
         document.head.appendChild(meta);
+        window.location.replace('https://alphify.site' + window.location.pathname + window.location.search + window.location.hash);
       }
     </script>
   </head>

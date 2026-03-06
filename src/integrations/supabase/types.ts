@@ -1165,6 +1165,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      handle_ku_purchase: {
+        Args: {
+          _amount_kobo: number
+          _bonus_ku: number
+          _group_id: string
+          _package_type: string
+          _plan_label: string
+          _promo_code: string
+          _reference: string
+          _target: string
+          _units: number
+          _user_id: string
+        }
+        Returns: Json
+      }
       increment_star_rating: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined

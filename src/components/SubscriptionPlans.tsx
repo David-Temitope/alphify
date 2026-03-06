@@ -27,6 +27,7 @@ declare global {
         amount: number;
         currency: string;
         ref: string;
+        subaccount?: string;
         metadata?: {
           custom_fields?: {
             display_name: string;
