@@ -487,11 +487,25 @@ Student Profile:
         messages.length > 0 && messages[messages.length - 1]?.role === 'assistant' && 
         (messages[messages.length - 1]?.is_quiz || messages[messages.length - 1]?.content?.includes('[QUIZ]'));
       
+      // Detect lecture exam pass (≥60%) for star rewards (+0.4)
+      const examPassIndicators = ['you crushed it', 'you passed', '⭐ +0.4', 'stars earned', 'ready for topic', 'you scored'];
+      const passPercentMatch = fullContent.match(/(\d+)%/);
+      const wasExamPass = examPassIndicators.some(ind => lowerContent.includes(ind)) && 
+        passPercentMatch && parseInt(passPercentMatch[1]) >= 60;
+      
       if (wasCorrectAnswer) {
         try {
           await supabase.rpc('increment_star_rating' as any, { _user_id: user!.id, _amount: 0.1 });
         } catch {
           // Silent fail - star increment is non-critical
+        }
+      }
+      
+      if (wasExamPass) {
+        try {
+          await supabase.rpc('increment_star_rating' as any, { _user_id: user!.id, _amount: 0.4 });
+        } catch {
+          // Silent fail
         }
       }
       
