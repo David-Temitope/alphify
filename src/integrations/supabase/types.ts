@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          mode: string | null
           subject: string | null
           title: string
           updated_at: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          mode?: string | null
           subject?: string | null
           title?: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          mode?: string | null
           subject?: string | null
           title?: string
           updated_at?: string
@@ -994,6 +997,7 @@ export type Database = {
         Row: {
           conversation_id: string | null
           created_at: string
+          extracted_text: string | null
           file_name: string
           file_path: string
           file_size: number
@@ -1005,6 +1009,7 @@ export type Database = {
         Insert: {
           conversation_id?: string | null
           created_at?: string
+          extracted_text?: string | null
           file_name: string
           file_path: string
           file_size: number
@@ -1016,6 +1021,7 @@ export type Database = {
         Update: {
           conversation_id?: string | null
           created_at?: string
+          extracted_text?: string | null
           file_name?: string
           file_path?: string
           file_size?: number
