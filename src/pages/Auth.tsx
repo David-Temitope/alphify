@@ -99,7 +99,10 @@ export default function Auth() {
     }
     link.href = 'https://alphify.site/auth';
     document.title = isLogin ? 'Sign In — Alphify' : 'Create Account — Alphify';
-    return () => { document.title = 'Alphify — Achieve Academic Dominance'; };
+    return () => {
+      document.title = 'Alphify — Achieve Academic Dominance';
+      link?.remove();
+    };
   }, [isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -175,6 +175,16 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('og:url', `https://alphify.site/blog/${post.slug}`);
     setMeta('og:image', `https://alphify.site/alphify-icon-512.png`);
     setMeta('og:site_name', 'Alphify');
+
+    // Canonical link for SEO
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', `https://alphify.site/blog/${post.slug}`);
+
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', post.title);
     setMeta('twitter:description', post.metaDescription);
@@ -210,6 +220,7 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     return () => {
       document.title = 'Alphify — AI Study Companion';
       scriptEl?.remove();
+      canonical?.remove();
     };
   }, [post]);
 
