@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useCanonical } from '@/hooks/useCanonical';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
@@ -7,19 +8,7 @@ import alphifyLogo from '@/assets/alphify-logo.webp';
 export default function Terms() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Canonical link for SEO
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', 'https://alphify.site/terms');
-    return () => {
-      canonical?.remove();
-    };
-  }, []);
+  useCanonical('https://alphify.site/terms');
 
   return (
     <div className="min-h-screen bg-background">
