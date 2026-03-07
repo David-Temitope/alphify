@@ -291,7 +291,7 @@ export default function LectureMode() {
 
           <Button
             onClick={handleStartLecture}
-            disabled={isProcessing || (!topic && !uploadedFile)}
+            disabled={isProcessing || (!course && !topic && !uploadedFile)}
             className="w-full py-6 rounded-2xl xp-gradient text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/20"
           >
             {isProcessing ? (
