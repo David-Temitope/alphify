@@ -113,9 +113,19 @@ export default function Index() {
 
     script.textContent = JSON.stringify(structuredData);
 
+    // Canonical link for SEO
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', 'https://alphify.site/');
+
     return () => {
       const existingScript = document.getElementById(scriptId);
       if (existingScript) existingScript.remove();
+      canonical?.remove();
     };
   }, []);
 
