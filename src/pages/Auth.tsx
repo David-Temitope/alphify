@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useCanonical } from '@/hooks/useCanonical';
 import { Eye, EyeOff, ArrowLeft, Loader2, BookOpen, Brain, Zap } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -89,19 +90,12 @@ export default function Auth() {
     if (!authLoading && user) navigate('/dashboard');
   }, [user, authLoading, navigate]);
 
-  // Set canonical link for security scanners
+  useCanonical('https://alphify.site/auth');
+
   useEffect(() => {
-    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'canonical';
-      document.head.appendChild(link);
-    }
-    link.href = 'https://alphify.site/auth';
     document.title = isLogin ? 'Sign In — Alphify' : 'Create Account — Alphify';
     return () => {
       document.title = 'Alphify — Achieve Academic Dominance';
-      link?.remove();
     };
   }, [isLogin]);
 

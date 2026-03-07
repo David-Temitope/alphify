@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSqu
 import alphifyLogo from '@/assets/alphify-logo.webp';
 import { blogPosts } from '@/data/blogPosts';
 import { useEffect, useRef, useMemo } from 'react';
+import { useCanonical } from '@/hooks/useCanonical';
 
 function FloatingParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -64,70 +65,42 @@ export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Structured Data for SEO
-  useEffect(() => {
-    const scriptId = 'alphify-structured-data-jsonld';
-    let script = document.getElementById(scriptId) as HTMLScriptElement;
-
-    if (!script) {
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.type = 'application/ld+json';
-      document.head.appendChild(script);
-    }
-
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "How does Alphify help with university courses?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for any course, from Engineering to Nursing."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Can Ezra AI explain complex university PDFs?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, Ezra AI breaks down large and complex university PDFs into simple, human-like explanations, helping students move from confusion to topic mastery across all departments."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What is the Global Library feature?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "The Global Library allows students to upload and share study materials within their specific university, department, and level for easy access by course mates."
-              }
+  const structuredData = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does Alphify help with university courses?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Alphify helps students achieve academic dominance through human-like AI tutoring, PDF understanding, and topic mastery tools for any course, from Engineering to Nursing."
             }
-          ]
-        }
-      ]
-    };
+          },
+          {
+            "@type": "Question",
+            "name": "Can Ezra AI explain complex university PDFs?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, Ezra AI breaks down large and complex university PDFs into simple, human-like explanations, helping students move from confusion to topic mastery across all departments."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the Global Library feature?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The Global Library allows students to upload and share study materials within their specific university, department, and level for easy access by course mates."
+            }
+          }
+        ]
+      }
+    ]
+  }), []);
 
-    script.textContent = JSON.stringify(structuredData);
-
-    // Canonical link for SEO
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', 'https://alphify.site/');
-
-    return () => {
-      const existingScript = document.getElementById(scriptId);
-      if (existingScript) existingScript.remove();
-      canonical?.remove();
-    };
-  }, []);
+  useCanonical('https://alphify.site/', structuredData, 'alphify-structured-data-jsonld');
 
   const features = [
     { icon: Brain, title: 'Smart Explanations', description: 'Complex topics broken down using examples from your daily life' },

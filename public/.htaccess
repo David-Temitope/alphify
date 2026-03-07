@@ -34,6 +34,11 @@
   RewriteCond %{HTTP_HOST} ^www\.alphify\.site [NC]
   RewriteRule ^(.*)$ https://alphify.site/$1 [L,R=301]
 
+  # Blog Redirects
+  RewriteRule ^blog/how-to-simplify-general-studies-with-ai$ /blog/mastering-general-studies-gst-for-university-students [L,R=301]
+  RewriteRule ^blog/mastering-first-year-physics-ezra-ai$ /blog/dominating-complex-science-and-engineering-courses [L,R=301]
+  RewriteRule ^blog/understand-complex-nursing-pdfs-ezra-ai$ /blog/understand-large-pdfs-in-nursing-law-and-professional-courses [L,R=301]
+
   # Handle SPA Routing
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

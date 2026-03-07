@@ -1,10 +1,11 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ArrowLeft, ArrowRight, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getBlogPostBySlug, blogPosts } from '@/data/blogPosts';
 import alphifyLogo from '@/assets/alphify-logo.webp';
+import { useCanonical } from '@/hooks/useCanonical';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -148,13 +149,33 @@ export default function BlogPost() {
 }
 
 // Update document title, meta tags, and JSON-LD structured data
-function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
+function MetaTags({ post }: { post: NonNullable<ReturnType<typeof getBlogPostBySlug>> }) {
+  const jsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.metaDescription,
+    author: { '@type': 'Organization', name: 'Alphify by Alphadominity', url: 'https://alphify.site' },
+    publisher: { '@type': 'Organization', name: 'Alphify', url: 'https://alphify.site' },
+    datePublished: post.publishedDate,
+    dateModified: post.publishedDate,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://alphify.site/blog/${post.slug}` },
+    keywords: post.keywords.join(', '),
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+  }), [post]);
+
+  useCanonical(`https://alphify.site/blog/${post.slug}`, jsonLd, 'blog-jsonld');
+
   useEffect(() => {
-    if (!post) return;
     document.title = `${post.title} | Alphify Blog`;
     
+    const metaTags: { element: HTMLMetaElement; originalContent: string | null }[] = [];
+
     const setMeta = (name: string, content: string) => {
-      let el = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
+      let el = (document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`)) as HTMLMetaElement;
+      let originalContent = el ? el.getAttribute('content') : null;
+
       if (!el) {
         el = document.createElement('meta');
         if (name.startsWith('og:')) {
@@ -165,6 +186,7 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
         document.head.appendChild(el);
       }
       el.setAttribute('content', content);
+      metaTags.push({ element: el, originalContent });
     };
 
     setMeta('description', post.metaDescription);
@@ -175,16 +197,6 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('og:url', `https://alphify.site/blog/${post.slug}`);
     setMeta('og:image', `https://alphify.site/alphify-icon-512.png`);
     setMeta('og:site_name', 'Alphify');
-
-    // Canonical link for SEO
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', `https://alphify.site/blog/${post.slug}`);
-
     setMeta('twitter:card', 'summary_large_image');
     setMeta('twitter:title', post.title);
     setMeta('twitter:description', post.metaDescription);
@@ -192,38 +204,18 @@ function MetaTags({ post }: { post: ReturnType<typeof getBlogPostBySlug> }) {
     setMeta('twitter:site', '@alphadominity');
     setMeta('twitter:creator', '@alphadominity');
 
-    // JSON-LD Article structured data for Google rich results
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: post.title,
-      description: post.metaDescription,
-      author: { '@type': 'Organization', name: 'Alphify by Alphadominity', url: 'https://alphify.site' },
-      publisher: { '@type': 'Organization', name: 'Alphify', url: 'https://alphify.site' },
-      datePublished: post.publishedDate,
-      dateModified: post.publishedDate,
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://alphify.site/blog/${post.slug}` },
-      keywords: post.keywords.join(', '),
-      inLanguage: 'en',
-      isAccessibleForFree: true,
-    };
-
-    let scriptEl = document.querySelector('script[data-jsonld="blog"]') as HTMLScriptElement | null;
-    if (!scriptEl) {
-      scriptEl = document.createElement('script');
-      scriptEl.type = 'application/ld+json';
-      scriptEl.setAttribute('data-jsonld', 'blog');
-      document.head.appendChild(scriptEl);
-    }
-    scriptEl.textContent = JSON.stringify(jsonLd);
-
     return () => {
       document.title = 'Alphify — AI Study Companion';
-      scriptEl?.remove();
-      canonical?.remove();
+      // Cleanup meta tags: restore original content or remove if they were created by this component
+      metaTags.forEach(({ element, originalContent }) => {
+        if (originalContent === null) {
+          element.remove();
+        } else {
+          element.setAttribute('content', originalContent);
+        }
+      });
     };
   }, [post]);
 
-  if (!post) return null;
   return null;
 }
