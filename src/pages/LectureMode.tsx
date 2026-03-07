@@ -180,9 +180,14 @@ export default function LectureMode() {
       // Study history tracked via conversations
 
       // Start the lecture in chat
-      const prompt = textContent
-        ? `[LECTURE_MODE] I have uploaded a document about "${lectureTitle}". Please start lecturing me on it thoroughly.`
-        : `[LECTURE_MODE] Please lecture me on the topic: "${topic}"${course ? ` within the context of ${course}` : ''}. Start with the basics and go deep.`;
+      let prompt: string;
+      if (textContent) {
+        prompt = `[LECTURE_MODE] I have uploaded a document about "${lectureTitle}". Please start lecturing me on it thoroughly.`;
+      } else if (topic) {
+        prompt = `[LECTURE_MODE] Please lecture me on the topic: "${topic}"${course ? ` within the context of ${course}` : ''}. Start with the basics and go deep.`;
+      } else {
+        prompt = `[LECTURE_MODE][COURSE_OUTLINE] I want to study the course "${course}". I don't have a specific topic or PDF. Please research this course, create a comprehensive course outline with all the key topics, and start lecturing me topic by topic from the beginning.`;
+      }
 
       navigate(`/chat/${conversation.id}?mode=lecture`, { state: { initialMessage: prompt, fileContent: textContent } });
 
