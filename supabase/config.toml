@@ -3,3 +3,31 @@ project_id = "sfbaltsobmulweapgkco"
 [functions]
   [functions.auth-email-hook]
     verify_jwt = false
+  [functions.xplane-chat]
+    verify_jwt = false
+  [functions.extract-pdf-text]
+    verify_jwt = false
+  [functions.analyze-image]
+    verify_jwt = false
+  [functions.generate-exam]
+    verify_jwt = false
+  [functions.session-chat]
+    verify_jwt = false
+  [functions.purchase-ku]
+    verify_jwt = false
+  [functions.verify-payment]
+    verify_jwt = false
+  [functions.paystack-webhook]
+    verify_jwt = false
+  [functions.delete-account]
+    verify_jwt = false
+  [functions.elevenlabs-tts]
+    verify_jwt = false
+  [functions.handle-friend-request-notification]
+    verify_jwt = false
+  [functions.send-daily-mastery]
+    verify_jwt = false
+  [functions.send-notification]
+    verify_jwt = false
+  [functions.slack-notify]
+    verify_jwt = false
