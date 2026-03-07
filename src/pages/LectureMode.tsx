@@ -89,10 +89,10 @@ export default function LectureMode() {
       return;
     }
 
-    if (!topic && !uploadedFile) {
+    if (!course && !topic && !uploadedFile) {
       toast({
         title: 'Missing information',
-        description: 'Please provide a topic or upload a document to start.',
+        description: 'Please provide a course name, topic, or upload a document to start.',
         variant: 'destructive',
       });
       return;
