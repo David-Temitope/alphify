@@ -18,6 +18,7 @@ import {
   Loader2,
   Plus,
   MessageCircle,
+  Sparkles,
 } from 'lucide-react';
 import StudyGroupCard from '@/components/StudyGroupCard';
 import CreateGroupModal from '@/components/CreateGroupModal';
