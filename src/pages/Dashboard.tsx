@@ -19,6 +19,7 @@ import {
   Clock,
   LogOut,
   Wand2,
+  TrendingUp,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
