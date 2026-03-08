@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS fcm_token text DEFAULT NULL;

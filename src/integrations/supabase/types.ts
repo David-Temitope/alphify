@@ -1080,6 +1080,7 @@ export type Database = {
           exam_sample_file_id: string | null
           exam_sample_text: string | null
           explanation_style: string | null
+          fcm_token: string | null
           field_of_study: string | null
           id: string
           preferred_name: string | null
@@ -1101,6 +1102,7 @@ export type Database = {
           exam_sample_file_id?: string | null
           exam_sample_text?: string | null
           explanation_style?: string | null
+          fcm_token?: string | null
           field_of_study?: string | null
           id?: string
           preferred_name?: string | null
@@ -1122,6 +1124,7 @@ export type Database = {
           exam_sample_file_id?: string | null
           exam_sample_text?: string | null
           explanation_style?: string | null
+          fcm_token?: string | null
           field_of_study?: string | null
           id?: string
           preferred_name?: string | null
