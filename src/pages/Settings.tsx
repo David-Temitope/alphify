@@ -176,6 +176,11 @@ export default function Settings() {
         courses: settings.courses, preferred_name: settings.preferred_name,
         explanation_style: settings.explanation_style, exam_sample_text: settings.exam_sample_text,
         bio: settings.bio,
+        notify_mate_requests: settings.notify_mate_requests,
+        notify_mate_messages: settings.notify_mate_messages,
+        notify_library_uploads: settings.notify_library_uploads,
+        notify_study_sessions: settings.notify_study_sessions,
+        notify_daily_mastery: settings.notify_daily_mastery,
       };
       if (existingSettings) {
         const { error } = await supabase.from('user_settings').update(settingsToSave).eq('user_id', user!.id);
