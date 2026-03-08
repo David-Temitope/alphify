@@ -108,6 +108,11 @@ interface UserSettings {
   explanation_style: string | null;
   exam_sample_text: string | null;
   bio: string | null;
+  notify_mate_requests: boolean;
+  notify_mate_messages: boolean;
+  notify_library_uploads: boolean;
+  notify_study_sessions: boolean;
+  notify_daily_mastery: boolean;
 }
 
 export default function Settings() {
