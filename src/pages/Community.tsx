@@ -25,6 +25,7 @@ import BottomNav from '@/components/BottomNav';
 import StarRating from '@/components/StarRating';
 import { cn } from '@/lib/utils';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { sendPushNotification } from '@/lib/firebase';
 
 interface UserProfile {
   id: string;
