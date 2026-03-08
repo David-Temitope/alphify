@@ -7,6 +7,9 @@ import { blogPosts } from '@/data/blogPosts';
 import { useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useCanonical } from '@/hooks/useCanonical';
 
+// Extracted to separate chunk to reduce main bundle size for LCP
+const FloatingParticlesLazy = lazy(() => import('@/components/FloatingParticles'));
+
 function FloatingParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
