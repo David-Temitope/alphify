@@ -88,6 +88,20 @@ export default function MateChat() {
       });
       if (error) throw error;
       setInput('');
+
+      // Send push notification to mate
+      const senderName = mateProfile?.full_name ? 'Your study mate' : 'A study mate';
+      const { data: senderSettings } = await supabase
+        .from('user_settings')
+        .select('preferred_name')
+        .eq('user_id', user.id)
+        .single();
+      sendPushNotification(
+        mateId,
+        `New message from ${senderSettings?.preferred_name || senderName} 💬`,
+        msg.length > 80 ? msg.substring(0, 80) + '...' : msg,
+        { link: `https://alphify.site/mate-chat/${user.id}`, type: 'mate_message' }
+      );
       queryClient.invalidateQueries({ queryKey: ['mate-messages', mateId] });
     } catch (error) {
       toast({ title: 'Failed to send', description: error instanceof Error ? error.message : 'Unknown error', variant: 'destructive' });
