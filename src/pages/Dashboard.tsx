@@ -20,6 +20,7 @@ import {
   LogOut,
   Wand2,
   TrendingUp,
+  Trophy,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
