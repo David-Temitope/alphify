@@ -90,6 +90,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       requestNotificationPermission(user.id);
+
+      // Handle foreground notifications as toasts
+      const unsubscribe = onForegroundMessage((payload: any) => {
+        toast({
+          title: payload.notification?.title || 'Notification',
+          description: payload.notification?.body || '',
+        });
+      });
+
+      return () => {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      };
     }
   }, [user]);
 
