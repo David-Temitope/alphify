@@ -29,6 +29,19 @@ export const requestNotificationPermission = async (userId: string) => {
 
       if (token) {
         console.log('FCM Token obtained:', token.substring(0, 20) + '...');
+
+        // Save the FCM token to user_settings
+        const { error } = await supabase
+          .from('user_settings')
+          .update({ fcm_token: token } as any)
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error saving FCM token:', error);
+        } else {
+          console.log('FCM token saved successfully');
+        }
+
         return token;
       }
     }
@@ -40,4 +53,26 @@ export const requestNotificationPermission = async (userId: string) => {
 export const onForegroundMessage = (callback: (payload: any) => void) => {
   if (!messaging) return;
   return onMessage(messaging, callback);
+};
+
+/**
+ * Helper to send a push notification via the send-notification edge function.
+ * Call this from client-side code after actions like accepting a friend request.
+ */
+export const sendPushNotification = async (
+  userId: string,
+  title: string,
+  body: string,
+  data?: Record<string, string>
+) => {
+  try {
+    const { error } = await supabase.functions.invoke('send-notification', {
+      body: { userId, title, body, data },
+    });
+    if (error) {
+      console.error('Push notification failed:', error);
+    }
+  } catch (e) {
+    console.error('Push notification error:', e);
+  }
 };

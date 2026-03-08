@@ -123,6 +123,19 @@ export default function Library() {
         const { error: insertError } = await supabase.from('shared_files').insert({ uploaded_by: user!.id, university: assignment.university, department: assignment.department, level: assignment.level, course_code: courseCode, file_name: uploadFile.name, file_path: filePath, file_type: uploadFile.type, file_size: uploadFile.size, extracted_text: extractedText, file_category: uploadCategory });
         if (insertError) throw insertError;
         queryClient.invalidateQueries({ queryKey: ['shared-files'] });
+
+        // Notify all students in same university/department/level
+        supabase.functions.invoke('notify-library-upload', {
+          body: {
+            university: assignment.university,
+            department: assignment.department,
+            level: assignment.level,
+            courseCode,
+            fileName: uploadFile.name,
+            uploadedByName: 'Your Course Rep',
+          },
+        }).catch(e => console.error('Library upload notification failed:', e));
+
         toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
       } else {
         if (!hasFreeSlotsLeft) { const bought = await buyLibrarySlot(); if (!bought) { setIsUploading(false); return; } }

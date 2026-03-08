@@ -25,6 +25,7 @@ import BottomNav from '@/components/BottomNav';
 import StarRating from '@/components/StarRating';
 import { cn } from '@/lib/utils';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { sendPushNotification } from '@/lib/firebase';
 
 interface UserProfile {
   id: string;
@@ -140,6 +141,20 @@ export default function Community() {
       const { error: m2 } = await supabase.from('study_mates').insert({ user_id: request.to_user_id, mate_id: request.from_user_id });
       if (m2 && !m2.message.includes('duplicate')) throw m2;
       await supabase.from('study_requests').delete().eq('id', request.id);
+
+      // Notify the requester that their request was accepted
+      const { data: accepterSettings } = await supabase
+        .from('user_settings')
+        .select('preferred_name')
+        .eq('user_id', request.to_user_id)
+        .single();
+      const accepterName = accepterSettings?.preferred_name || 'Someone';
+      sendPushNotification(
+        request.from_user_id,
+        'Study Mate Request Accepted! 🎉',
+        `${accepterName} accepted your study mate request. Start chatting now!`,
+        { link: `https://alphify.site/mate-chat/${request.to_user_id}`, type: 'friend_accepted' }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['study-requests'] });

@@ -31,3 +31,5 @@ project_id = "sfbaltsobmulweapgkco"
     verify_jwt = false
   [functions.slack-notify]
     verify_jwt = false
+  [functions.notify-library-upload]
+    verify_jwt = false

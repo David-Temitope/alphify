@@ -23,7 +23,7 @@ import {
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import ReturningUserNudge from '@/components/ReturningUserNudge';
-import { requestNotificationPermission } from '@/lib/firebase';
+import { requestNotificationPermission, onForegroundMessage } from '@/lib/firebase';
 import { format } from 'date-fns';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
@@ -90,6 +90,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       requestNotificationPermission(user.id);
+
+      // Handle foreground notifications as toasts
+      const unsubscribe = onForegroundMessage((payload: any) => {
+        toast({
+          title: payload.notification?.title || 'Notification',
+          description: payload.notification?.body || '',
+        });
+      });
+
+      return () => {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      };
     }
   }, [user]);
 
