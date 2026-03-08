@@ -164,6 +164,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/leaderboard"
+                element={
+                  <ProtectedRoute>
+                    <Leaderboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
