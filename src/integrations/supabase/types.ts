@@ -1083,6 +1083,12 @@ export type Database = {
           fcm_token: string | null
           field_of_study: string | null
           id: string
+          last_studied_topic: string | null
+          notify_daily_mastery: boolean | null
+          notify_library_uploads: boolean | null
+          notify_mate_messages: boolean | null
+          notify_mate_requests: boolean | null
+          notify_study_sessions: boolean | null
           preferred_name: string | null
           quiz_score_percentage: number | null
           star_rating: number | null
@@ -1105,6 +1111,12 @@ export type Database = {
           fcm_token?: string | null
           field_of_study?: string | null
           id?: string
+          last_studied_topic?: string | null
+          notify_daily_mastery?: boolean | null
+          notify_library_uploads?: boolean | null
+          notify_mate_messages?: boolean | null
+          notify_mate_requests?: boolean | null
+          notify_study_sessions?: boolean | null
           preferred_name?: string | null
           quiz_score_percentage?: number | null
           star_rating?: number | null
@@ -1127,6 +1139,12 @@ export type Database = {
           fcm_token?: string | null
           field_of_study?: string | null
           id?: string
+          last_studied_topic?: string | null
+          notify_daily_mastery?: boolean | null
+          notify_library_uploads?: boolean | null
+          notify_mate_messages?: boolean | null
+          notify_mate_requests?: boolean | null
+          notify_study_sessions?: boolean | null
           preferred_name?: string | null
           quiz_score_percentage?: number | null
           star_rating?: number | null
@@ -1166,11 +1184,34 @@ export type Database = {
           university: string
         }[]
       }
+      get_leaderboard: {
+        Args: { _field_of_study: string }
+        Returns: {
+          field_of_study: string
+          preferred_name: string
+          quiz_score_percentage: number
+          star_rating: number
+          total_quizzes_taken: number
+          university: string
+          user_id: string
+        }[]
+      }
       get_public_profiles: {
         Args: never
         Returns: {
           field_of_study: string
           star_rating: number
+          user_id: string
+        }[]
+      }
+      get_recommended_mates: {
+        Args: { _user_id: string }
+        Returns: {
+          field_of_study: string
+          match_score: number
+          preferred_name: string
+          star_rating: number
+          university: string
           user_id: string
         }[]
       }
