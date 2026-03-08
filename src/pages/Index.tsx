@@ -146,8 +146,8 @@ export default function Index() {
       <main>
         {/* ======= HERO SECTION ======= */}
         <section className="relative min-h-[calc(100vh-80px)] flex flex-col -mt-20 pt-20">
-          {/* Animated particles */}
-          <FloatingParticles />
+          {/* Animated particles - lazy loaded to not block LCP */}
+          <Suspense fallback={null}><FloatingParticlesLazy /></Suspense>
 
           {/* Radial glow */}
           <div className="absolute inset-0 pointer-events-none z-0">
