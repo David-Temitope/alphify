@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Loader2, ShieldAlert } from 'lucide-react';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { sendPushNotification } from '@/lib/firebase';
 
 const BLOCKED_PATTERNS = /(\b(sex|nude|naked|porn|xxx|dick|pussy|fuck|shit|ass\b|bitch|damn|bastard|cock|cunt|whore|slut)\b)/i;
 
