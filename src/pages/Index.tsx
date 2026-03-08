@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle, Sparkles } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 import { blogPosts } from '@/data/blogPosts';
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useCanonical } from '@/hooks/useCanonical';
 
 function FloatingParticles() {
