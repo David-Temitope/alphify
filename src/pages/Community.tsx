@@ -442,3 +442,73 @@ export default function Community() {
     </div>
   );
 }
+
+// Recommended Mates component using the RPC function
+function RecommendedMates({ 
+  userId, mateIds, outgoingRequests, incomingRequests, onSendRequest, sendingRequest, renderUserCard 
+}: {
+  userId: string;
+  mateIds: string[];
+  outgoingRequests: StudyRequest[];
+  incomingRequests: StudyRequest[];
+  onSendRequest: (id: string) => void;
+  sendingRequest: boolean;
+  renderUserCard: (profile: any, action: React.ReactNode) => React.ReactNode;
+}) {
+  const { data: recommended, isLoading } = useQuery({
+    queryKey: ['recommended-mates', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_recommended_mates', { _user_id: userId });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  // Get profiles for the recommended users
+  const { data: profiles } = useQuery({
+    queryKey: ['recommended-profiles', recommended?.map((r: any) => r.user_id)],
+    queryFn: async () => {
+      const userIds = recommended!.map((r: any) => r.user_id);
+      const { data } = await supabase.from('profiles').select('*').in('user_id', userIds);
+      return data || [];
+    },
+    enabled: !!recommended && recommended.length > 0,
+  });
+
+  const filteredRecs = recommended
+    ?.filter((r: any) => !mateIds.includes(r.user_id))
+    .slice(0, 5) || [];
+
+  if (isLoading || filteredRecs.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        Recommended for you
+      </h3>
+      {filteredRecs.map((rec: any) => {
+        const profile = profiles?.find((p: any) => p.user_id === rec.user_id);
+        const displayProfile = {
+          id: rec.user_id,
+          user_id: rec.user_id,
+          full_name: rec.preferred_name || profile?.full_name || 'Student',
+          settings: { field_of_study: rec.field_of_study, star_rating: rec.star_rating },
+        };
+        const isPendingOut = outgoingRequests.some(r => r.to_user_id === rec.user_id);
+        const isPendingIn = incomingRequests.some(r => r.from_user_id === rec.user_id);
+        const action = isPendingOut ? (
+          <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-secondary">Sent</span>
+        ) : isPendingIn ? (
+          <span className="text-xs text-primary px-3 py-1.5 rounded-full bg-primary/10">Respond</span>
+        ) : (
+          <Button size="sm" variant="outline" className="rounded-full h-8 px-3 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground" onClick={() => onSendRequest(rec.user_id)} disabled={sendingRequest}>
+            <UserPlus className="h-3.5 w-3.5 mr-1" /> Add
+          </Button>
+        );
+        return renderUserCard(displayProfile, action);
+      })}
+    </div>
+  );
+}
