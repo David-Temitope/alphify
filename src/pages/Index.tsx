@@ -4,62 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { ArrowRight, BookOpen, Brain, FileText, GraduationCap, Users, MessageSquare, Clock, CheckCircle, Sparkles } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 import { blogPosts } from '@/data/blogPosts';
-import { useEffect, useRef, useMemo } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { useCanonical } from '@/hooks/useCanonical';
 
-function FloatingParticles() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+// Extracted to separate chunk to reduce main bundle size for LCP
+const FloatingParticlesLazy = lazy(() => import('@/components/FloatingParticles'));
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const particles: { x: number; y: number; r: number; dx: number; dy: number; o: number }[] = [];
-    for (let i = 0; i < 60; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 2 + 0.5,
-        dx: (Math.random() - 0.5) * 0.3,
-        dy: (Math.random() - 0.5) * 0.3,
-        o: Math.random() * 0.5 + 0.1,
-      });
-    }
-
-    let animId: number;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(187, 85%, 53%, ${p.o})`;
-        ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
-      });
-      animId = requestAnimationFrame(draw);
-    };
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />;
-}
 
 export default function Index() {
   const { user } = useAuth();
@@ -143,8 +93,8 @@ export default function Index() {
       <main>
         {/* ======= HERO SECTION ======= */}
         <section className="relative min-h-[calc(100vh-80px)] flex flex-col -mt-20 pt-20">
-          {/* Animated particles */}
-          <FloatingParticles />
+          {/* Animated particles - lazy loaded to not block LCP */}
+          <Suspense fallback={null}><FloatingParticlesLazy /></Suspense>
 
           {/* Radial glow */}
           <div className="absolute inset-0 pointer-events-none z-0">
@@ -157,7 +107,7 @@ export default function Index() {
           {/* Logo glow */}
           <div className="relative mb-8 animate-fade-in">
             <div className="absolute inset-0 w-24 h-24 mx-auto bg-primary/30 rounded-full blur-2xl" />
-            <img src={alphifyLogo} alt="Alphify - Human-Like AI Tutor" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
+            <img src={alphifyLogo} alt="Alphify - Human-Like AI Tutor" width={96} height={96} fetchPriority="high" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
@@ -234,7 +184,7 @@ export default function Index() {
             <div className="order-2 lg:order-1">
               <div className="relative">
                 <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-                <img alt="Alphify AI Interface showing human-like tutor explanations" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
+                <img alt="Alphify AI Interface showing human-like tutor explanations" width={800} height={533} loading="lazy" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
               </div>
             </div>
             <div className="order-1 lg:order-2">
