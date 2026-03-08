@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-query': ['@tanstack/react-query'],
           'vendor-charts': ['recharts'],
           'vendor-markdown': ['react-markdown'],
-          'vendor-firebase': ['firebase'],
+          'vendor-firebase': ['firebase/app', 'firebase/messaging'],
         },
       },
     },
