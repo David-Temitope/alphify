@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "inline",
       manifest: false, // using public/manifest.json
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp,woff,woff2}"],
