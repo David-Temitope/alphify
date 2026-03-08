@@ -18,16 +18,34 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user's FCM token
+    // Get user's FCM token and notification preferences
     const { data: settings } = await supabase
       .from("user_settings")
-      .select("fcm_token")
+      .select("fcm_token, notify_mate_requests, notify_mate_messages, notify_library_uploads, notify_study_sessions, notify_daily_mastery")
       .eq("user_id", userId)
       .single();
 
     if (!settings?.fcm_token) {
       return new Response(JSON.stringify({ error: "No FCM token for user" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check notification preferences based on notification type
+    const notifType = data?.type || '';
+    const prefMap: Record<string, string> = {
+      'friend_request': 'notify_mate_requests',
+      'friend_accepted': 'notify_mate_requests',
+      'mate_message': 'notify_mate_messages',
+      'library_upload': 'notify_library_uploads',
+      'study_session': 'notify_study_sessions',
+      'daily_mastery': 'notify_daily_mastery',
+    };
+
+    const prefKey = prefMap[notifType];
+    if (prefKey && settings[prefKey] === false) {
+      return new Response(JSON.stringify({ skipped: true, reason: "User disabled this notification type" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
