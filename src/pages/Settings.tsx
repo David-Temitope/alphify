@@ -130,6 +130,8 @@ export default function Settings() {
     student_type: null, field_of_study: null, country: null, university_level: null,
     university: null, ai_personality: ['friendly_teacher'], courses: [],
     preferred_name: null, explanation_style: 'five_year_old', exam_sample_text: null, bio: null,
+    notify_mate_requests: true, notify_mate_messages: true, notify_library_uploads: true,
+    notify_study_sessions: true, notify_daily_mastery: true,
   });
   const [customCourse, setCustomCourse] = useState('');
 
