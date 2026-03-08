@@ -20,6 +20,7 @@ import {
   LogOut,
   Wand2,
   TrendingUp,
+  Trophy,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
@@ -261,6 +262,17 @@ export default function Dashboard() {
               </div>
               <p className="font-medium text-sm text-foreground">Progress</p>
               <p className="text-xs text-muted-foreground mt-0.5">Your stats</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/leaderboard')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/20 p-4 text-left hover:border-yellow-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-3">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Leaderboard</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Rankings</p>
             </button>
           </div>
         </section>

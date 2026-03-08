@@ -17,8 +17,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   User, GraduationCap, Globe, Sparkles, BookOpen, Save, Loader2, Brain, X,
   CreditCard, AlertTriangle, Upload, Settings as SettingsIcon, Gift, Copy, Check,
-  HelpCircle
+  HelpCircle, Bell
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import HelpDesk from '@/components/HelpDesk';
 import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
@@ -107,6 +108,11 @@ interface UserSettings {
   explanation_style: string | null;
   exam_sample_text: string | null;
   bio: string | null;
+  notify_mate_requests: boolean;
+  notify_mate_messages: boolean;
+  notify_library_uploads: boolean;
+  notify_study_sessions: boolean;
+  notify_daily_mastery: boolean;
 }
 
 export default function Settings() {
@@ -124,6 +130,8 @@ export default function Settings() {
     student_type: null, field_of_study: null, country: null, university_level: null,
     university: null, ai_personality: ['friendly_teacher'], courses: [],
     preferred_name: null, explanation_style: 'five_year_old', exam_sample_text: null, bio: null,
+    notify_mate_requests: true, notify_mate_messages: true, notify_library_uploads: true,
+    notify_study_sessions: true, notify_daily_mastery: true,
   });
   const [customCourse, setCustomCourse] = useState('');
 
@@ -150,6 +158,11 @@ export default function Settings() {
         explanation_style: existingSettings.explanation_style || 'five_year_old',
         exam_sample_text: existingSettings.exam_sample_text || null,
         bio: (existingSettings as any).bio || null,
+        notify_mate_requests: (existingSettings as any).notify_mate_requests ?? true,
+        notify_mate_messages: (existingSettings as any).notify_mate_messages ?? true,
+        notify_library_uploads: (existingSettings as any).notify_library_uploads ?? true,
+        notify_study_sessions: (existingSettings as any).notify_study_sessions ?? true,
+        notify_daily_mastery: (existingSettings as any).notify_daily_mastery ?? true,
       });
     }
   }, [existingSettings]);
@@ -163,6 +176,11 @@ export default function Settings() {
         courses: settings.courses, preferred_name: settings.preferred_name,
         explanation_style: settings.explanation_style, exam_sample_text: settings.exam_sample_text,
         bio: settings.bio,
+        notify_mate_requests: settings.notify_mate_requests,
+        notify_mate_messages: settings.notify_mate_messages,
+        notify_library_uploads: settings.notify_library_uploads,
+        notify_study_sessions: settings.notify_study_sessions,
+        notify_daily_mastery: settings.notify_daily_mastery,
       };
       if (existingSettings) {
         const { error } = await supabase.from('user_settings').update(settingsToSave).eq('user_id', user!.id);
@@ -472,6 +490,34 @@ export default function Settings() {
                 <textarea id="exam_sample" placeholder="Paste sample exam questions here..." value={settings.exam_sample_text || ''}
                   onChange={(e) => setSettings(prev => ({ ...prev, exam_sample_text: e.target.value }))}
                   className="mt-2 w-full min-h-[120px] rounded-lg bg-secondary border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y" />
+              </div>
+            </section>
+            {/* Notification Preferences */}
+            <section className="p-4 rounded-2xl bg-card border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Bell className="h-4 w-4 text-primary" />
+                <h2 className="font-display text-base font-semibold">Notification Preferences</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Choose which push notifications you receive</p>
+              <div className="space-y-4">
+                {[
+                  { key: 'notify_mate_requests' as const, label: 'Study Mate Requests', desc: 'When someone sends you a friend request' },
+                  { key: 'notify_mate_messages' as const, label: 'Mate Messages', desc: 'New messages from study mates' },
+                  { key: 'notify_library_uploads' as const, label: 'Library Uploads', desc: 'When course rep uploads new materials' },
+                  { key: 'notify_study_sessions' as const, label: 'Study Sessions', desc: 'Group study session notifications' },
+                  { key: 'notify_daily_mastery' as const, label: 'Daily Mastery Reminders', desc: 'Daily study nudges from Ezra' },
+                ].map(({ key, label, desc }) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">{desc}</p>
+                    </div>
+                    <Switch
+                      checked={settings[key]}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, [key]: checked }))}
+                    />
+                  </div>
+                ))}
               </div>
             </section>
           </TabsContent>
