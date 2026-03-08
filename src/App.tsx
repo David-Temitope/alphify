@@ -155,6 +155,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/progress"
+                element={
+                  <ProtectedRoute>
+                    <Progress />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
