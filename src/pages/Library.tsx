@@ -16,7 +16,8 @@ import {
 import { 
   Search, 
   FileText, 
-  Trash2, 
+  Trash2,
+  Download,
   Upload,
   Folder,
   Clock,
@@ -248,6 +249,25 @@ export default function Library() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"
+                          onClick={async () => {
+                            try {
+                              const { data, error } = await supabase.storage.from('user-files').download(file.file_path);
+                              if (error) throw error;
+                              const url = URL.createObjectURL(data);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = file.file_name;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              URL.revokeObjectURL(url);
+                            } catch {
+                              toast({ title: 'Download failed', variant: 'destructive' });
+                            }
+                          }}>
+                          <Download className="h-3.5 w-3.5 text-primary" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"
                           onClick={async () => {
                             const { data, error } = await supabase.from('conversations').insert({ user_id: user!.id, title: `Discussing: ${file.file_name}` }).select().single();
