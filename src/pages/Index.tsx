@@ -237,7 +237,7 @@ export default function Index() {
             <div className="order-2 lg:order-1">
               <div className="relative">
                 <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-                <img alt="Alphify AI Interface showing human-like tutor explanations" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
+                <img alt="Alphify AI Interface showing human-like tutor explanations" width={800} height={533} loading="lazy" className="relative rounded-3xl shadow-xl w-full max-w-md mx-auto border border-border/30" src="/lovable-uploads/cd4cfcf8-293a-4fda-9403-aab92c6235b7.webp" />
               </div>
             </div>
             <div className="order-1 lg:order-2">
