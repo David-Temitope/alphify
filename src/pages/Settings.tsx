@@ -158,6 +158,11 @@ export default function Settings() {
         explanation_style: existingSettings.explanation_style || 'five_year_old',
         exam_sample_text: existingSettings.exam_sample_text || null,
         bio: (existingSettings as any).bio || null,
+        notify_mate_requests: (existingSettings as any).notify_mate_requests ?? true,
+        notify_mate_messages: (existingSettings as any).notify_mate_messages ?? true,
+        notify_library_uploads: (existingSettings as any).notify_library_uploads ?? true,
+        notify_study_sessions: (existingSettings as any).notify_study_sessions ?? true,
+        notify_daily_mastery: (existingSettings as any).notify_daily_mastery ?? true,
       });
     }
   }, [existingSettings]);
