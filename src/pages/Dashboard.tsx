@@ -23,7 +23,7 @@ import {
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import ReturningUserNudge from '@/components/ReturningUserNudge';
-import { requestNotificationPermission } from '@/lib/firebase';
+import { requestNotificationPermission, onForegroundMessage } from '@/lib/firebase';
 import { format } from 'date-fns';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 
