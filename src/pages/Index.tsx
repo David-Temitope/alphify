@@ -217,7 +217,7 @@ export default function Index() {
             {howItWorks.map((step, i) => (
               <div key={step.step} className="relative animate-fade-in-up" style={{ animationDelay: `${0.12 * i}s` }}>
                 {i < howItWorks.length - 1 && <div className="hidden lg:block absolute top-8 left-[60%] w-full h-px bg-gradient-to-r from-primary/40 to-transparent" />}
-                <div className="text-4xl font-display font-bold text-primary/15 mb-3">{step.step}</div>
+                <div className="text-4xl font-display font-bold text-primary/25 mb-3">{step.step}</div>
                 <h3 className="font-display font-semibold text-lg text-foreground mb-1.5">{step.title}</h3>
                 <p className="text-muted-foreground text-sm">{step.description}</p>
               </div>
