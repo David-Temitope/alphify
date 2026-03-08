@@ -23,20 +23,35 @@ const GroupChat = lazy(() => import("./pages/GroupChat"));
 const MateChat = lazy(() => import("./pages/MateChat"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Progress = lazy(() => import("./pages/Progress"));
 
 const queryClient = new QueryClient();
 
-// Initialize theme from localStorage on app load
+// Initialize theme from localStorage on app load, with time-based auto-switch
 function ThemeInit() {
   useEffect(() => {
-    const theme = localStorage.getItem('alphify-theme') || 'dark';
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    if (theme === 'system') {
-      root.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    } else {
-      root.classList.add(theme);
-    }
+    const applyTheme = () => {
+      const theme = localStorage.getItem('alphify-theme') || 'dark';
+      const autoSwitch = localStorage.getItem('alphify-auto-dark') === 'true';
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+
+      if (autoSwitch) {
+        const hour = new Date().getHours();
+        const isDark = hour >= 19 || hour < 6; // Dark from 7pm to 6am
+        root.classList.add(isDark ? 'dark' : 'light');
+      } else if (theme === 'system') {
+        root.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      } else {
+        root.classList.add(theme);
+      }
+    };
+
+    applyTheme();
+
+    // Re-check every 5 minutes for time-based switching
+    const interval = setInterval(applyTheme, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
   return null;
 }
@@ -137,6 +152,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ExamMode />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/progress"
+                element={
+                  <ProtectedRoute>
+                    <Progress />
                   </ProtectedRoute>
                 }
               />

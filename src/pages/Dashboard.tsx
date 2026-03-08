@@ -19,6 +19,7 @@ import {
   Clock,
   LogOut,
   Wand2,
+  TrendingUp,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
@@ -249,6 +250,17 @@ export default function Dashboard() {
               </div>
               <p className="font-medium text-sm text-foreground">Community</p>
               <p className="text-xs text-muted-foreground mt-0.5">Study mates</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/progress')}
+              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 border border-rose-500/20 p-4 text-left hover:border-rose-500/40 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center mb-3">
+                <TrendingUp className="h-5 w-5 text-rose-500" />
+              </div>
+              <p className="font-medium text-sm text-foreground">Progress</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Your stats</p>
             </button>
           </div>
         </section>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -14,38 +15,58 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function applyTheme(theme: Theme) {
+function applyTheme(theme: Theme, autoDark: boolean) {
   const root = document.documentElement;
-  const resolved = theme === 'system' ? getSystemTheme() : theme;
   root.classList.remove('light', 'dark');
-  root.classList.add(resolved);
+
+  if (autoDark) {
+    const hour = new Date().getHours();
+    root.classList.add(hour >= 19 || hour < 6 ? 'dark' : 'light');
+  } else {
+    const resolved = theme === 'system' ? getSystemTheme() : theme;
+    root.classList.add(resolved);
+  }
 }
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     return (localStorage.getItem('alphify-theme') as Theme) || 'dark';
   });
+  const [autoDark, setAutoDarkState] = useState(() => {
+    return localStorage.getItem('alphify-auto-dark') === 'true';
+  });
 
   useEffect(() => {
-    applyTheme(theme);
+    applyTheme(theme, autoDark);
     localStorage.setItem('alphify-theme', theme);
-  }, [theme]);
+    localStorage.setItem('alphify-auto-dark', String(autoDark));
+  }, [theme, autoDark]);
 
   useEffect(() => {
-    if (theme !== 'system') return;
+    if (theme !== 'system' && !autoDark) return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => applyTheme('system');
+    const handler = () => applyTheme(theme, autoDark);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, [theme]);
+  }, [theme, autoDark]);
 
-  return { theme, setTheme: setThemeState };
+  const setTheme = (t: Theme) => {
+    setAutoDarkState(false);
+    setThemeState(t);
+  };
+
+  const toggleAutoDark = () => {
+    setAutoDarkState(prev => !prev);
+  };
+
+  return { theme, setTheme, autoDark, toggleAutoDark };
 }
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, autoDark, toggleAutoDark } = useTheme();
 
-  const icon = theme === 'dark' ? <Moon className="h-4 w-4" /> 
+  const icon = autoDark ? <Clock className="h-4 w-4" />
+    : theme === 'dark' ? <Moon className="h-4 w-4" /> 
     : theme === 'light' ? <Sun className="h-4 w-4" /> 
     : <Monitor className="h-4 w-4" />;
 
@@ -65,6 +86,11 @@ export default function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
           <Monitor className="h-4 w-4 mr-2" /> System
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={toggleAutoDark}>
+          <Clock className="h-4 w-4 mr-2" />
+          Auto Night Mode {autoDark ? '✓' : ''}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
