@@ -23,6 +23,7 @@ const GroupChat = lazy(() => import("./pages/GroupChat"));
 const MateChat = lazy(() => import("./pages/MateChat"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Progress = lazy(() => import("./pages/Progress"));
 
 const queryClient = new QueryClient();
 
