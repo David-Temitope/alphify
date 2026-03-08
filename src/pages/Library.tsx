@@ -16,7 +16,8 @@ import {
 import { 
   Search, 
   FileText, 
-  Trash2, 
+  Trash2,
+  Download,
   Upload,
   Folder,
   Clock,
