@@ -17,8 +17,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   User, GraduationCap, Globe, Sparkles, BookOpen, Save, Loader2, Brain, X,
   CreditCard, AlertTriangle, Upload, Settings as SettingsIcon, Gift, Copy, Check,
-  HelpCircle
+  HelpCircle, Bell
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import HelpDesk from '@/components/HelpDesk';
 import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
