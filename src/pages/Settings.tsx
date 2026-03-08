@@ -492,6 +492,34 @@ export default function Settings() {
                   className="mt-2 w-full min-h-[120px] rounded-lg bg-secondary border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y" />
               </div>
             </section>
+            {/* Notification Preferences */}
+            <section className="p-4 rounded-2xl bg-card border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Bell className="h-4 w-4 text-primary" />
+                <h2 className="font-display text-base font-semibold">Notification Preferences</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Choose which push notifications you receive</p>
+              <div className="space-y-4">
+                {[
+                  { key: 'notify_mate_requests' as const, label: 'Study Mate Requests', desc: 'When someone sends you a friend request' },
+                  { key: 'notify_mate_messages' as const, label: 'Mate Messages', desc: 'New messages from study mates' },
+                  { key: 'notify_library_uploads' as const, label: 'Library Uploads', desc: 'When course rep uploads new materials' },
+                  { key: 'notify_study_sessions' as const, label: 'Study Sessions', desc: 'Group study session notifications' },
+                  { key: 'notify_daily_mastery' as const, label: 'Daily Mastery Reminders', desc: 'Daily study nudges from Ezra' },
+                ].map(({ key, label, desc }) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">{desc}</p>
+                    </div>
+                    <Switch
+                      checked={settings[key]}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, [key]: checked }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
           </TabsContent>
 
           <TabsContent value="account" className="space-y-4">
