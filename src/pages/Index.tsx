@@ -160,7 +160,7 @@ export default function Index() {
           {/* Logo glow */}
           <div className="relative mb-8 animate-fade-in">
             <div className="absolute inset-0 w-24 h-24 mx-auto bg-primary/30 rounded-full blur-2xl" />
-            <img src={alphifyLogo} alt="Alphify - Human-Like AI Tutor" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
+            <img src={alphifyLogo} alt="Alphify - Human-Like AI Tutor" width={96} height={96} fetchPriority="high" className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-primary/40 mx-auto" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
