@@ -110,7 +110,12 @@ export default function Terms() {
           For questions about these Terms, contact Alphadominity through the Platform's support channels.
         </p>
 
-        <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">16. Ownership &amp; Provenance</h2>
+        <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">16. AI-Generated Stories &amp; Illustrations Disclaimer</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Ezra, the AI tutor, uses fictional stories, analogies, and scenarios (referred to as "Gists") to explain academic concepts in a relatable and memorable way. These stories are <strong>entirely fictional</strong> and are generated solely for educational illustration purposes. They do not represent real events, real people, or real situations. Any resemblance to actual persons, living or dead, or actual events is purely coincidental. These stories are designed to be light, positive, and culturally relatable to aid learning — they are not intended to offend, stereotype, or misrepresent any individual, group, culture, or community.
+        </p>
+
+        <h2 className="font-display text-xl font-semibold mt-8 mb-4 text-foreground">17. Ownership &amp; Provenance</h2>
         <p className="text-muted-foreground leading-relaxed">
           Alphify was conceptualized, designed, and developed by <strong>Obasa David Temitope</strong>, operating under the business entity <strong>Alphadominity</strong> (established 2024). All intellectual property — including but not limited to the name "Alphify", the AI tutor character "Ezra", the Knowledge Units credit system, the application source code, design assets, and all associated documentation — are the original works of Alphadominity and are protected by international intellectual property laws. This platform has been publicly available since January 2025, with continuous development records, commit history, and user data serving as evidence of prior art and first use in commerce.
         </p>
