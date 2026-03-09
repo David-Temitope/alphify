@@ -17,6 +17,16 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Verify shared secret — only Alphify Companion can call this
+  const secret = req.headers.get("x-dashboard-secret");
+  const expectedSecret = Deno.env.get("DASHBOARD_API_SECRET");
+  if (!expectedSecret || secret !== expectedSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
