@@ -498,7 +498,7 @@ export default function Settings() {
                 <Bell className="h-4 w-4 text-primary" />
                 <h2 className="font-display text-base font-semibold">Notification Preferences</h2>
               </div>
-              <p className="text-xs text-muted-foreground mb-4">Choose which notifications you receive</p>
+              <p className="text-xs text-muted-foreground mb-4">Choose which push notifications you receive</p>
               <div className="space-y-4">
                 {[
                   { key: 'notify_mate_requests' as const, label: 'Study Mate Requests', desc: 'When someone sends you a friend request' },
