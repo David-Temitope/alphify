@@ -33,3 +33,5 @@ project_id = "sfbaltsobmulweapgkco"
     verify_jwt = false
   [functions.notify-library-upload]
     verify_jwt = false
+  [functions.broadcast-notification]
+    verify_jwt = false
