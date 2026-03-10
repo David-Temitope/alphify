@@ -343,13 +343,12 @@ export default function Chat() {
 
   const handleSendMessage = useCallback(async (text?: string, customFileContent?: string) => {
     const messageToSend = text || input.trim();
-    if (!messageToSend || isStreaming || balance < (chatMode === 'assignment' ? 2 : 1)) {
+    if (!messageToSend || isStreaming || balance <= 0) {
       if (!messageToSend || isStreaming) return;
 
-      const requiredKU = chatMode === 'assignment' ? 2 : 1;
       toast({
         title: 'Not enough Knowledge Units',
-        description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
+        description: 'You need KU to chat with Ezra. Top up your wallet!',
         variant: 'destructive',
       });
       return;
