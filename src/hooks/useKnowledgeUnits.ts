@@ -1,13 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
 
 export function useKnowledgeUnits() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isBuyingSlot, setIsBuyingSlot] = useState(false);
 
   const { data: wallet, isLoading, refetch } = useQuery({
     queryKey: ['ku-wallet', user?.id],
