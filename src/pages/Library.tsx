@@ -75,7 +75,8 @@ export default function Library() {
     },
   });
 
-  const hasFreeSlotsLeft = (personalFileCount || 0) < librarySlots;
+  // File size based KU cost: 1 KU per 1000KB (1MB)
+  const calculateFileCost = (fileSize: number) => Math.max(1, Math.ceil(fileSize / (1000 * 1024)));
 
   const { data: files, isLoading } = useQuery({
     queryKey: ['shared-files'],
