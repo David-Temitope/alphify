@@ -947,7 +947,10 @@ Student Profile:
                   type="submit"
                   disabled={!input.trim() || isStreaming}
                   size="icon"
-                  className="h-8 w-8 rounded-full xp-gradient text-primary-foreground disabled:opacity-30"
+                  className={cn(
+                    "h-8 w-8 rounded-full text-primary-foreground disabled:opacity-30",
+                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : "xp-gradient"
+                  )}
                 >
                   {isStreaming ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
