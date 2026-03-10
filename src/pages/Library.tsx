@@ -45,7 +45,7 @@ export default function Library() {
   const [uploadCategory, setUploadCategory] = useState<string>('course_material');
   const [uploadCourseCode, setUploadCourseCode] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const { balance, librarySlots, buyLibrarySlot, isBuyingSlot, refetch: refetchKU } = useKnowledgeUnits();
+  const { balance, refetch: refetchKU } = useKnowledgeUnits();
 
   const { data: userSettings } = useQuery({
     queryKey: ['user-settings'],
@@ -75,7 +75,8 @@ export default function Library() {
     },
   });
 
-  const hasFreeSlotsLeft = (personalFileCount || 0) < librarySlots;
+  // File size based KU cost: 1 KU per 1000KB (1MB)
+  const calculateFileCost = (fileSize: number) => Math.max(1, Math.ceil(fileSize / (1000 * 1024)));
 
   const { data: files, isLoading } = useQuery({
     queryKey: ['shared-files'],
@@ -138,7 +139,20 @@ export default function Library() {
 
         toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
       } else {
-        if (!hasFreeSlotsLeft) { const bought = await buyLibrarySlot(); if (!bought) { setIsUploading(false); return; } }
+        // Charge KU based on file size for personal uploads
+        const fileCost = calculateFileCost(uploadFile.size);
+        if (balance < fileCost) {
+          toast({ title: 'Not enough KU', description: `This file requires ${fileCost} KU to upload (based on file size).`, variant: 'destructive' });
+          setIsUploading(false);
+          return;
+        }
+        // Deduct KU via edge function
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session) {
+          const { error: kuError } = await supabase.from('ku_wallets').update({ balance: balance - fileCost }).eq('user_id', user!.id);
+          if (kuError) throw new Error('Failed to deduct KU');
+          await supabase.from('ku_transactions').insert({ user_id: user!.id, amount: -fileCost, type: 'file_upload', description: `File upload: ${uploadFile.name} (${Math.round(uploadFile.size / 1024)}KB)` });
+        }
         const courseCode = uploadCourseCode.trim().toUpperCase();
         const filePath = `personal/${user!.id}/${courseCode}/${Date.now()}_${uploadFile.name}`;
         const { error: uploadError } = await supabase.storage.from('user-files').upload(filePath, uploadFile);
@@ -334,11 +348,11 @@ export default function Library() {
                 <div className="flex items-center gap-2 mb-1">
                   <Coins className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">
-                    {hasFreeSlotsLeft ? `Free upload (${librarySlots - (personalFileCount || 0)} slot${librarySlots - (personalFileCount || 0) > 1 ? 's' : ''} left)` : 'Additional slot costs 5 KU'}
+                    {uploadFile ? `Upload cost: ${calculateFileCost(uploadFile.size)} KU` : 'KU charged based on file size'}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {hasFreeSlotsLeft ? 'This upload is free.' : `You have ${balance} KU. 5 KU will be deducted.`}
+                  {uploadFile ? `File size: ${Math.round(uploadFile.size / 1024)}KB • You have ${balance} KU` : '~1 KU per 1MB'}
                 </p>
               </div>
             )}

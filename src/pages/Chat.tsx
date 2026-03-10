@@ -343,13 +343,12 @@ export default function Chat() {
 
   const handleSendMessage = useCallback(async (text?: string, customFileContent?: string) => {
     const messageToSend = text || input.trim();
-    if (!messageToSend || isStreaming || balance < (chatMode === 'assignment' ? 2 : 1)) {
+    if (!messageToSend || isStreaming || balance <= 0) {
       if (!messageToSend || isStreaming) return;
 
-      const requiredKU = chatMode === 'assignment' ? 2 : 1;
       toast({
         title: 'Not enough Knowledge Units',
-        description: `You need at least ${requiredKU} KU${chatMode === 'assignment' ? ' for Assignment Assist' : ''}. Top up your wallet!`,
+        description: 'You need KU to chat with Ezra. Top up your wallet!',
         variant: 'destructive',
       });
       return;
@@ -697,7 +696,10 @@ Student Profile:
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Chat Header */}
-        <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-xl p-4 flex flex-col gap-3 flex-shrink-0">
+        <header className={cn(
+          "sticky top-0 z-10 border-b bg-background/80 backdrop-blur-xl p-4 flex flex-col gap-3 flex-shrink-0",
+          chatMode === 'assignment' ? "border-emerald-500/30" : "border-border"
+        )}>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-xl hover:bg-secondary transition-colors lg:hidden">
               <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -706,11 +708,14 @@ Student Profile:
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="font-display font-semibold text-foreground truncate">
+              <h1 className={cn(
+                "font-display font-semibold truncate",
+                chatMode === 'assignment' ? "text-emerald-500" : "text-foreground"
+              )}>
                 {conversation?.title || 'New Conversation'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {chatMode === 'assignment' ? '📝 Assignment Assist Mode (2 KU/prompt)' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+                {chatMode === 'assignment' ? '📝 Assignment Assist Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
               </p>
             </div>
             <Button
@@ -942,7 +947,10 @@ Student Profile:
                   type="submit"
                   disabled={!input.trim() || isStreaming}
                   size="icon"
-                  className="h-8 w-8 rounded-full xp-gradient text-primary-foreground disabled:opacity-30"
+                  className={cn(
+                    "h-8 w-8 rounded-full text-primary-foreground disabled:opacity-30",
+                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : "xp-gradient"
+                  )}
                 >
                   {isStreaming ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

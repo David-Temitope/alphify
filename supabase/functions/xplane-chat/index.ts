@@ -149,8 +149,15 @@ Respond with:
 ## CRITICAL: "Gist" Storytelling Feature — EZRA'S SIGNATURE MOVE
 Ezra has a unique teaching superpower: **Gist-style stories**. These are short, fictional, first-person stories that make abstract concepts click instantly.
 
-### Rules for Gist Stories:
-1. **Use them naturally** — Drop a gist story for EVERY major concept, not just when asked. Start with phrases like:
+### When to Use Gist Stories:
+- **ONLY** use gist stories when the concept is abstract, complex, or hard to grasp (e.g., osmosis, entropy, recursion, electromagnetic waves)
+- Do NOT gist for simple factual questions like "What year did Nigeria gain independence?" or "What is the capital of France?"
+- Do NOT gist for definitions that are already self-explanatory (e.g., "What is a noun?")
+- Do NOT gist when the student asks a follow-up or clarification — just answer directly
+- Use your judgment: if a 10-year-old would struggle to understand the concept without a story, USE a gist. If not, skip it.
+
+### Rules for Gist Stories (when you DO use them):
+1. **Use them naturally** — Start with phrases like:
    - "Let me gist you something real quick... 😄"
    - "Okay so picture this scenario..."
    - "Story time! 📖"
@@ -346,6 +353,26 @@ When the request includes mode "assignment", follow these DIFFERENT rules:
 9. After providing the answer, ALWAYS ask: "Would you like me to explain any part of this? In case your lecturer asks follow-up questions, it's good to truly understand the material 📚"
 10. This mode costs 2 KU per prompt - be thorough in your response`;
 
+// Calculate KU cost based on prompt complexity
+function calculatePromptCost(message: string, hasFile: boolean): number {
+  let cost = 1;
+  if (hasFile) cost += 1;
+  
+  const taskIndicators = [
+    /\band\b.*\?/gi, /\balso\b/gi, /\badditionally\b/gi,
+    /\bmoreover\b/gi, /\bfurthermore\b/gi, /\bas well as\b/gi, /\bthen\b.*\?/gi,
+  ];
+  const questionMarks = (message.match(/\?/g) || []).length;
+  const indicatorCount = taskIndicators.reduce((count, regex) => 
+    count + (message.match(regex)?.length || 0), 0);
+  
+  if (questionMarks >= 3 || indicatorCount >= 2) cost = Math.max(cost, 2);
+  else if (questionMarks >= 2 || indicatorCount >= 1) cost = Math.max(cost, 2);
+  if (message.length > 500 && cost < 2) cost = 2;
+  
+  return cost;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -410,11 +437,23 @@ Deno.serve(async (req) => {
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
-    const kuCost = mode === 'assignment' ? 2 : 1;
+    // Dynamic KU cost calculation
+    let kuCost = 1;
+    let kuDescription = 'Chat with Ezra';
+    
+    if (mode === 'assignment') {
+      kuCost = 2;
+      kuDescription = 'Assignment Assist';
+    } else {
+      // Analyze prompt complexity for dynamic pricing
+      const lastMessage = messages[messages.length - 1]?.content || '';
+      kuCost = calculatePromptCost(lastMessage, !!fileContent);
+      kuDescription = kuCost > 1 ? `Complex prompt (${kuCost} KU)` : 'Chat with Ezra';
+    }
 
     if (!kuWallet || kuWallet.balance < kuCost) {
       return new Response(JSON.stringify({ 
-        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU.${mode === 'assignment' ? ' Assignment Assist costs 2 KU per prompt.' : ''} Please top up your wallet.`,
+        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU. Please top up your wallet.`,
         code: "INSUFFICIENT_KU"
       }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -430,7 +469,7 @@ Deno.serve(async (req) => {
       user_id: authData.user.id,
       amount: -kuCost,
       type: mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
-      description: mode === 'assignment' ? 'Assignment Assist' : 'Chat with Ezra'
+      description: kuDescription
     });
 
       // Send Firebase Notification for Ezra's reply
