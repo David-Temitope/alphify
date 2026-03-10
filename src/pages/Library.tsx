@@ -45,7 +45,7 @@ export default function Library() {
   const [uploadCategory, setUploadCategory] = useState<string>('course_material');
   const [uploadCourseCode, setUploadCourseCode] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const { balance, librarySlots, buyLibrarySlot, isBuyingSlot, refetch: refetchKU } = useKnowledgeUnits();
+  const { balance, refetch: refetchKU } = useKnowledgeUnits();
 
   const { data: userSettings } = useQuery({
     queryKey: ['user-settings'],
