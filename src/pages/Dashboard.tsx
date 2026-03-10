@@ -226,7 +226,7 @@ export default function Dashboard() {
             <button
               onClick={async () => {
                 if (balance < 2) {
-                  toast({ title: 'Not enough KU', description: 'Assignment Assist costs 2 KU per prompt.', variant: 'destructive' });
+                  toast({ title: 'Not enough KU', description: 'Assignment Assist requires at least 2 KU.', variant: 'destructive' });
                   navigate('/settings?tab=wallet');
                   return;
                 }
@@ -239,7 +239,7 @@ export default function Dashboard() {
                 <FileText className="h-5 w-5 text-emerald-500" />
               </div>
               <p className="font-medium text-sm text-foreground">Assignment</p>
-              <p className="text-xs text-muted-foreground mt-0.5">2 KU/prompt</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Get help</p>
             </button>
 
             <button
