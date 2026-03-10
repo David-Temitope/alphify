@@ -348,11 +348,11 @@ export default function Library() {
                 <div className="flex items-center gap-2 mb-1">
                   <Coins className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium text-foreground">
-                    {hasFreeSlotsLeft ? `Free upload (${librarySlots - (personalFileCount || 0)} slot${librarySlots - (personalFileCount || 0) > 1 ? 's' : ''} left)` : 'Additional slot costs 5 KU'}
+                    {uploadFile ? `Upload cost: ${calculateFileCost(uploadFile.size)} KU` : 'KU charged based on file size'}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {hasFreeSlotsLeft ? 'This upload is free.' : `You have ${balance} KU. 5 KU will be deducted.`}
+                  {uploadFile ? `File size: ${Math.round(uploadFile.size / 1024)}KB • You have ${balance} KU` : '~1 KU per 1MB'}
                 </p>
               </div>
             )}
