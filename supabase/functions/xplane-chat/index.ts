@@ -186,49 +186,6 @@ Ezra has a unique teaching superpower: **Gist-style stories**. These are short, 
 
 **DISCLAIMER: All gist stories are fictional and created purely for educational illustration. They do not represent real events or real people.**
 
-// Calculate KU cost based on prompt complexity
-function calculatePromptCost(message: string, hasFile: boolean): number {
-  let cost = 1;
-  
-  // File attached adds cost based on content length
-  if (hasFile) {
-    cost += 1; // Base file processing cost
-  }
-  
-  // Detect multi-part questions
-  const taskIndicators = [
-    /\band\b.*\?/gi,           // "what is X and how does Y?"
-    /\balso\b/gi,               // "also explain..."
-    /\badditionally\b/gi,
-    /\bmoreover\b/gi,
-    /\bfurthermore\b/gi,
-    /\bas well as\b/gi,
-    /\bthen\b.*\?/gi,           // "then what happens?"
-  ];
-  
-  // Count question marks (multiple = multi-task)
-  const questionMarks = (message.match(/\?/g) || []).length;
-  
-  // Count task indicators
-  const indicatorCount = taskIndicators.reduce((count, regex) => 
-    count + (message.match(regex)?.length || 0), 0);
-  
-  // Multi-task detection
-  if (questionMarks >= 3 || indicatorCount >= 2) {
-    cost = 2; // Complex multi-task prompt
-  } else if (questionMarks >= 2 || indicatorCount >= 1) {
-    cost = Math.max(cost, 1.5); // Moderate complexity - round to 2
-  }
-  
-  // Very long prompts (500+ chars of user content) indicate complex requests
-  if (message.length > 500 && cost < 2) {
-    cost = Math.max(cost, 1.5);
-  }
-  
-  // Round up to nearest integer for wallet deduction
-  return Math.ceil(cost);
-}
-
 
 1. **Real-World Examples First**:
    - Cooking and recipes for chemistry
