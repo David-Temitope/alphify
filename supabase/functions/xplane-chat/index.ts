@@ -417,11 +417,23 @@ Deno.serve(async (req) => {
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
-    const kuCost = mode === 'assignment' ? 2 : 1;
+    // Dynamic KU cost calculation
+    let kuCost = 1;
+    let kuDescription = 'Chat with Ezra';
+    
+    if (mode === 'assignment') {
+      kuCost = 2;
+      kuDescription = 'Assignment Assist';
+    } else {
+      // Analyze prompt complexity for dynamic pricing
+      const lastMessage = messages[messages.length - 1]?.content || '';
+      kuCost = calculatePromptCost(lastMessage, !!fileContent);
+      kuDescription = kuCost > 1 ? `Complex prompt (${kuCost} KU)` : 'Chat with Ezra';
+    }
 
     if (!kuWallet || kuWallet.balance < kuCost) {
       return new Response(JSON.stringify({ 
-        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU.${mode === 'assignment' ? ' Assignment Assist costs 2 KU per prompt.' : ''} Please top up your wallet.`,
+        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU. Please top up your wallet.`,
         code: "INSUFFICIENT_KU"
       }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -437,7 +449,7 @@ Deno.serve(async (req) => {
       user_id: authData.user.id,
       amount: -kuCost,
       type: mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
-      description: mode === 'assignment' ? 'Assignment Assist' : 'Chat with Ezra'
+      description: kuDescription
     });
 
       // Send Firebase Notification for Ezra's reply
