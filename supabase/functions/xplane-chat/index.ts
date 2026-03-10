@@ -353,6 +353,26 @@ When the request includes mode "assignment", follow these DIFFERENT rules:
 9. After providing the answer, ALWAYS ask: "Would you like me to explain any part of this? In case your lecturer asks follow-up questions, it's good to truly understand the material 📚"
 10. This mode costs 2 KU per prompt - be thorough in your response`;
 
+// Calculate KU cost based on prompt complexity
+function calculatePromptCost(message: string, hasFile: boolean): number {
+  let cost = 1;
+  if (hasFile) cost += 1;
+  
+  const taskIndicators = [
+    /\band\b.*\?/gi, /\balso\b/gi, /\badditionally\b/gi,
+    /\bmoreover\b/gi, /\bfurthermore\b/gi, /\bas well as\b/gi, /\bthen\b.*\?/gi,
+  ];
+  const questionMarks = (message.match(/\?/g) || []).length;
+  const indicatorCount = taskIndicators.reduce((count, regex) => 
+    count + (message.match(regex)?.length || 0), 0);
+  
+  if (questionMarks >= 3 || indicatorCount >= 2) cost = Math.max(cost, 2);
+  else if (questionMarks >= 2 || indicatorCount >= 1) cost = Math.max(cost, 2);
+  if (message.length > 500 && cost < 2) cost = 2;
+  
+  return cost;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
