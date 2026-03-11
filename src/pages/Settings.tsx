@@ -254,6 +254,9 @@ export default function Settings() {
 
           <TabsContent value="wallet" className="space-y-4">
             <KUPurchase onSuccess={() => refetchKU()} />
+            
+            {/* KU Consumption Dashboard */}
+            <KUConsumptionDashboard userId={user?.id} />
           </TabsContent>
 
           <TabsContent value="profile" className="space-y-4">

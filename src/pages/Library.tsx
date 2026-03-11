@@ -276,7 +276,7 @@ export default function Library() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" title="Download"
                           onClick={async () => {
                             try {
                               const { data, error } = await supabase.storage.from('user-files').download(file.file_path);
@@ -295,7 +295,14 @@ export default function Library() {
                           }}>
                           <Download className="h-3.5 w-3.5 text-primary" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" title="Summarize"
+                          onClick={async () => {
+                            const { data, error } = await supabase.from('conversations').insert({ user_id: user!.id, title: `Summary: ${file.file_name}` }).select().single();
+                            if (!error && data) navigate(`/chat/${data.id}?sharedFile=${file.id}`, { state: { initialMessage: 'Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.' } });
+                          }}>
+                          <FileText className="h-3.5 w-3.5 text-primary" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" title="Discuss with Ezra"
                           onClick={async () => {
                             const { data, error } = await supabase.from('conversations').insert({ user_id: user!.id, title: `Discussing: ${file.file_name}` }).select().single();
                             if (!error && data) navigate(`/chat/${data.id}?sharedFile=${file.id}`);
