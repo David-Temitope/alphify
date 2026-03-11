@@ -371,7 +371,7 @@ export default function Chat() {
         content: userMessage,
       });
 
-      // Get all messages for context
+      // Get all messages for context (includes the just-saved user message)
       const { data: allMessages } = await supabase
         .from('messages')
         .select('role, content')
@@ -382,9 +382,6 @@ export default function Chat() {
         role: m.role as 'user' | 'assistant',
         content: m.content
       })) || [];
-
-      // Add current message
-      messageHistory.push({ role: 'user', content: userMessage });
 
       // Build personalization context
       let personalizationContext = '';
