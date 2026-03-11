@@ -371,7 +371,7 @@ export default function Chat() {
         content: userMessage,
       });
 
-      // Get all messages for context
+      // Get all messages for context (includes the just-saved user message)
       const { data: allMessages } = await supabase
         .from('messages')
         .select('role, content')
@@ -382,9 +382,6 @@ export default function Chat() {
         role: m.role as 'user' | 'assistant',
         content: m.content
       })) || [];
-
-      // Add current message
-      messageHistory.push({ role: 'user', content: userMessage });
 
       // Build personalization context
       let personalizationContext = '';
@@ -849,9 +846,19 @@ Student Profile:
         {fileContent && (
           <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-2 flex-wrap">
             <span className="text-sm text-primary">
-              📄 {libraryFile ? libraryFile.file_name : 'Document attached'} - Ask me anything about it!
+              📄 {libraryFile ? libraryFile.file_name : sharedFile ? sharedFile.file_name : 'Document attached'} - Ask me anything about it!
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-primary border-primary/30 hover:bg-primary/10"
+                onClick={() => {
+                  handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.');
+                }}
+              >
+                📋 Summarize
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 

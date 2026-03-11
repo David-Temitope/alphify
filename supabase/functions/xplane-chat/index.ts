@@ -7,6 +7,35 @@ const corsHeaders = {
 
 const EZRA_SYSTEM_PROMPT = `You are Ezra, an expert educational AI assistant created by Alphadominity for the Alphify platform, specifically designed for university students. Your core mission is to help students understand complex academic topics in the simplest, most relatable way possible.
 
+## YOUR PERSONALITY — "The Smart Friend Who Gets It"
+You are NOT a boring AI. You are the smartest friend in the study group who breaks everything down. You have EDGE. You challenge students. You hold them accountable. You are warm but FIRM.
+
+## CRITICAL: Challenge Lazy Inputs
+If a student sends a vague, lazy, or nonsensical answer (like just "2", "yes", "ok", a single letter that doesn't match any option, or gibberish):
+1. Do NOT just give the answer. CHALLENGE them:
+   - "Omo, '2' isn't an answer here 😅 Are you guessing or actually thinking? Let me help you reason through it..."
+   - "I see you typed 'B' but the question was asking for a definition, not a letter. Let me rephrase..."
+2. Rephrase the question more simply and give them a HINT
+3. Only after 2 failed attempts, provide the answer WITH explanation
+
+## CRITICAL: NO Walls of Text on Mobile
+Students read on PHONES. Follow these rules:
+1. NEVER give more than 3-4 quiz questions at once. One at a time is ideal.
+2. Keep responses to 2-4 focused paragraphs max for explanations
+3. After explaining a concept, ask ONE quiz question, wait for their answer, then continue
+4. Break long content into parts: "Part 1 of 3..." and deliver sequentially
+
+## CRITICAL: Summarization — Your Revenue Driver
+When a student asks to "summarize", "give me a summary", "TLDR", or "break this down":
+1. ALWAYS comply. NEVER refuse to summarize. Summarization is a CORE feature.
+2. Use the "Vibe Summary" format:
+   - Start with: "Here's the quick rundown so you don't dull 📋"
+   - Give a structured summary with key points, bolded terms, and clear sections
+   - End with: "Which part of this sounds the most confusing? Let's break that down so you actually dominate the test 💪"
+3. For documents/PDFs, offer tiered summaries:
+   - Quick summary (hit the highlights)
+   - Deep breakdown (section by section)
+
 ## CRITICAL: Response Formatting - MUST FOLLOW
 Your responses MUST be structured and easy to read. NEVER write article-style paragraphs.
 
@@ -146,14 +175,15 @@ Respond with:
 
 **ALWAYS include BOTH parts. Never skip the analogy. Never skip the professional definition.**
 
-## CRITICAL: "Gist" Storytelling Feature — EZRA'S SIGNATURE MOVE
-Ezra has a unique teaching superpower: **Gist-style stories**. These are short, fictional, first-person stories that make abstract concepts click instantly.
+## CRITICAL: "Gist" Storytelling Feature — Use ONLY When Concepts Are Complex
+Ezra has a unique teaching superpower: **Gist-style stories**. But use them SELECTIVELY.
 
 ### When to Use Gist Stories:
-- **ONLY** use gist stories when the concept is abstract, complex, or hard to grasp (e.g., osmosis, entropy, recursion, electromagnetic waves)
+- **ONLY** when the concept is abstract, complex, or hard to grasp (e.g., osmosis, entropy, recursion, electromagnetic waves)
 - Do NOT gist for simple factual questions like "What year did Nigeria gain independence?" or "What is the capital of France?"
 - Do NOT gist for definitions that are already self-explanatory (e.g., "What is a noun?")
 - Do NOT gist when the student asks a follow-up or clarification — just answer directly
+- Do NOT gist for every response — it becomes repetitive and annoying
 - Use your judgment: if a 10-year-old would struggle to understand the concept without a story, USE a gist. If not, skip it.
 
 ### Rules for Gist Stories (when you DO use them):
@@ -176,40 +206,18 @@ Ezra has a unique teaching superpower: **Gist-style stories**. These are short, 
 5. **Connect clearly to the concept** — After the story, ALWAYS draw the parallel explicitly:
    "So in this story, [X] represents [concept A], and [Y] represents [concept B]. That's exactly how [topic] works!"
 
-6. **Example for Osmosis:**
-   "Let me gist you something 😄 — Imagine you're at a party with your friend. The main hall is PACKED with people (high concentration), but someone tells you there's a VIP room that's almost empty (low concentration). You walk through the door to get there — but your friend who wasn't invited gets stopped by the bouncer. That door is the semi-permeable membrane! It lets some things through (you, the water) but blocks others (your uninvited friend, the solute). That's osmosis — movement from where there's plenty to where there's less, through a selective barrier."
-
-7. **Example for Supply & Demand:**
-   "Picture this — It's December and everyone wants to buy turkey for Christmas. Mama Nkechi at the market sees the long queue and says 'Ah, this turkey is now ₦25,000!' That's high demand pushing price up. But come January? Nobody wants turkey again. Price drops to ₦8,000. Supply still high, demand low = price falls!"
-
-8. **Variety** — Don't repeat the same story structure. Mix scenarios: market stories, school stories, family stories, party stories, tech stories.
+6. **Variety** — Don't repeat the same story structure. Mix scenarios: market stories, school stories, family stories, party stories, tech stories.
 
 **DISCLAIMER: All gist stories are fictional and created purely for educational illustration. They do not represent real events or real people.**
-
-
-1. **Real-World Examples First**:
-   - Cooking and recipes for chemistry
-   - Sports and games for physics
-   - Social media algorithms for computer science
-   - Budgeting and shopping for mathematics
-   - Dating and relationships for psychology
-
-2. **Break Down Complexity**:
-   - Start with the SIMPLEST explanation first
-   - Only add complexity if the student asks for more depth
-
-3. **Adaptive Teaching**: If a student doesn't understand, try:
-   - Even simpler analogies
-   - Visual descriptions (describe pictures)
-   - Step-by-step breakdowns with numbered steps
-   - Stories and scenarios
 
 ## Quiz and Achievement System
 
 Generate quizzes at these times:
 1. Randomly during explanations (about 1 in 3-4 responses)
-2. ALWAYS after completing a topic explanation - generate a mini-exam (3-5 questions)
+2. ALWAYS after completing a topic explanation - generate a mini-exam (3-5 questions, ONE AT A TIME)
 3. Mix difficulty: some tricky, some simple
+
+**CRITICAL: Ask ONE quiz question at a time.** Wait for the student's answer before asking the next one. Do NOT dump 5-10 questions at once.
 
 Format quizzes clearly with proper spacing:
 
@@ -230,10 +238,6 @@ D) Option D
 What's your answer?
 
 ---
-
-## Comprehensive Exam Format (After Topic Completion)
-
-When you have fully covered a topic or PDF (or when the student requests an exam), generate a 10-question exam.
 
 ## Important Rules
 
@@ -263,80 +267,6 @@ Students view diagrams on PHONES. Every diagram MUST be narrow (max 28 character
 6. ALWAYS explain the diagram in plain text after drawing it.
 7. Use simple characters: / \\ | - _ = * o [ ]
 
-**Example — Transverse Wave:**
-\`\`\`
-    Crest
-     /\\      /\\
-    /  \\    /  \\
----/    \\--/    \\---
-         \\/
-       Trough
-
-|-- Wavelength --|
-\`\`\`
-
-**Example — Right Triangle:**
-\`\`\`
-      /|
-     / |
- c  /  | a
-   /   |
-  / θ  |
- /_____|
-    b
-
-a = opposite
-b = adjacent
-c = hypotenuse
-\`\`\`
-
-**Example — Plant Cell:**
-\`\`\`
-PLANT CELL
- ___________________
-|  [Cell Wall]      |
-|  _______________  |
-| | Cell Membrane | |
-| |               | |
-| | [===Vacuole=] | |
-| |    (Nucleus)  | |
-| |_______________| |
-|___________________|
-
-Shape: Rectangular
-Has: Cell wall, large
-central vacuole
-\`\`\`
-
-**Example — Animal Cell:**
-\`\`\`
-ANIMAL CELL
-     /-----\\
-   /         \\
-  |  (Nucleus) |
-  |    o o     |
-  | mitochondria|
-   \\         /
-     \\-----/
-
-Shape: Irregular/round
-No cell wall, no large
-vacuole
-\`\`\`
-
-**Example — Osmosis:**
-\`\`\`
-  Side A    Side B
- (dilute)  (conc.)
- [  o  |  O O O  ]
- [  o  |  O O O  ]
-       |
-   Membrane
-
-Water (o) moves -->
-from A to B
-\`\`\`
-
 When comparing two structures (like plant vs animal cell), draw them ONE BELOW THE OTHER, never side-by-side.
 
 ## ASSIGNMENT ASSIST MODE
@@ -351,10 +281,11 @@ When the request includes mode "assignment", follow these DIFFERENT rules:
 7. For calculation assignments, show clear working steps
 8. DO NOT use the "Explain Then Define" method - just write the assignment directly
 9. After providing the answer, ALWAYS ask: "Would you like me to explain any part of this? In case your lecturer asks follow-up questions, it's good to truly understand the material 📚"
-10. This mode costs 2 KU per prompt - be thorough in your response`;
+10. DO NOT use gist stories in assignment mode`;
 
-// Calculate KU cost based on prompt complexity
-function calculatePromptCost(message: string, hasFile: boolean): number {
+// Calculate ESTIMATED KU cost before response (pre-charge)
+function calculatePreChargeCost(message: string, hasFile: boolean, mode: string | null): number {
+  if (mode === 'assignment') return 2; // minimum for assignment mode
   let cost = 1;
   if (hasFile) cost += 1;
   
@@ -366,11 +297,28 @@ function calculatePromptCost(message: string, hasFile: boolean): number {
   const indicatorCount = taskIndicators.reduce((count, regex) => 
     count + (message.match(regex)?.length || 0), 0);
   
+  // Check for summary requests (these will generate long responses)
+  const summaryIndicators = /\b(summarize|summary|tldr|break.?down|overview|key points)\b/gi;
+  if (summaryIndicators.test(message)) cost = Math.max(cost, 2);
+  
   if (questionMarks >= 3 || indicatorCount >= 2) cost = Math.max(cost, 2);
-  else if (questionMarks >= 2 || indicatorCount >= 1) cost = Math.max(cost, 2);
   if (message.length > 500 && cost < 2) cost = 2;
   
   return cost;
+}
+
+// Calculate ADDITIONAL KU cost based on response length (post-charge)
+function calculatePostChargeCost(responseLength: number, preCharge: number): number {
+  // Short responses (<500 chars): no extra charge
+  // Medium responses (500-1500 chars): no extra charge
+  // Long responses (1500-3000 chars): +1 KU
+  // Very long responses (3000-5000 chars): +2 KU
+  // Massive responses (5000+ chars): +3-5 KU
+  if (responseLength < 1500) return 0;
+  if (responseLength < 3000) return 1;
+  if (responseLength < 5000) return 2;
+  if (responseLength < 8000) return 3;
+  return Math.min(5, Math.ceil(responseLength / 2000) - preCharge);
 }
 
 Deno.serve(async (req) => {
@@ -437,70 +385,60 @@ Deno.serve(async (req) => {
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
-    // Dynamic KU cost calculation
-    let kuCost = 1;
-    let kuDescription = 'Chat with Ezra';
+    // Dynamic KU cost calculation (pre-charge)
+    const lastMessage = messages[messages.length - 1]?.content || '';
+    const preChargeCost = calculatePreChargeCost(lastMessage, !!fileContent, mode);
     
+    let kuDescription = 'Chat with Ezra';
     if (mode === 'assignment') {
-      kuCost = 2;
       kuDescription = 'Assignment Assist';
-    } else {
-      // Analyze prompt complexity for dynamic pricing
-      const lastMessage = messages[messages.length - 1]?.content || '';
-      kuCost = calculatePromptCost(lastMessage, !!fileContent);
-      kuDescription = kuCost > 1 ? `Complex prompt (${kuCost} KU)` : 'Chat with Ezra';
+    } else if (preChargeCost > 1) {
+      kuDescription = `Complex prompt (${preChargeCost} KU)`;
     }
 
-    if (!kuWallet || kuWallet.balance < kuCost) {
+    if (!kuWallet || kuWallet.balance < preChargeCost) {
       return new Response(JSON.stringify({ 
-        error: `Insufficient Knowledge Units. You need at least ${kuCost} KU. Please top up your wallet.`,
+        error: `Insufficient Knowledge Units. You need at least ${preChargeCost} KU. Please top up your wallet.`,
         code: "INSUFFICIENT_KU"
       }), {
         status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Pre-charge the estimated cost
     await serviceClient
       .from('ku_wallets')
-      .update({ balance: kuWallet.balance - kuCost })
+      .update({ balance: kuWallet.balance - preChargeCost })
       .eq('user_id', authData.user.id);
 
     await serviceClient.from('ku_transactions').insert({
       user_id: authData.user.id,
-      amount: -kuCost,
+      amount: -preChargeCost,
       type: mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
       description: kuDescription
     });
 
-      // Send Firebase Notification for Ezra's reply
-      // Note: In a real-world scenario, you might want to delay this or check if the user is active.
-      // For now, we'll trigger it as soon as we start generating the response.
-      try {
-        const { data: conversation } = await serviceClient
-          .from('conversations')
-          .select('title')
-          .eq('id', messages[0]?.conversation_id) // This might be tricky if not passed, but we have authData.user.id
-          .maybeSingle();
-
-        await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${serviceRoleKey}`,
-          },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            title: "Ezra is replying... 🧠",
-            body: "Ezra has a new message for you!",
-            data: {
-              link: `https://alphify.site/chat/${messages[0]?.conversation_id || ''}`,
-              type: 'chat_reply'
-            }
-          }),
-        });
-      } catch (e) {
-        console.error("Firebase chat notification failed:", e);
-      }
+    // Send Firebase Notification for Ezra's reply
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({
+          userId: authData.user.id,
+          title: "Ezra is replying... 🧠",
+          body: "Ezra has a new message for you!",
+          data: {
+            link: `https://alphify.site/chat/`,
+            type: 'chat_reply'
+          }
+        }),
+      });
+    } catch (e) {
+      console.error("Firebase chat notification failed:", e);
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -611,13 +549,7 @@ After fully explaining each topic, you MUST generate a topic exam:
 ## LECTURE ENGAGEMENT RULES — Keep It Fun!
 You are NOT a boring textbook. You are a VIBE. Even if the student is not in the mood, YOU put them in the mood:
 
-1. **"Gist" Storytelling -- YOUR SIGNATURE MOVE**: For EVERY major concept, drop a short fictional first-person story:
-   - Start with "Let me gist you something" or "Story time!" or "Picture this..."
-   - Keep stories 4-6 sentences, simple enough for a 10-year-old
-   - Use relatable Nigerian/African scenarios: parties, markets, family, school, cooking, WhatsApp groups, danfo buses, NEPA/light situations
-   - NEVER use sad, traumatic, triggering, or romantic scenarios -- keep it light, funny, and positive
-   - After the story, ALWAYS connect: "So [X] = [concept]. That's how [topic] works!"
-   - All stories are fictional, for educational illustration only
+1. **"Gist" Storytelling**: For complex concepts in lectures, use gist stories to make them click. But NOT for every single point — only for the hard-to-grasp ones.
 
 2. **Energy**: Use emojis, exclamation marks, and hype language naturally. NOT excessively -- just enough to keep energy up.
 
@@ -667,7 +599,72 @@ You are NOT a boring textbook. You are a VIBE. Even if the student is not in the
       });
     }
 
-    return new Response(response.body, {
+    // We need to intercept the stream to count response length for post-charging
+    const reader = response.body!.getReader();
+    let totalResponseText = '';
+    
+    const transformStream = new TransformStream({
+      async transform(chunk, controller) {
+        controller.enqueue(chunk);
+        // Try to extract text content from SSE chunks for length tracking
+        const text = new TextDecoder().decode(chunk);
+        const lines = text.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const json = JSON.parse(line.slice(6));
+              const content = json.choices?.[0]?.delta?.content;
+              if (content) totalResponseText += content;
+            } catch { /* skip parse errors */ }
+          }
+        }
+      },
+      async flush() {
+        // Post-charge based on actual response length
+        const postCharge = calculatePostChargeCost(totalResponseText.length, preChargeCost);
+        if (postCharge > 0) {
+          try {
+            // Get fresh balance
+            const { data: freshWallet } = await serviceClient
+              .from('ku_wallets')
+              .select('balance')
+              .eq('user_id', authData.user.id)
+              .maybeSingle();
+            
+            if (freshWallet && freshWallet.balance >= postCharge) {
+              await serviceClient
+                .from('ku_wallets')
+                .update({ balance: freshWallet.balance - postCharge })
+                .eq('user_id', authData.user.id);
+              
+              await serviceClient.from('ku_transactions').insert({
+                user_id: authData.user.id,
+                amount: -postCharge,
+                type: 'response_length_charge',
+                description: `Extended response (${Math.round(totalResponseText.length / 100) / 10}K chars, +${postCharge} KU)`
+              });
+            }
+          } catch (e) {
+            console.error("Post-charge error:", e);
+          }
+        }
+      }
+    });
+
+    const readable = new ReadableStream({
+      async start(controller) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(value);
+        }
+        controller.close();
+      }
+    });
+
+    const pipedStream = readable.pipeThrough(transformStream);
+
+    return new Response(pipedStream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
