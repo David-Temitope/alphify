@@ -24,6 +24,7 @@ import HelpDesk from '@/components/HelpDesk';
 import KUPurchase from '@/components/KUPurchase';
 import AccountDeletion from '@/components/AccountDeletion';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
+import KUConsumptionDashboard from '@/components/KUConsumptionDashboard';
 import { useReferralCode } from '@/hooks/useReferralCode';
 import { format } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
