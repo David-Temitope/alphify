@@ -64,7 +64,8 @@ export default function Dashboard() {
 
   const needsOnboarding = !userSettings || !userSettings.preferred_name || !userSettings.field_of_study || !userSettings.ai_personality?.length;
 
-  const handleNewChat = async () => {
+  // Don't create conversation on dashboard — navigate to blank chat page
+  const handleNewChat = () => {
     if (!canChat) {
       toast({
         title: 'No Knowledge Units',
@@ -74,15 +75,7 @@ export default function Dashboard() {
       navigate('/settings?tab=wallet');
       return;
     }
-
-    const { data, error } = await supabase.from('conversations').insert({
-      user_id: user!.id,
-      title: 'New Conversation',
-    }).select().single();
-
-    if (!error && data) {
-      navigate(`/chat/${data.id}`);
-    }
+    navigate('/chat');
   };
 
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
