@@ -139,20 +139,7 @@ export default function Library() {
 
         toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
       } else {
-        // Charge KU based on file size for personal uploads
-        const fileCost = calculateFileCost(uploadFile.size);
-        if (balance < fileCost) {
-          toast({ title: 'Not enough KU', description: `This file requires ${fileCost} KU to upload (based on file size).`, variant: 'destructive' });
-          setIsUploading(false);
-          return;
-        }
-        // Deduct KU via edge function
-        const { data: session } = await supabase.auth.getSession();
-        if (session?.session) {
-          const { error: kuError } = await supabase.from('ku_wallets').update({ balance: balance - fileCost }).eq('user_id', user!.id);
-          if (kuError) throw new Error('Failed to deduct KU');
-          await supabase.from('ku_transactions').insert({ user_id: user!.id, amount: -fileCost, type: 'file_upload', description: `File upload: ${uploadFile.name} (${Math.round(uploadFile.size / 1024)}KB)` });
-        }
+        // Personal uploads — NO KU charge
         const courseCode = uploadCourseCode.trim().toUpperCase();
         const filePath = `personal/${user!.id}/${courseCode}/${Date.now()}_${uploadFile.name}`;
         const { error: uploadError } = await supabase.storage.from('user-files').upload(filePath, uploadFile);
@@ -160,7 +147,6 @@ export default function Library() {
         const { error: insertError } = await supabase.from('uploaded_files').insert({ user_id: user!.id, file_name: uploadFile.name, file_path: filePath, file_type: uploadFile.type, file_size: uploadFile.size });
         if (insertError) throw insertError;
         queryClient.invalidateQueries({ queryKey: ['personal-file-count'] });
-        refetchKU();
         toast({ title: 'File uploaded!', description: `${uploadFile.name} saved to your personal library.` });
       }
       setShowUpload(false); setUploadFile(null); setUploadCourseCode('');
