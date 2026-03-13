@@ -760,9 +760,7 @@ Student Profile:
 
           {messages.length === 0 && !streamingContent && !searchQuery && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
-                E
-              </div>
+              <img src={ezraAvatar} alt="Ezra" className="w-20 h-20 rounded-2xl xp-glow mb-6" />
               <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
                 Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Ezra 👋
               </h2>
