@@ -61,7 +61,28 @@ const FIELDS_OF_STUDY = [
   'Business Administration', 'Public Administration', 'Architecture',
   'Fine Arts', 'Theatre Arts', 'Music', 'Philosophy', 'History',
   'English', 'French', 'Linguistics', 'Education', 'Agriculture',
-  'Veterinary Medicine', 'Dentistry', 'Physiotherapy', 'Other'
+  'Veterinary Medicine', 'Dentistry', 'Physiotherapy',
+  'Mechanical Engineering', 'Electrical Engineering', 'Civil Engineering',
+  'Chemical Engineering', 'Computer Engineering', 'Petroleum Engineering',
+  'Agricultural Engineering', 'Industrial Chemistry', 'Geology',
+  'Geography', 'Statistics', 'Information Technology', 'Cybersecurity',
+  'Software Engineering', 'Data Science', 'Environmental Science',
+  'Food Science and Technology', 'Fisheries and Aquaculture',
+  'Crop Science', 'Animal Science', 'Soil Science',
+  'Library and Information Science', 'Religious Studies',
+  'International Relations', 'Criminology', 'Social Work',
+  'Urban and Regional Planning', 'Estate Management',
+  'Quantity Surveying', 'Building Technology', 'Surveying and Geoinformatics',
+  'Anatomy', 'Physiology', 'Medical Laboratory Science',
+  'Radiography', 'Optometry', 'Public Health',
+  'Human Kinetics', 'Guidance and Counselling',
+  'Early Childhood Education', 'Educational Management',
+  'Special Education', 'Accounting Education',
+  'Hospitality and Tourism', 'Banking and Finance',
+  'Insurance', 'Marketing', 'Entrepreneurship',
+  'Industrial Relations', 'Demography', 'Peace and Conflict Studies',
+  'Creative Arts', 'Music Technology', 'Film and Multimedia',
+  'Other'
 ];
 
 const COUNTRIES = [

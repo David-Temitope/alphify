@@ -362,6 +362,7 @@ export default function Dashboard() {
         )}
       </main>
 
+      <FeedbackPrompt />
       <BottomNav />
     </div>
   );
