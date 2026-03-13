@@ -75,9 +75,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     <div className="animate-fade-in-up group">
       {/* Ezra label + voice button */}
       <div className="flex items-center gap-2.5 mb-2">
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
-          E
-        </div>
+        <img src={ezraAvatar} alt="Ezra" className="w-7 h-7 rounded-full flex-shrink-0" />
         <span className="text-sm font-semibold text-foreground">Ezra</span>
         <Button
           variant="ghost"

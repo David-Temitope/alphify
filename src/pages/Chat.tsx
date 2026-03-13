@@ -707,7 +707,7 @@ Student Profile:
                 {conversation?.title || 'New Conversation'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {chatMode === 'assignment' ? '📝 Assignment Assist Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+                {chatMode === 'assignment' ? '📝 Assignment & Project Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
               </p>
             </div>
             <Button
