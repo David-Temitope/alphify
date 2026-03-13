@@ -1070,6 +1070,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback: string
+          id?: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           ai_personality: string[] | null
@@ -1081,6 +1105,7 @@ export type Database = {
           exam_sample_text: string | null
           explanation_style: string | null
           fcm_token: string | null
+          feedback_submitted: boolean | null
           field_of_study: string | null
           id: string
           last_studied_topic: string | null
@@ -1109,6 +1134,7 @@ export type Database = {
           exam_sample_text?: string | null
           explanation_style?: string | null
           fcm_token?: string | null
+          feedback_submitted?: boolean | null
           field_of_study?: string | null
           id?: string
           last_studied_topic?: string | null
@@ -1137,6 +1163,7 @@ export type Database = {
           exam_sample_text?: string | null
           explanation_style?: string | null
           fcm_token?: string | null
+          feedback_submitted?: boolean | null
           field_of_study?: string | null
           id?: string
           last_studied_topic?: string | null
