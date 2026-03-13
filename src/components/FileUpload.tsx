@@ -51,11 +51,11 @@ export default function FileUpload({ conversationId, onClose, onFileProcessed }:
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (max 25MB)
+    if (file.size > 25 * 1024 * 1024) {
       toast({
         title: 'File too large',
-        description: 'Maximum file size is 10MB.',
+        description: 'Maximum file size is 25MB.',
         variant: 'destructive',
       });
       return;
