@@ -30,9 +30,27 @@ import { format } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
 
 const STUDENT_TYPES = [
-  { value: 'science', label: 'Science' },
-  { value: 'art', label: 'Art' },
-  { value: 'commercial', label: 'Commercial' },
+  { value: 'science', label: 'Faculty of Science' },
+  { value: 'engineering', label: 'Faculty of Engineering' },
+  { value: 'arts', label: 'Faculty of Arts' },
+  { value: 'social_sciences', label: 'Faculty of Social Sciences' },
+  { value: 'law', label: 'Faculty of Law' },
+  { value: 'medicine', label: 'Faculty of Medicine / Health Sciences' },
+  { value: 'pharmacy', label: 'Faculty of Pharmacy' },
+  { value: 'education', label: 'Faculty of Education' },
+  { value: 'agriculture', label: 'Faculty of Agriculture' },
+  { value: 'environmental_sciences', label: 'Faculty of Environmental Sciences' },
+  { value: 'management_sciences', label: 'Faculty of Management Sciences' },
+  { value: 'computing', label: 'Faculty of Computing / ICT' },
+  { value: 'veterinary_medicine', label: 'Faculty of Veterinary Medicine' },
+  { value: 'dentistry', label: 'Faculty of Dentistry' },
+  { value: 'life_sciences', label: 'Faculty of Life Sciences' },
+  { value: 'physical_sciences', label: 'Faculty of Physical Sciences' },
+  { value: 'communication', label: 'Faculty of Communication / Mass Comm' },
+  { value: 'clinical_sciences', label: 'Faculty of Clinical Sciences' },
+  { value: 'basic_medical_sciences', label: 'Faculty of Basic Medical Sciences' },
+  { value: 'technology', label: 'School of Technology' },
+  { value: 'postgraduate', label: 'School of Postgraduate Studies' },
 ];
 
 const FIELDS_OF_STUDY = [
@@ -43,7 +61,28 @@ const FIELDS_OF_STUDY = [
   'Business Administration', 'Public Administration', 'Architecture',
   'Fine Arts', 'Theatre Arts', 'Music', 'Philosophy', 'History',
   'English', 'French', 'Linguistics', 'Education', 'Agriculture',
-  'Veterinary Medicine', 'Dentistry', 'Physiotherapy', 'Other'
+  'Veterinary Medicine', 'Dentistry', 'Physiotherapy',
+  'Mechanical Engineering', 'Electrical Engineering', 'Civil Engineering',
+  'Chemical Engineering', 'Computer Engineering', 'Petroleum Engineering',
+  'Agricultural Engineering', 'Industrial Chemistry', 'Geology',
+  'Geography', 'Statistics', 'Information Technology', 'Cybersecurity',
+  'Software Engineering', 'Data Science', 'Environmental Science',
+  'Food Science and Technology', 'Fisheries and Aquaculture',
+  'Crop Science', 'Animal Science', 'Soil Science',
+  'Library and Information Science', 'Religious Studies',
+  'International Relations', 'Criminology', 'Social Work',
+  'Urban and Regional Planning', 'Estate Management',
+  'Quantity Surveying', 'Building Technology', 'Surveying and Geoinformatics',
+  'Anatomy', 'Physiology', 'Medical Laboratory Science',
+  'Radiography', 'Optometry', 'Public Health',
+  'Human Kinetics', 'Guidance and Counselling',
+  'Early Childhood Education', 'Educational Management',
+  'Special Education', 'Accounting Education',
+  'Hospitality and Tourism', 'Banking and Finance',
+  'Insurance', 'Marketing', 'Entrepreneurship',
+  'Industrial Relations', 'Demography', 'Peace and Conflict Studies',
+  'Creative Arts', 'Music Technology', 'Film and Multimedia',
+  'Other'
 ];
 
 const COUNTRIES = [
@@ -360,9 +399,9 @@ export default function Settings() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Student Type</Label>
+                  <Label>Faculty</Label>
                   <Select value={settings.student_type || ''} onValueChange={(value) => setSettings(prev => ({ ...prev, student_type: value }))}>
-                    <SelectTrigger className="mt-1 bg-secondary border-border"><SelectValue placeholder="Select track" /></SelectTrigger>
+                    <SelectTrigger className="mt-1 bg-secondary border-border"><SelectValue placeholder="Select faculty" /></SelectTrigger>
                     <SelectContent>{STUDENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>

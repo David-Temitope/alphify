@@ -227,9 +227,17 @@ export default function Community() {
     <div className="min-h-[100dvh] bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl px-4 pt-4 pb-3">
-        <h1 className="font-display text-xl font-bold text-foreground">Community</h1>
-
-        {/* Tab bar */}
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-xl font-bold text-foreground">Community</h1>
+          <a
+            href="https://chat.whatsapp.com/Gy40EBShSQY4YgmQ5gGWMY?mode=gi_t"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-green-600 text-xs font-medium hover:bg-green-500/20 transition-colors"
+          >
+            💬 WhatsApp Group
+          </a>
+        </div>
         <div className="flex gap-1 mt-3 overflow-x-auto scrollbar-hide">
           {tabs.map(tab => (
             <button

@@ -27,6 +27,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
+import ezraAvatar from '@/assets/ezra-avatar.png';
 
 interface Message {
   id: string;
@@ -317,13 +318,15 @@ export default function Chat() {
     }
   }, [transcript]);
 
+  // Only create conversation on first actual message (don't save empty chats)
   const resolveConversationId = useCallback(async (): Promise<string | null> => {
     if (conversationId) return conversationId;
     if (!user) return null;
 
+    const modeParam = chatMode ? `?mode=${chatMode}` : '';
     const { data, error } = await supabase
       .from('conversations')
-      .insert({ user_id: user.id, title: 'New Conversation' })
+      .insert({ user_id: user.id, title: 'New Conversation', mode: chatMode || null })
       .select()
       .single();
 
@@ -337,9 +340,9 @@ export default function Chat() {
     }
 
     queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-    navigate(`/chat/${data.id}`, { replace: true });
+    navigate(`/chat/${data.id}${modeParam}`, { replace: true });
     return data.id;
-  }, [conversationId, user, queryClient, navigate, toast]);
+  }, [conversationId, user, queryClient, navigate, toast, chatMode]);
 
   const handleSendMessage = useCallback(async (text?: string, customFileContent?: string) => {
     const messageToSend = text || input.trim();
@@ -561,17 +564,9 @@ Student Profile:
     }
   };
 
-  const handleNewChat = async () => {
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert({ user_id: user!.id, title: 'New Conversation' })
-      .select()
-      .single();
-    
-    if (!error && data) {
-      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-      navigate(`/chat/${data.id}`);
-    }
+  // Navigate to blank chat page without creating DB entry until first message
+  const handleNewChat = () => {
+    navigate('/chat');
   };
 
   const handleFileProcessed = (content: string) => {
@@ -712,7 +707,7 @@ Student Profile:
                 {conversation?.title || 'New Conversation'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {chatMode === 'assignment' ? '📝 Assignment Assist Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+                {chatMode === 'assignment' ? '📝 Assignment & Project Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
               </p>
             </div>
             <Button
@@ -765,9 +760,7 @@ Student Profile:
 
           {messages.length === 0 && !streamingContent && !searchQuery && (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <div className="w-20 h-20 rounded-2xl xp-gradient flex items-center justify-center font-display font-bold text-3xl text-primary-foreground xp-glow mb-6">
-                E
-              </div>
+              <img src={ezraAvatar} alt="Ezra" className="w-20 h-20 rounded-2xl xp-glow mb-6" />
               <h2 className="font-display text-2xl font-semibold text-foreground mb-2">
                 Hey there{userSettings?.preferred_name ? `, ${userSettings.preferred_name}` : ''}! I'm Ezra 👋
               </h2>

@@ -139,20 +139,7 @@ export default function Library() {
 
         toast({ title: 'File uploaded!', description: `${uploadFile.name} is now available to all students.` });
       } else {
-        // Charge KU based on file size for personal uploads
-        const fileCost = calculateFileCost(uploadFile.size);
-        if (balance < fileCost) {
-          toast({ title: 'Not enough KU', description: `This file requires ${fileCost} KU to upload (based on file size).`, variant: 'destructive' });
-          setIsUploading(false);
-          return;
-        }
-        // Deduct KU via edge function
-        const { data: session } = await supabase.auth.getSession();
-        if (session?.session) {
-          const { error: kuError } = await supabase.from('ku_wallets').update({ balance: balance - fileCost }).eq('user_id', user!.id);
-          if (kuError) throw new Error('Failed to deduct KU');
-          await supabase.from('ku_transactions').insert({ user_id: user!.id, amount: -fileCost, type: 'file_upload', description: `File upload: ${uploadFile.name} (${Math.round(uploadFile.size / 1024)}KB)` });
-        }
+        // Personal uploads — NO KU charge
         const courseCode = uploadCourseCode.trim().toUpperCase();
         const filePath = `personal/${user!.id}/${courseCode}/${Date.now()}_${uploadFile.name}`;
         const { error: uploadError } = await supabase.storage.from('user-files').upload(filePath, uploadFile);
@@ -160,7 +147,6 @@ export default function Library() {
         const { error: insertError } = await supabase.from('uploaded_files').insert({ user_id: user!.id, file_name: uploadFile.name, file_path: filePath, file_type: uploadFile.type, file_size: uploadFile.size });
         if (insertError) throw insertError;
         queryClient.invalidateQueries({ queryKey: ['personal-file-count'] });
-        refetchKU();
         toast({ title: 'File uploaded!', description: `${uploadFile.name} saved to your personal library.` });
       }
       setShowUpload(false); setUploadFile(null); setUploadCourseCode('');
@@ -351,17 +337,9 @@ export default function Library() {
             </div>
 
             {!isAdmin && (
-              <div className="mb-4 p-3 rounded-lg bg-secondary border border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
-                    {uploadFile ? `Upload cost: ${calculateFileCost(uploadFile.size)} KU` : 'KU charged based on file size'}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {uploadFile ? `File size: ${Math.round(uploadFile.size / 1024)}KB • You have ${balance} KU` : '~1 KU per 1MB'}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Upload files for free — KU is only charged when you discuss them with Ezra.
+              </p>
             )}
 
             <div className="space-y-4">
@@ -393,9 +371,9 @@ export default function Library() {
                     <label className="cursor-pointer">
                       <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-foreground">Tap to select a file</p>
-                      <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint (max 10MB)</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint (max 25MB)</p>
                       <input type="file" className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size <= 10 * 1024 * 1024) setUploadFile(f); else if (f) toast({ title: 'File too large', description: 'Max 10MB', variant: 'destructive' }); }} />
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size <= 25 * 1024 * 1024) setUploadFile(f); else if (f) toast({ title: 'File too large', description: 'Max 25MB', variant: 'destructive' }); }} />
                     </label>
                   )}
                 </div>
