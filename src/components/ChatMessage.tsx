@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import ezraAvatar from '@/assets/ezra-avatar.png';
 import { cn } from '@/lib/utils';
 import { formatMathToPlainText } from '@/utils/formatMath';
 import { useVoice } from '@/hooks/useVoice';
