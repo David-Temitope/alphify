@@ -371,9 +371,9 @@ export default function Library() {
                     <label className="cursor-pointer">
                       <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-foreground">Tap to select a file</p>
-                      <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint (max 10MB)</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint (max 25MB)</p>
                       <input type="file" className="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size <= 10 * 1024 * 1024) setUploadFile(f); else if (f) toast({ title: 'File too large', description: 'Max 10MB', variant: 'destructive' }); }} />
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size <= 25 * 1024 * 1024) setUploadFile(f); else if (f) toast({ title: 'File too large', description: 'Max 25MB', variant: 'destructive' }); }} />
                     </label>
                   )}
                 </div>

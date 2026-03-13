@@ -219,12 +219,11 @@ export default function Dashboard() {
             <button
               onClick={async () => {
                 if (balance < 2) {
-                  toast({ title: 'Not enough KU', description: 'Assignment Assist requires at least 2 KU.', variant: 'destructive' });
+                  toast({ title: 'Not enough KU', description: 'Assignment & Project mode requires at least 2 KU.', variant: 'destructive' });
                   navigate('/settings?tab=wallet');
                   return;
                 }
-                const { data, error } = await supabase.from('conversations').insert({ user_id: user!.id, title: 'Assignment Assist' }).select().single();
-                if (!error && data) navigate(`/chat/${data.id}?mode=assignment`);
+                navigate('/chat?mode=assignment');
               }}
               className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 p-4 text-left hover:border-emerald-500/40 transition-all"
             >
@@ -232,7 +231,7 @@ export default function Dashboard() {
                 <FileText className="h-5 w-5 text-emerald-500" />
               </div>
               <p className="font-medium text-sm text-foreground">Assignment</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Get help</p>
+              <p className="text-xs text-muted-foreground mt-0.5">& Projects</p>
             </button>
 
             <button

@@ -207,78 +207,60 @@ Start your response with: "Looking at your image, I can see..."`,
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="glass-card w-full max-w-lg rounded-2xl p-6 animate-scale-in">
+    <div className="fixed inset-x-0 bottom-0 z-50 animate-slide-up">
+      <div className="mx-3 mb-3 bg-card rounded-2xl border border-border shadow-xl p-4 max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-xl font-semibold text-foreground">Upload Document</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-base font-semibold text-foreground">Attach File</h2>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={onClose}>
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Drop Zone */}
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-            isDragging 
-              ? 'border-primary bg-primary/5' 
-              : 'border-border hover:border-primary/50'
-          }`}
-        >
-          {uploadedFile ? (
-            <div className="flex flex-col items-center">
-              <FileText className="h-12 w-12 text-primary mb-4" />
-              <p className="font-medium text-foreground mb-1">{uploadedFile.name}</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                {(uploadedFile.size / 1024).toFixed(1)} KB
-              </p>
+        {uploadedFile ? (
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary border border-border">
+            <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground truncate">{uploadedFile.name}</p>
+              <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setUploadedFile(null)}>
+                Change
+              </Button>
               <Button
-                variant="outline"
+                onClick={processFile}
+                disabled={isUploading}
                 size="sm"
-                onClick={() => setUploadedFile(null)}
+                className="h-7 px-3 xp-gradient text-primary-foreground text-xs"
               >
-                Remove
+                {isUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3 mr-1" />}
+                {isUploading ? 'Processing...' : 'Analyze'}
               </Button>
             </div>
-          ) : (
-            <>
-              <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-foreground mb-2">
-                Drag and drop your file here, or
-              </p>
-              <label className="cursor-pointer">
-                <span className="text-primary hover:underline">browse files</span>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.txt,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp"
-                  onChange={handleFileInput}
-                />
-              </label>
-              <p className="text-sm text-muted-foreground mt-4">
-                PDF, Word, PowerPoint, or images (max 10MB)
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={processFile}
-            disabled={!uploadedFile || isUploading}
-            className="xp-gradient text-primary-foreground"
-          >
-            {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isUploading ? 'Processing...' : 'Upload & Analyze'}
-          </Button>
-        </div>
+          </div>
+        ) : (
+          <label className="block cursor-pointer">
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+                isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-foreground">Tap to select or drag a file</p>
+              <p className="text-xs text-muted-foreground mt-1">PDF, Word, PPT, or images (max 25MB)</p>
+            </div>
+            <input
+              type="file"
+              className="hidden"
+              accept=".pdf,.txt,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp"
+              onChange={handleFileInput}
+            />
+          </label>
+        )}
       </div>
     </div>
   );
