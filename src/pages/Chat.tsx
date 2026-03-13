@@ -318,13 +318,15 @@ export default function Chat() {
     }
   }, [transcript]);
 
+  // Only create conversation on first actual message (don't save empty chats)
   const resolveConversationId = useCallback(async (): Promise<string | null> => {
     if (conversationId) return conversationId;
     if (!user) return null;
 
+    const modeParam = chatMode ? `?mode=${chatMode}` : '';
     const { data, error } = await supabase
       .from('conversations')
-      .insert({ user_id: user.id, title: 'New Conversation' })
+      .insert({ user_id: user.id, title: 'New Conversation', mode: chatMode || null })
       .select()
       .single();
 
@@ -338,9 +340,9 @@ export default function Chat() {
     }
 
     queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-    navigate(`/chat/${data.id}`, { replace: true });
+    navigate(`/chat/${data.id}${modeParam}`, { replace: true });
     return data.id;
-  }, [conversationId, user, queryClient, navigate, toast]);
+  }, [conversationId, user, queryClient, navigate, toast, chatMode]);
 
   const handleSendMessage = useCallback(async (text?: string, customFileContent?: string) => {
     const messageToSend = text || input.trim();
