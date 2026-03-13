@@ -30,9 +30,27 @@ import { format } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
 
 const STUDENT_TYPES = [
-  { value: 'science', label: 'Science' },
-  { value: 'art', label: 'Art' },
-  { value: 'commercial', label: 'Commercial' },
+  { value: 'science', label: 'Faculty of Science' },
+  { value: 'engineering', label: 'Faculty of Engineering' },
+  { value: 'arts', label: 'Faculty of Arts' },
+  { value: 'social_sciences', label: 'Faculty of Social Sciences' },
+  { value: 'law', label: 'Faculty of Law' },
+  { value: 'medicine', label: 'Faculty of Medicine / Health Sciences' },
+  { value: 'pharmacy', label: 'Faculty of Pharmacy' },
+  { value: 'education', label: 'Faculty of Education' },
+  { value: 'agriculture', label: 'Faculty of Agriculture' },
+  { value: 'environmental_sciences', label: 'Faculty of Environmental Sciences' },
+  { value: 'management_sciences', label: 'Faculty of Management Sciences' },
+  { value: 'computing', label: 'Faculty of Computing / ICT' },
+  { value: 'veterinary_medicine', label: 'Faculty of Veterinary Medicine' },
+  { value: 'dentistry', label: 'Faculty of Dentistry' },
+  { value: 'life_sciences', label: 'Faculty of Life Sciences' },
+  { value: 'physical_sciences', label: 'Faculty of Physical Sciences' },
+  { value: 'communication', label: 'Faculty of Communication / Mass Comm' },
+  { value: 'clinical_sciences', label: 'Faculty of Clinical Sciences' },
+  { value: 'basic_medical_sciences', label: 'Faculty of Basic Medical Sciences' },
+  { value: 'technology', label: 'School of Technology' },
+  { value: 'postgraduate', label: 'School of Postgraduate Studies' },
 ];
 
 const FIELDS_OF_STUDY = [
