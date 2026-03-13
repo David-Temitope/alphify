@@ -468,7 +468,7 @@ Deno.serve(async (req) => {
     let systemContent = EZRA_SYSTEM_PROMPT;
 
     if (mode === 'assignment') {
-      systemContent += `\n\nCRITICAL: You are in ASSIGNMENT ASSIST MODE. Follow the Assignment Assist rules defined above. Write the assignment answer as if you are the student, using their level-appropriate language. DO NOT lecture. DO NOT use "Explain Then Define". Just write the assignment directly and ask if they want explanation afterward.`;
+      systemContent += `\n\nCRITICAL: You are in ASSIGNMENT & PROJECT MODE. Follow the Assignment & Project rules defined above. Write the assignment/project answer as if you are the student, using their level-appropriate language. DO NOT lecture. DO NOT use "Explain Then Define". Just write the assignment directly and ask if they want explanation afterward. For project work, help them articulate their ideas professionally.`;
     }
 
     if (personalization) {

@@ -399,9 +399,9 @@ export default function Settings() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Student Type</Label>
+                  <Label>Faculty</Label>
                   <Select value={settings.student_type || ''} onValueChange={(value) => setSettings(prev => ({ ...prev, student_type: value }))}>
-                    <SelectTrigger className="mt-1 bg-secondary border-border"><SelectValue placeholder="Select track" /></SelectTrigger>
+                    <SelectTrigger className="mt-1 bg-secondary border-border"><SelectValue placeholder="Select faculty" /></SelectTrigger>
                     <SelectContent>{STUDENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
