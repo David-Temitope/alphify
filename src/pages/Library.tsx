@@ -337,17 +337,9 @@ export default function Library() {
             </div>
 
             {!isAdmin && (
-              <div className="mb-4 p-3 rounded-lg bg-secondary border border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
-                    {uploadFile ? `Upload cost: ${calculateFileCost(uploadFile.size)} KU` : 'KU charged based on file size'}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {uploadFile ? `File size: ${Math.round(uploadFile.size / 1024)}KB • You have ${balance} KU` : '~1 KU per 1MB'}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Upload files for free — KU is only charged when you discuss them with Ezra.
+              </p>
             )}
 
             <div className="space-y-4">
