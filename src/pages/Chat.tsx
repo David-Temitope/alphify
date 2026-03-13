@@ -564,17 +564,9 @@ Student Profile:
     }
   };
 
-  const handleNewChat = async () => {
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert({ user_id: user!.id, title: 'New Conversation' })
-      .select()
-      .single();
-    
-    if (!error && data) {
-      queryClient.invalidateQueries({ queryKey: ['all-conversations'] });
-      navigate(`/chat/${data.id}`);
-    }
+  // Navigate to blank chat page without creating DB entry until first message
+  const handleNewChat = () => {
+    navigate('/chat');
   };
 
   const handleFileProcessed = (content: string) => {
