@@ -27,6 +27,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import alphifyLogo from '@/assets/alphify-logo.webp';
+import ezraAvatar from '@/assets/ezra-avatar.png';
 
 interface Message {
   id: string;
