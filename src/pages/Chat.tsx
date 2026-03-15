@@ -24,8 +24,10 @@ import {
   Trash2,
   BookOpen,
   Search as SearchIcon,
-  ChevronDown
+  ChevronDown,
+  Camera
 } from 'lucide-react';
+import { cacheChatMessages, cacheVibe } from '@/lib/vibeCache';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 import ezraAvatar from '@/assets/ezra-avatar.png';
 
@@ -74,6 +76,8 @@ export default function Chat() {
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { state } = useLocation();
   const hasInitializedLecture = useRef(false);
   
@@ -532,6 +536,31 @@ Student Profile:
       }
 
       setFileContent(null);
+
+      // Cache messages offline for vibe access
+      try {
+        const { data: latestMessages } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', activeConversationId)
+          .order('created_at', { ascending: true });
+        if (latestMessages) {
+          cacheChatMessages(activeConversationId, latestMessages);
+          // Cache AI summaries/core principles as vibes
+          if (fullContent.includes('CORE PRINCIPLES') || fullContent.includes('THE VIBE')) {
+            cacheVibe({
+              id: `vibe-${Date.now()}`,
+              type: 'core_principles',
+              conversationId: activeConversationId,
+              content: fullContent,
+              title: userMessage.slice(0, 60),
+              createdAt: new Date().toISOString(),
+              synced: true,
+            });
+          }
+        }
+      } catch { /* offline cache is best-effort */ }
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] }),
         queryClient.invalidateQueries({ queryKey: ['all-conversations'] }),
@@ -576,6 +605,39 @@ Student Profile:
       title: 'Document ready!',
       description: 'Your file has been processed. Ask me anything about it!',
     });
+  };
+
+  const handleCameraCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsProcessingOCR(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+      const base64 = btoa(binary);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Please log in');
+
+      const { data, error } = await supabase.functions.invoke('ocr-handout', {
+        body: { imageBase64: base64, mimeType: file.type },
+      });
+
+      if (error) throw error;
+      if (data?.text) {
+        setFileContent(data.text);
+        toast({ title: '📸 Handout scanned!', description: 'Text extracted from your photo. Ask Ezra about it!' });
+      }
+    } catch (error) {
+      console.error('OCR error:', error);
+      toast({ title: 'Scan failed', description: 'Could not read the handout. Try a clearer photo.', variant: 'destructive' });
+    } finally {
+      setIsProcessingOCR(false);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+    }
   };
 
   const handleVoiceToggle = () => {
@@ -805,6 +867,13 @@ Student Profile:
             </div>
           )}
 
+          {isProcessingOCR && (
+            <div className="flex items-center gap-2 text-muted-foreground p-4">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm">📸 Scanning your handout... Extracting text with OCR.</span>
+            </div>
+          )}
+
           {isStreaming && !streamingContent && (
             <div className="flex items-center gap-2 text-muted-foreground p-4">
               <div className="flex gap-1">
@@ -914,6 +983,24 @@ Student Profile:
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  type="button"
+                  disabled={isProcessingOCR}
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraCapture}
+                  className="hidden"
+                />
                 {voiceSupported && (
                   <Button 
                     variant="ghost"
