@@ -213,7 +213,7 @@ export default function Dashboard() {
               <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
               <h3 className="font-display font-semibold text-base mb-1">No conversations yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Ask Ezra anything to get started</p>
-              <Button onClick={handleNewChat} size="sm" className="bg-primary text-primary-foreground">
+              <Button onClick={() => navigate('/chat')} size="sm" className="bg-primary text-primary-foreground">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Start Learning
               </Button>
