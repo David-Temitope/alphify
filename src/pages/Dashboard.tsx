@@ -8,20 +8,15 @@ import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
 import {
   MessageSquarePlus,
-  BookOpen,
   ChevronRight,
   Sparkles,
   FileText,
-  GraduationCap,
   Coins,
-  Bell,
-  Search,
   Clock,
   LogOut,
   Wand2,
-  TrendingUp,
-  Trophy,
 } from 'lucide-react';
+import QuickActions from '@/components/dashboard/QuickActions';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import ReturningUserNudge from '@/components/ReturningUserNudge';
