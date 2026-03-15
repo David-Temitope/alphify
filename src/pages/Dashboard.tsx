@@ -60,20 +60,6 @@ export default function Dashboard() {
 
   const needsOnboarding = !userSettings || !userSettings.preferred_name || !userSettings.field_of_study || !userSettings.ai_personality?.length;
 
-  // Don't create conversation on dashboard — navigate to blank chat page
-  const handleNewChat = () => {
-    if (!canChat) {
-      toast({
-        title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
-        variant: 'destructive',
-      });
-      navigate('/settings?tab=wallet');
-      return;
-    }
-    navigate('/chat');
-  };
-
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
   const courses = userSettings?.courses || [];
 
