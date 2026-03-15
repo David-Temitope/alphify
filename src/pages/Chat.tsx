@@ -915,14 +915,13 @@ Student Profile:
               </span>
               <button
                 onClick={() => handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.')}
-                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
+                className="text-xs font-medium px-2.5 py-0.5 rounded-full border border-primary/30 text-primary bg-transparent hover:bg-primary hover:text-primary-foreground active:bg-primary active:text-primary-foreground transition-colors flex-shrink-0"
               >
                 Summarize
               </button>
-              <span className="text-border">|</span>
               <button
                 onClick={() => handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.')}
-                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
+                className="text-xs font-medium px-2.5 py-0.5 rounded-full border border-primary/30 text-primary bg-transparent hover:bg-primary hover:text-primary-foreground active:bg-primary active:text-primary-foreground transition-colors flex-shrink-0"
               >
                 Lecture
               </button>
