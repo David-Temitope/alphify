@@ -500,7 +500,9 @@ Deno.serve(async (req) => {
     const preChargeCost = calculatePreChargeCost(lastMessage, !!fileContent, mode);
     
     let kuDescription = 'Chat with Ezra';
-    if (mode === 'assignment') {
+    if (mode === 'project') {
+      kuDescription = 'Project Research';
+    } else if (mode === 'assignment') {
       kuDescription = 'Assignment Assist';
     } else if (preChargeCost > 1) {
       kuDescription = `Complex prompt (${preChargeCost} KU)`;
