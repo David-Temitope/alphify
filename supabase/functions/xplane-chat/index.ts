@@ -563,7 +563,9 @@ Deno.serve(async (req) => {
     let systemContent = EZRA_SYSTEM_PROMPT;
 
     if (mode === 'assignment') {
-      systemContent += `\n\nCRITICAL: You are in ASSIGNMENT & PROJECT MODE. Follow the Assignment & Project rules defined above. Write the assignment/project answer as if you are the student, using their level-appropriate language. DO NOT lecture. DO NOT use "Explain Then Define". Just write the assignment directly and ask if they want explanation afterward. For project work, help them articulate their ideas professionally.`;
+      systemContent += `\n\nCRITICAL: You are in ASSIGNMENT MODE. Follow the Assignment Mode rules defined above. Write the assignment answer as if you are the student, using their level-appropriate language. DO NOT lecture. DO NOT use "Explain Then Define". Just write the assignment directly. Follow any provided rules/instructions EXACTLY. Ask if they want explanation afterward.`;
+    } else if (mode === 'project') {
+      systemContent += `\n\nCRITICAL: You are in PROJECT MODE — DEEP ACADEMIC RESEARCH. Follow the Project Mode rules defined above. This is for serious academic project writing (proposals, chapters, full research). Start by understanding the project scope, warn about KU cost, and ask about delivery preference (section by section or all at once). Include the human-in-the-loop disclaimer. Write at publishable quality with proper academic structure, citations, and methodology. If resuming, check conversation history to continue where you left off.`;
     }
 
     if (personalization) {
