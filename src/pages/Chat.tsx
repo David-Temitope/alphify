@@ -536,6 +536,31 @@ Student Profile:
       }
 
       setFileContent(null);
+
+      // Cache messages offline for vibe access
+      try {
+        const { data: latestMessages } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', activeConversationId)
+          .order('created_at', { ascending: true });
+        if (latestMessages) {
+          cacheChatMessages(activeConversationId, latestMessages);
+          // Cache AI summaries/core principles as vibes
+          if (fullContent.includes('CORE PRINCIPLES') || fullContent.includes('THE VIBE')) {
+            cacheVibe({
+              id: `vibe-${Date.now()}`,
+              type: 'core_principles',
+              conversationId: activeConversationId,
+              content: fullContent,
+              title: userMessage.slice(0, 60),
+              createdAt: new Date().toISOString(),
+              synced: true,
+            });
+          }
+        }
+      } catch { /* offline cache is best-effort */ }
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['messages', activeConversationId] }),
         queryClient.invalidateQueries({ queryKey: ['all-conversations'] }),
