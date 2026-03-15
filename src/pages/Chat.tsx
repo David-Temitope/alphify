@@ -582,6 +582,39 @@ Student Profile:
     });
   };
 
+  const handleCameraCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsProcessingOCR(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+      const base64 = btoa(binary);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Please log in');
+
+      const { data, error } = await supabase.functions.invoke('ocr-handout', {
+        body: { imageBase64: base64, mimeType: file.type },
+      });
+
+      if (error) throw error;
+      if (data?.text) {
+        setFileContent(data.text);
+        toast({ title: '📸 Handout scanned!', description: 'Text extracted from your photo. Ask Ezra about it!' });
+      }
+    } catch (error) {
+      console.error('OCR error:', error);
+      toast({ title: 'Scan failed', description: 'Could not read the handout. Try a clearer photo.', variant: 'destructive' });
+    } finally {
+      setIsProcessingOCR(false);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+    }
+  };
+
   const handleVoiceToggle = () => {
     if (isListening) {
       stopListening();
