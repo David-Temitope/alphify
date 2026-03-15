@@ -25,7 +25,8 @@ import {
   BookOpen,
   Search as SearchIcon,
   ChevronDown,
-  Camera
+  Camera,
+  Plus
 } from 'lucide-react';
 import { cacheChatMessages, cacheVibe } from '@/lib/vibeCache';
 import alphifyLogo from '@/assets/alphify-logo.webp';
