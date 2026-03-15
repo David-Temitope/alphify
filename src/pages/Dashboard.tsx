@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
-import { useToast } from '@/hooks/use-toast';
 import {
   MessageSquarePlus,
   ChevronRight,
