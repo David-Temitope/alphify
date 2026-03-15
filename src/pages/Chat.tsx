@@ -1050,7 +1050,7 @@ Student Profile:
                   size="icon"
                   className={cn(
                     "h-8 w-8 rounded-full text-primary-foreground disabled:opacity-30",
-                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : "xp-gradient"
+                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : chatMode === 'project' ? "bg-purple-500 hover:bg-purple-600" : "xp-gradient"
                   )}
                 >
                   {isStreaming ? (
