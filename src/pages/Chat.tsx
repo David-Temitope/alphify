@@ -77,6 +77,7 @@ export default function Chat() {
   const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [showPlusMenu, setShowPlusMenu] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { state } = useLocation();
   const hasInitializedLecture = useRef(false);
