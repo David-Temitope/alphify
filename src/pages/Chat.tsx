@@ -25,7 +25,8 @@ import {
   BookOpen,
   Search as SearchIcon,
   ChevronDown,
-  Camera
+  Camera,
+  Plus
 } from 'lucide-react';
 import { cacheChatMessages, cacheVibe } from '@/lib/vibeCache';
 import alphifyLogo from '@/assets/alphify-logo.webp';
@@ -77,6 +78,7 @@ export default function Chat() {
   const [hasPlayedBounce, setHasPlayedBounce] = useState(false);
   const [isExtractingFile, setIsExtractingFile] = useState(false);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [showPlusMenu, setShowPlusMenu] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { state } = useLocation();
   const hasInitializedLecture = useRef(false);
@@ -904,37 +906,29 @@ Student Profile:
           )}
         </div>
 
-        {/* File Content Indicator */}
+        {/* File Content Indicator — compact inline chip */}
         {fileContent && (
-          <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-sm text-primary">
-              📄 {libraryFile ? libraryFile.file_name : sharedFile ? sharedFile.file_name : 'Document attached'} - Ask me anything about it!
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-primary border-primary/30 hover:bg-primary/10"
-                onClick={() => {
-                  handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.');
-                }}
+          <div className="mx-4 mb-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm max-w-full">
+              <span className="text-primary truncate max-w-[180px]">
+                📄 {libraryFile ? libraryFile.file_name : sharedFile ? sharedFile.file_name : 'Document ready'}
+              </span>
+              <button
+                onClick={() => handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.')}
+                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
               >
-                📋 Summarize
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-primary border-primary/30 hover:bg-primary/10"
-                onClick={() => {
-                  handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
-                }}
+                Summarize
+              </button>
+              <span className="text-border">|</span>
+              <button
+                onClick={() => handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.')}
+                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
               >
-                <BookOpen className="h-4 w-4 mr-1" />
-                Lecture This PDF
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
-                <X className="h-4 w-4" />
-              </Button>
+                Lecture
+              </button>
+              <button onClick={() => setFileContent(null)} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
@@ -972,27 +966,46 @@ Student Profile:
               }}
               className="relative flex items-end bg-secondary rounded-2xl border border-border focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all"
             >
-              {/* Left action buttons */}
-              <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0">
-                <Button 
-                  variant="ghost" 
+              {/* Left action buttons — Plus menu + Mic */}
+              <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0 relative">
+                <Button
+                  variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() => setShowFileUpload(true)}
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPlusMenu(!showPlusMenu)}
+                  className={cn(
+                    "h-8 w-8 rounded-full transition-transform",
+                    showPlusMenu ? "rotate-45 text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  type="button"
-                  disabled={isProcessingOCR}
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-                >
-                  {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                </Button>
+
+                {/* Expandable attachment options */}
+                {showPlusMenu && (
+                  <div className="flex items-center gap-0.5 animate-fade-in">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      onClick={() => { setShowFileUpload(true); setShowPlusMenu(false); }}
+                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      disabled={isProcessingOCR}
+                      onClick={() => { cameraInputRef.current?.click(); setShowPlusMenu(false); }}
+                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                    >
+                      {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+
                 <input
                   ref={cameraInputRef}
                   type="file"
@@ -1001,8 +1014,9 @@ Student Profile:
                   onChange={handleCameraCapture}
                   className="hidden"
                 />
+
                 {voiceSupported && (
-                  <Button 
+                  <Button
                     variant="ghost"
                     size="icon"
                     type="button"
