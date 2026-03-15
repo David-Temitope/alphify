@@ -526,7 +526,7 @@ Deno.serve(async (req) => {
     await serviceClient.from('ku_transactions').insert({
       user_id: authData.user.id,
       amount: -preChargeCost,
-      type: mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
+      type: mode === 'project' ? 'project_research' : mode === 'assignment' ? 'assignment_assist' : 'chat_prompt',
       description: kuDescription
     });
 
