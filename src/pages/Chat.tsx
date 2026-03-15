@@ -58,7 +58,7 @@ export default function Chat() {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
   const fileIdFromLibrary = searchParams.get('file');
-  const chatMode = searchParams.get('mode'); // 'assignment' or null
+  const chatMode = searchParams.get('mode'); // 'assignment', 'project', or null
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
