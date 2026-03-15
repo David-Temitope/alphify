@@ -395,6 +395,7 @@ Occasionally (every 4-5 responses during a long session), naturally surface some
 // Calculate ESTIMATED KU cost before response (pre-charge)
 function calculatePreChargeCost(message: string, hasFile: boolean, mode: string | null): number {
   if (mode === 'assignment') return 2; // minimum for assignment mode
+  if (mode === 'project') return 5; // projects are resource-intensive
   let cost = 1;
   if (hasFile) cost += 1;
   
