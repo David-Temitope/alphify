@@ -867,6 +867,13 @@ Student Profile:
             </div>
           )}
 
+          {isProcessingOCR && (
+            <div className="flex items-center gap-2 text-muted-foreground p-4">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm">📸 Scanning your handout... Extracting text with OCR.</span>
+            </div>
+          )}
+
           {isStreaming && !streamingContent && (
             <div className="flex items-center gap-2 text-muted-foreground p-4">
               <div className="flex gap-1">
