@@ -28,6 +28,7 @@ import alphifyLogo from '@/assets/alphify-logo.webp';
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { balance } = useKnowledgeUnits();
 
   const { data: conversations } = useQuery({
