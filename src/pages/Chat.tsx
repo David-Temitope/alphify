@@ -24,8 +24,10 @@ import {
   Trash2,
   BookOpen,
   Search as SearchIcon,
-  ChevronDown
+  ChevronDown,
+  Camera
 } from 'lucide-react';
+import { cacheChatMessages, cacheVibe } from '@/lib/vibeCache';
 import alphifyLogo from '@/assets/alphify-logo.webp';
 import ezraAvatar from '@/assets/ezra-avatar.png';
 
