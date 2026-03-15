@@ -966,27 +966,46 @@ Student Profile:
               }}
               className="relative flex items-end bg-secondary rounded-2xl border border-border focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all"
             >
-              {/* Left action buttons */}
-              <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0">
-                <Button 
-                  variant="ghost" 
+              {/* Left action buttons — Plus menu + Mic */}
+              <div className="flex items-center gap-0.5 pl-2 pb-2.5 flex-shrink-0 relative">
+                <Button
+                  variant="ghost"
                   size="icon"
                   type="button"
-                  onClick={() => setShowFileUpload(true)}
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPlusMenu(!showPlusMenu)}
+                  className={cn(
+                    "h-8 w-8 rounded-full transition-transform",
+                    showPlusMenu ? "rotate-45 text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  type="button"
-                  disabled={isProcessingOCR}
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-                >
-                  {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                </Button>
+
+                {/* Expandable attachment options */}
+                {showPlusMenu && (
+                  <div className="flex items-center gap-0.5 animate-fade-in">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      onClick={() => { setShowFileUpload(true); setShowPlusMenu(false); }}
+                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      disabled={isProcessingOCR}
+                      onClick={() => { cameraInputRef.current?.click(); setShowPlusMenu(false); }}
+                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                    >
+                      {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+
                 <input
                   ref={cameraInputRef}
                   type="file"
@@ -995,8 +1014,9 @@ Student Profile:
                   onChange={handleCameraCapture}
                   className="hidden"
                 />
+
                 {voiceSupported && (
-                  <Button 
+                  <Button
                     variant="ghost"
                     size="icon"
                     type="button"
