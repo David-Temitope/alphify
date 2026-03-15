@@ -906,37 +906,29 @@ Student Profile:
           )}
         </div>
 
-        {/* File Content Indicator */}
+        {/* File Content Indicator — compact inline chip */}
         {fileContent && (
-          <div className="mx-4 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-sm text-primary">
-              📄 {libraryFile ? libraryFile.file_name : sharedFile ? sharedFile.file_name : 'Document attached'} - Ask me anything about it!
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-primary border-primary/30 hover:bg-primary/10"
-                onClick={() => {
-                  handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.');
-                }}
+          <div className="mx-4 mb-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm max-w-full">
+              <span className="text-primary truncate max-w-[180px]">
+                📄 {libraryFile ? libraryFile.file_name : sharedFile ? sharedFile.file_name : 'Document ready'}
+              </span>
+              <button
+                onClick={() => handleSendMessage('Please give me a comprehensive summary of this document. Highlight the key points, main themes, and important details I need to know.')}
+                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
               >
-                📋 Summarize
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-primary border-primary/30 hover:bg-primary/10"
-                onClick={() => {
-                  handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.');
-                }}
+                Summarize
+              </button>
+              <span className="text-border">|</span>
+              <button
+                onClick={() => handleSendMessage('[LECTURE_MODE] Please lecture me through this entire document, page by page, covering every topic thoroughly. After you finish, give me a comprehensive exam.')}
+                className="text-xs font-medium text-primary hover:underline flex-shrink-0"
               >
-                <BookOpen className="h-4 w-4 mr-1" />
-                Lecture This PDF
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setFileContent(null)}>
-                <X className="h-4 w-4" />
-              </Button>
+                Lecture
+              </button>
+              <button onClick={() => setFileContent(null)} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
