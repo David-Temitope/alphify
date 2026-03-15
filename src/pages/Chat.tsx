@@ -58,7 +58,7 @@ export default function Chat() {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
   const fileIdFromLibrary = searchParams.get('file');
-  const chatMode = searchParams.get('mode'); // 'assignment' or null
+  const chatMode = searchParams.get('mode'); // 'assignment', 'project', or null
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -766,12 +766,12 @@ Student Profile:
             <div className="flex-1 min-w-0">
               <h1 className={cn(
                 "font-display font-semibold truncate",
-                chatMode === 'assignment' ? "text-emerald-500" : "text-foreground"
+                chatMode === 'assignment' ? "text-emerald-500" : chatMode === 'project' ? "text-purple-500" : "text-foreground"
               )}>
                 {conversation?.title || 'New Conversation'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {chatMode === 'assignment' ? '📝 Assignment & Project Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+                {chatMode === 'assignment' ? '📝 Assignment Mode' : chatMode === 'project' ? '📚 Project Mode — Deep Research' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
               </p>
             </div>
             <Button
@@ -1050,7 +1050,7 @@ Student Profile:
                   size="icon"
                   className={cn(
                     "h-8 w-8 rounded-full text-primary-foreground disabled:opacity-30",
-                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : "xp-gradient"
+                    chatMode === 'assignment' ? "bg-emerald-500 hover:bg-emerald-600" : chatMode === 'project' ? "bg-purple-500 hover:bg-purple-600" : "xp-gradient"
                   )}
                 >
                   {isStreaming ? (

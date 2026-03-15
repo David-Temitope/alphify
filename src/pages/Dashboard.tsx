@@ -8,20 +8,15 @@ import { useKnowledgeUnits } from '@/hooks/useKnowledgeUnits';
 import { useToast } from '@/hooks/use-toast';
 import {
   MessageSquarePlus,
-  BookOpen,
   ChevronRight,
   Sparkles,
   FileText,
-  GraduationCap,
   Coins,
-  Bell,
-  Search,
   Clock,
   LogOut,
   Wand2,
-  TrendingUp,
-  Trophy,
 } from 'lucide-react';
+import QuickActions from '@/components/dashboard/QuickActions';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNav from '@/components/BottomNav';
 import ReturningUserNudge from '@/components/ReturningUserNudge';
@@ -34,7 +29,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { balance, canChat } = useKnowledgeUnits();
+  const { balance } = useKnowledgeUnits();
 
   const { data: conversations } = useQuery({
     queryKey: ['conversations'],
@@ -64,20 +59,6 @@ export default function Dashboard() {
   });
 
   const needsOnboarding = !userSettings || !userSettings.preferred_name || !userSettings.field_of_study || !userSettings.ai_personality?.length;
-
-  // Don't create conversation on dashboard — navigate to blank chat page
-  const handleNewChat = () => {
-    if (!canChat) {
-      toast({
-        title: 'No Knowledge Units',
-        description: 'You need at least 1 KU to chat with Ezra. Top up your wallet!',
-        variant: 'destructive',
-      });
-      navigate('/settings?tab=wallet');
-      return;
-    }
-    navigate('/chat');
-  };
 
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Student';
   const courses = userSettings?.courses || [];
@@ -169,106 +150,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Quick Actions - Horizontal scroll cards */}
-        <section>
-          <h2 className="font-display text-base font-semibold text-foreground mb-3">Quick Actions</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-            <button
-              onClick={handleNewChat}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 p-4 text-left hover:border-primary/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3">
-                <MessageSquarePlus className="h-5 w-5 text-primary" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Ask Ezra</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Quick help</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/lecture')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 p-4 text-left hover:border-indigo-500/40 transition-all shadow-sm"
-            >
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-3">
-                <BookOpen className="h-5 w-5 text-indigo-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Lecture Mode</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Master topics</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/exam')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20 p-4 text-left hover:border-amber-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mb-3">
-                <GraduationCap className="h-5 w-5 text-amber-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Exam Mode</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Practice tests</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/library')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/20 p-4 text-left hover:border-blue-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
-                <FileText className="h-5 w-5 text-blue-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Library</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{files?.length ?? 0} docs</p>
-            </button>
-
-            <button
-              onClick={async () => {
-                if (balance < 2) {
-                  toast({ title: 'Not enough KU', description: 'Assignment & Project mode requires at least 2 KU.', variant: 'destructive' });
-                  navigate('/settings?tab=wallet');
-                  return;
-                }
-                navigate('/chat?mode=assignment');
-              }}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 p-4 text-left hover:border-emerald-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-3">
-                <FileText className="h-5 w-5 text-emerald-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Assignment</p>
-              <p className="text-xs text-muted-foreground mt-0.5">& Projects</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/community')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/20 p-4 text-left hover:border-violet-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center mb-3">
-                <Sparkles className="h-5 w-5 text-violet-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Community</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Study mates</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/progress')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 border border-rose-500/20 p-4 text-left hover:border-rose-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center mb-3">
-                <TrendingUp className="h-5 w-5 text-rose-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Progress</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Your stats</p>
-            </button>
-
-            <button
-              onClick={() => navigate('/leaderboard')}
-              className="flex-shrink-0 w-36 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/20 p-4 text-left hover:border-yellow-500/40 transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-3">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-              </div>
-              <p className="font-medium text-sm text-foreground">Leaderboard</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Rankings</p>
-            </button>
-          </div>
-        </section>
+        {/* Quick Actions — categorized grid */}
+        <QuickActions fileCount={files?.length ?? 0} />
 
         {/* Courses section */}
         {courses.length > 0 && (
@@ -330,7 +213,7 @@ export default function Dashboard() {
               <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
               <h3 className="font-display font-semibold text-base mb-1">No conversations yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Ask Ezra anything to get started</p>
-              <Button onClick={handleNewChat} size="sm" className="bg-primary text-primary-foreground">
+              <Button onClick={() => navigate('/chat')} size="sm" className="bg-primary text-primary-foreground">
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
                 Start Learning
               </Button>
