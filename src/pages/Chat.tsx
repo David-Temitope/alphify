@@ -766,12 +766,12 @@ Student Profile:
             <div className="flex-1 min-w-0">
               <h1 className={cn(
                 "font-display font-semibold truncate",
-                chatMode === 'assignment' ? "text-emerald-500" : "text-foreground"
+                chatMode === 'assignment' ? "text-emerald-500" : chatMode === 'project' ? "text-purple-500" : "text-foreground"
               )}>
                 {conversation?.title || 'New Conversation'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {chatMode === 'assignment' ? '📝 Assignment & Project Mode' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
+                {chatMode === 'assignment' ? '📝 Assignment Mode' : chatMode === 'project' ? '📚 Project Mode — Deep Research' : libraryFile ? `Discussing: ${libraryFile.file_name}` : 'Ask me anything - I\'ll explain it simply'}
               </p>
             </div>
             <Button
