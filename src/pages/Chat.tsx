@@ -976,6 +976,24 @@ Student Profile:
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  type="button"
+                  disabled={isProcessingOCR}
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                >
+                  {isProcessingOCR ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraCapture}
+                  className="hidden"
+                />
                 {voiceSupported && (
                   <Button 
                     variant="ghost"
